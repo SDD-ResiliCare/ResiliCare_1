@@ -1,0 +1,18 @@
+{
+  "version": "2026-08-30",
+  "top_probability_threshold": 0.65,
+  "top_two_gap_threshold": 0.15,
+  "high_confidence_threshold": 0.85,
+  "moderate_confidence_threshold": 0.65,
+  "deterministic_base_score": 0.92,
+  "penalties": {
+    "zero_history": 0.12,
+    "missing_vitals_each": 0.08,
+    "missing_vitals_cap": 0.24,
+    "relevant_history_missing": 0.12,
+    "ambiguous_presentation": 0.18,
+    "conflicting_information": 0.12,
+    "age_adjusted_vital_deviation": 0.08
+  },
+  "note": "Prototype selective-deferral thresholds. Tune on a held-out clinician-reviewed calibration set before clinical evaluation."
+}

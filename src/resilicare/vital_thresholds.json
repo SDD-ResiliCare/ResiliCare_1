@@ -1,0 +1,31 @@
+{
+  "version": "2026-08-30",
+  "description": "Operational reference bands for age-adjusted triage screening; not diagnostic normal ranges.",
+  "sources": {
+    "RCH_PEDIATRIC": "https://www.rch.org.au/clinicalguide/guideline_index/normal_ranges_for_physiological_variables/",
+    "QLD_PCCM": "https://www.health.qld.gov.au/__data/assets/pdf_file/0022/1447051/PCCM_full.pdf",
+    "RCP_NEWS2": "https://www.rcplondon.ac.uk/media/ctulqqbn/news2-executive-summary_0.pdf"
+  },
+  "profiles": [
+    {"id":"neonate_term","bracket":"neonate","min_age":0,"max_age":0.25,"anchor":"term","hr_bpm":[120,170],"rr_bpm":[25,60],"sbp_mmhg":[60,95]},
+    {"id":"infant_3m","bracket":"infant","min_age":0.25,"max_age":0.5,"anchor":"3 months","hr_bpm":[115,170],"rr_bpm":[25,60],"sbp_mmhg":[60,105]},
+    {"id":"infant_6m","bracket":"infant","min_age":0.5,"max_age":1,"anchor":"6 months","hr_bpm":[110,170],"rr_bpm":[20,55],"sbp_mmhg":[75,105]},
+    {"id":"toddler_1y","bracket":"toddler","min_age":1,"max_age":1.5,"anchor":"1 year","hr_bpm":[105,150],"rr_bpm":[20,45],"sbp_mmhg":[70,105]},
+    {"id":"toddler_2y","bracket":"toddler","min_age":1.5,"max_age":3,"anchor":"2 years","hr_bpm":[95,150],"rr_bpm":[20,40],"sbp_mmhg":[70,105]},
+    {"id":"child_4y","bracket":"child","min_age":3,"max_age":5,"anchor":"4 years","hr_bpm":[80,150],"rr_bpm":[17,30],"sbp_mmhg":[75,110]},
+    {"id":"child_6y","bracket":"child","min_age":5,"max_age":7,"anchor":"6 years","hr_bpm":[75,140],"rr_bpm":[16,30],"sbp_mmhg":[80,115]},
+    {"id":"child_8y","bracket":"child","min_age":7,"max_age":9,"anchor":"8 years","hr_bpm":[70,130],"rr_bpm":[16,30],"sbp_mmhg":[80,115]},
+    {"id":"child_10y","bracket":"child","min_age":9,"max_age":12,"anchor":"10 years","hr_bpm":[60,130],"rr_bpm":[15,25],"sbp_mmhg":[85,120]},
+    {"id":"adolescent_12y","bracket":"adolescent","min_age":12,"max_age":13,"anchor":"12 years","hr_bpm":[65,120],"rr_bpm":[15,25],"sbp_mmhg":[90,120]},
+    {"id":"adolescent_14y","bracket":"adolescent","min_age":13,"max_age":15,"anchor":"14 years","hr_bpm":[60,115],"rr_bpm":[14,25],"sbp_mmhg":[90,125]},
+    {"id":"adolescent_16y","bracket":"adolescent","min_age":15,"max_age":18,"anchor":"16 years","hr_bpm":[60,115],"rr_bpm":[14,25],"sbp_mmhg":[90,130]},
+    {"id":"adult_news2","bracket":"adult","min_age":18,"max_age":65,"anchor":"NEWS2 zero-score bands","hr_bpm":[51,90],"rr_bpm":[12,20],"sbp_mmhg":[111,219],"temp_c":[36.1,38],"spo2_pct":[96,100]},
+    {"id":"geriatric_news2","bracket":"geriatric","min_age":65,"max_age":130,"anchor":"NEWS2 zero-score bands plus baseline context","hr_bpm":[51,90],"rr_bpm":[12,20],"sbp_mmhg":[111,219],"temp_c":[36.1,38],"spo2_pct":[96,100],"requires_baseline_context":true}
+  ],
+  "pediatric_shared": {"temp_c":[36,37.9],"spo2_pct":[94,100]},
+  "metric_sources": {
+    "pediatric_hr_rr_sbp":"RCH_PEDIATRIC",
+    "pediatric_temp_spo2":"QLD_PCCM",
+    "adult_and_geriatric":"RCP_NEWS2"
+  }
+}
