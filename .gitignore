@@ -4,3 +4,4 @@ __pycache__/
 logs/*.jsonl
 data/audit_log*.jsonl
 ~$*.xlsx
+.venv/
