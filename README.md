@@ -1,5 +1,95 @@
 # ResiliCare prototype
 
+## Task 9: rule-based differential table for ambiguous presentations
+
+`ambiguous_presentations.json` contains three small, sourced pathways: acute chest discomfort,
+syncope/near-syncope, and acute lower-abdominal/pelvic pain. Matching uses bounded phrases from
+the chief complaint only (avoiding negated background-text false positives), evaluates every matched
+pathway, and returns:
+
+- non-diagnostic differential considerations;
+- a mandatory-safety-workup flag and pathway actions;
+- the matched phrase, pathway ID, source links, and maximum allowed ESI.
+
+Each match adds an escalation-only ESI-3 ceiling, so a regular ESI 4/5 suggestion becomes ESI 3,
+while an existing ESI 1/2 is never downgraded. PT-004 (`Central chest burning`) is the primary demo:
+it visibly retains ACS and other dangerous alternatives plus an ECG/cardiac-troponin pathway even
+though indigestion remains plausible. The mandatory flag is independent of the final ESI.
+
+These entries are clinician prompts, not diagnoses or autonomous orders. Required actions must be
+implemented through an approved local ED pathway. The chest-pain entry follows the 2021 AHA/ACC
+chest-pain guidance; syncope follows ACC/AHA/HRS guidance; pregnancy-relevant pelvic pain uses ACOG
+ectopic-pregnancy guidance. A GNN is deliberately omitted because no validated symptom-diagnosis
+graph or suitable labels exist in this prototype.
+
+## Task 8: one-to-two-line explanation per score
+
+Every `score_with_confidence()` result now includes one or two prioritized `explanation_lines`,
+a combined `explanation_text`, and the exact `explanation_rule_ids`. Explanations identify the
+displayed ESI/set and the most decision-relevant patient-specific basis—for example, the observed
+SpO₂ value and its selected age-adjusted reference floor. Immediate/high-risk rules outrank vital
+deviations, which outrank missing, ambiguous, conflicting, and zero-history uncertainty.
+
+The demo renders this text directly below every score badge and also shows it in the Override
+modal. Override audit snapshots retain the explanation seen by the clinician. Explanations are
+rule templates because no trained classifier exists yet; SHAP has deliberately not been installed
+or simulated. If a tree classifier is later built, SHAP attribution needs separate validation and
+wiring at that point.
+
+## Task 7: clinician override capture and append-only audit viewer
+
+Run `python demo/audit_server.py`, then open `http://127.0.0.1:8000`. Every displayed AI
+suggestion has an Override button. The modal requires clinician ID, a different ESI level, a
+structured reason category, and a free-text clinical rationale. The server—not the browser—looks
+up the canonical AI output and appends its score set, point estimate, confidence, clinician choice,
+direction, reason, UTC timestamp, and event UUID to `data/audit_log.jsonl`.
+
+The demo exposes only insert and read operations; HTTP PUT, PATCH, and DELETE return `405`.
+Concurrent in-process appends are locked, and reserved audit fields cannot be replaced by payload
+data. The Audit log tab provides the requested viewer. This is honestly an application-level
+append-only ledger, not a cryptographically immutable or OS-tamper-proof store.
+
+Until the regular scorer is implemented, the screen clearly labels its synthetic reference-label
+scores as a UI stub; no model-accuracy claim is made from them.
+
+The server binds to localhost by default and has no authentication; it is a hackathon demo, not a
+production clinical deployment. Clinician IDs are captured as entered, not identity-verified.
+
+## Task 6: waiting-room reassessment loop
+
+`tick_waiting_room()` evaluates every waiting entry using elapsed time and manually re-entered
+vitals only. The update channel rejects non-vital fields, so there is no microphone, acoustic,
+camera, or other sensor dependency. It:
+
+- flags ESI-1 as ineligible for the ordinary waiting queue;
+- triggers when the configured reassessment interval is exceeded;
+- compares repeat vitals using Task 3 age-normalized deviations;
+- re-runs Tasks 2, 4, and 5, permits acuity escalation but never automated downgrading;
+- sorts escalated/flagged patients forward and emits queue ranks;
+- writes `waiting_room_retriage` and clinician `waiting_room_reassessment_completed` events to
+  the same timestamped JSONL audit stream used by the other layers.
+
+The demo intervals (`0/10/30/60/120` minutes for ESI 1-5) are deliberately labelled local
+prototype reassessment ceilings in `waiting_room_config.json`. ESI itself does not prescribe
+time-to-provider or reassessment intervals, so these are not represented as a “safe wait” guarantee
+and must be replaced by an approved local ED policy before clinical evaluation.
+
+## Task 5: missingness-aware zero-history handling
+
+`has_prior_history` is required to be a real boolean—strings, integers, and absent values are
+rejected instead of silently interpreting them. `prepare_history_context()` creates a separate
+scorer view while preserving the raw patient record for audit:
+
+- history available: history-derived numeric features are retained;
+- no history on file: supplied/stale history-derived values are forced to `0.0`, an explicit
+  missingness indicator is set, and no guessed history value is imputed;
+- the history/vitals blend changes from `75% observed vitals + 25% history` to `100% observed
+  vitals + 0% history` for that record.
+
+The zero-history confidence output includes the visible notice: `No prior history on file —
+score based on presenting vitals only.` These prototype blend weights are isolated in
+`src/resilicare/missingness_config.json` and require clinician-reviewed calibration later.
+
 ## Task 4: confidence and uncertainty on every score
 
 Application-facing code should call `score_with_confidence()` rather than display the integer
@@ -66,6 +156,8 @@ Run the dataset example:
 $env:PYTHONPATH = "src"
 python examples/run_safety_layer.py
 python examples/run_confidence_layer.py
+python examples/run_missingness_layer.py
+python examples/run_waiting_room.py
 ```
 
 This is an educational prototype, not a clinically validated medical device. Reference ESI

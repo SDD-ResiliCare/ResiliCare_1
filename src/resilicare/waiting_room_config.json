@@ -1,0 +1,7 @@
+{
+  "version": "2026-08-30",
+  "policy_type": "LOCAL_PROTOTYPE_REASSESSMENT_POLICY_NOT_AN_ESI_TIME_STANDARD",
+  "reassessment_ceiling_minutes": {"1": 0, "2": 10, "3": 30, "4": 60, "5": 120},
+  "normalized_deterioration_delta": 0.15,
+  "note": "ESI does not prescribe time-to-provider or reassessment intervals. Replace these demo ceilings with an approved local ED policy."
+}

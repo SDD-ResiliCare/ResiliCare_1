@@ -11,6 +11,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Mapping
 
+from .explanations import build_score_explanation
+from .history import prepare_history_context
 from .safety import VITAL_FIELDS, apply_safety_ceiling, evaluate_safety_rules
 
 VALID_ESI = set(range(1, 6))
@@ -33,6 +35,7 @@ def score_with_confidence(
     if proposed_esi not in VALID_ESI:
         raise ValueError("proposed_esi must be between 1 and 5")
     config = load_confidence_config()
+    history_context = prepare_history_context(patient)
     safety = safety_result or evaluate_safety_rules(patient)
     displayed_esi = apply_safety_ceiling(proposed_esi, safety)
     levels, reasons = {displayed_esi}, []
@@ -59,7 +62,7 @@ def score_with_confidence(
         (patient.get("has_prior_history") is False, "ZERO_HISTORY", penalties["zero_history"]),
         (bool(missing), "MISSING_VITALS", min(len(missing) * penalties["missing_vitals_each"], penalties["missing_vitals_cap"])),
         (patient.get("relevant_history_missing") is True, "RELEVANT_HISTORY_MISSING", penalties["relevant_history_missing"]),
-        (patient.get("ambiguity_flag") is True, "AMBIGUOUS_PRESENTATION", penalties["ambiguous_presentation"]),
+        (patient.get("ambiguity_flag") is True or bool(safety.get("ambiguous_presentations")), "AMBIGUOUS_PRESENTATION", penalties["ambiguous_presentation"]),
         (bool(patient.get("conflicting_information")), "CONFLICTING_INFORMATION", penalties["conflicting_information"]),
         ("REVIEW.BORDERLINE_VITALS" in safety.get("matched_rule_ids", []), "AGE_ADJUSTED_VITAL_DEVIATION", penalties["age_adjusted_vital_deviation"]),
     ]
@@ -95,7 +98,7 @@ def score_with_confidence(
     )
     score_text = f"ESI {ordered[0]}" if len(ordered) == 1 else f"ESI {ordered[0]}-{ordered[-1]}"
     badge = f"{score_text} — Escalate for senior nurse review" if defer else f"{score_text} — {label} confidence"
-    return {
+    result = {
         "esi_set": ordered,
         "point_estimate": displayed_esi,
         "display_score": score_text,
@@ -116,7 +119,13 @@ def score_with_confidence(
         "badge": badge,
         "safety_ceiling": ceiling,
         "matched_safety_rules": safety.get("matched_rule_ids", []),
+        "history_context": history_context,
+        "ui_notices": [history_context["ui_notice"]] if history_context["ui_notice"] else [],
+        "ambiguous_presentations": safety.get("ambiguous_presentations", []),
+        "mandatory_safety_workup": bool(safety.get("ambiguous_presentations")),
     }
+    result.update(build_score_explanation(patient, result, safety))
+    return result
 
 
 def _validate_probabilities(values: Mapping[int | str, float] | None) -> dict[int, float]:

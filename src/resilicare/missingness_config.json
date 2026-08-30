@@ -1,0 +1,9 @@
+{
+  "version": "2026-08-30",
+  "history_vital_blend": {
+    "history_available": {"observed_vitals": 0.75, "prior_history": 0.25},
+    "zero_history": {"observed_vitals": 1.0, "prior_history": 0.0}
+  },
+  "zero_history_notice": "No prior history on file — score based on presenting vitals only.",
+  "note": "Prototype scorer weights. Validate and tune on clinician-reviewed data before clinical evaluation."
+}

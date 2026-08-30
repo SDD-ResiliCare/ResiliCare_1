@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ResiliCare Clinical Review</title>
+  <style>
+    :root{--navy:#102a43;--blue:#146c94;--cyan:#dff6ff;--ink:#172b3a;--muted:#607485;--line:#d7e2e8;--bg:#f3f7f9;--white:#fff;--red:#b42318;--green:#087a55}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,Segoe UI,sans-serif}
+    header{background:linear-gradient(120deg,var(--navy),#174f6d);color:white;padding:24px max(24px,calc((100vw - 1180px)/2))}
+    h1{margin:0;font-size:26px}header p{margin:5px 0 0;color:#cde6f2}.shell{max-width:1180px;margin:auto;padding:22px}
+    .notice{background:#fff8dc;border:1px solid #ecd889;border-radius:10px;padding:12px 15px;margin-bottom:18px;color:#66530c}
+    nav{display:flex;gap:8px;margin-bottom:18px}.tab{border:1px solid var(--line);background:white;padding:10px 16px;border-radius:8px;font-weight:700;cursor:pointer}.tab.active{background:var(--blue);color:white;border-color:var(--blue)}
+    .panel[hidden]{display:none}.summary{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}.summary h2{margin:0}.summary span{color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}.card{background:white;border:1px solid var(--line);border-radius:12px;padding:17px;box-shadow:0 3px 12px #16394b0d}
+    .patient{display:flex;justify-content:space-between;gap:10px}.patient strong{font-size:17px}.patient small{color:var(--muted)}.complaint{min-height:44px;margin:12px 0}.score-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .badge{display:inline-block;background:var(--cyan);color:#075378;padding:7px 10px;border-radius:999px;font-weight:800;font-size:13px}.explanation{margin:11px 0 0;border-left:3px solid #9ecfe1;padding-left:10px;color:#405a69;font-size:14px}.workup{margin-top:12px;padding:11px;border:1px solid #efc56d;border-radius:8px;background:#fff8df;color:#624b12;font-size:13px}.workup strong{display:block;color:#8a4b08;margin-bottom:4px}.workup div+div{margin-top:3px}.override{border:0;background:var(--red);color:white;padding:9px 13px;border-radius:8px;font-weight:800;cursor:pointer;flex:none}
+    table{width:100%;border-collapse:collapse;background:white;border:1px solid var(--line);font-size:14px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#eaf1f5;color:#344d5d}tbody tr:hover{background:#f8fbfc}.empty{text-align:center;color:var(--muted);padding:38px}
+    dialog{border:0;border-radius:14px;padding:0;width:min(520px,calc(100% - 30px));box-shadow:0 20px 60px #102a4355}dialog::backdrop{background:#102a4388}.modal-head{background:var(--navy);color:white;padding:18px 22px}.modal-head h2{margin:0}.form{padding:20px 22px}.field{margin-bottom:14px}label{display:block;font-weight:700;margin-bottom:5px}input,select,textarea{width:100%;padding:10px;border:1px solid #aebfc9;border-radius:7px;font:inherit}textarea{min-height:90px;resize:vertical}.actions{display:flex;justify-content:flex-end;gap:9px}.btn{padding:10px 15px;border-radius:8px;border:1px solid var(--line);background:white;font-weight:800;cursor:pointer}.btn.primary{background:var(--red);border-color:var(--red);color:white}.status{min-height:22px;color:var(--green);font-weight:700}.error{color:var(--red)}
+    @media(max-width:720px){.shell{padding:14px}.grid{grid-template-columns:1fr}.audit-wrap{overflow:auto}th,td{white-space:nowrap}}
+  </style>
+</head>
+<body>
+  <header><h1>ResiliCare Clinical Review</h1><p>Human-confirmed triage with append-only override traceability</p></header>
+  <main class="shell">
+    <div class="notice"><strong>Prototype data:</strong> UI scores are seeded from synthetic reference labels until the regular scorer is built. Overrides are real append-only demo events.</div>
+    <nav aria-label="Views"><button class="tab active" data-view="scores">AI suggestions</button><button class="tab" data-view="audit">Audit log</button></nav>
+    <section id="scores" class="panel"><div class="summary"><h2>Current patient suggestions</h2><span id="count"></span></div><div id="cards" class="grid"></div></section>
+    <section id="audit" class="panel" hidden><div class="summary"><h2>Override ledger</h2><button id="refresh" class="btn">Refresh log</button></div><div class="audit-wrap"><table><thead><tr><th>Timestamp</th><th>Patient</th><th>Clinician</th><th>AI output</th><th>Override</th><th>Reason</th><th>Event ID</th></tr></thead><tbody id="events"></tbody></table></div></section>
+    <p id="status" class="status" role="status"></p>
+  </main>
+
+  <dialog id="overrideDialog"><div class="modal-head"><h2>Override AI suggestion</h2><div id="selectedBadge"></div><small id="selectedExplanation"></small></div>
+    <form id="overrideForm" class="form">
+      <input id="patientId" type="hidden">
+      <div class="field"><label for="clinicianId">Clinician ID</label><input id="clinicianId" maxlength="80" required autocomplete="off"></div>
+      <div class="field"><label for="overrideEsi">Clinician-selected ESI</label><select id="overrideEsi" required><option value="">Select ESI</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+      <div class="field"><label for="reasonCode">Reason category</label><select id="reasonCode" required><option value="">Select reason</option></select></div>
+      <div class="field"><label for="reasonText">Clinical rationale</label><textarea id="reasonText" maxlength="2000" required placeholder="Describe the observed findings or new information..."></textarea></div>
+      <p id="formError" class="error" role="alert"></p>
+      <div class="actions"><button type="button" class="btn" id="cancel">Cancel</button><button type="submit" class="btn primary">Record override</button></div>
+    </form>
+  </dialog>
+
+  <script>
+    const state={suggestions:[],reasons:{},selected:null};
+    const $=id=>document.getElementById(id); const make=(tag,text)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e};
+    async function api(url,options){const response=await fetch(url,options);const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}
+    async function init(){[state.suggestions,state.reasons]=await Promise.all([api('/api/suggestions'),api('/api/reasons')]);renderCards();for(const [code,label] of Object.entries(state.reasons)){const option=make('option',label);option.value=code;$('reasonCode').append(option)}}
+    function renderWorkup(result){if(!result.mandatory_safety_workup)return null;const box=make('div');box.className='workup';box.append(make('strong','Mandatory safety workup'));for(const pathway of result.ambiguous_presentations){box.append(make('div',`Consider: ${pathway.differential_considerations.join(' · ')}`),make('div',`Required: ${pathway.required_safety_actions.join(' · ')}`))}return box}
+    function renderCards(){const root=$('cards');root.replaceChildren();$('count').textContent=`${state.suggestions.length} patients`;for(const item of state.suggestions){const card=make('article');card.className='card';const top=make('div');top.className='patient';const name=make('strong',item.patient_id);const age=make('small',`Age ${item.age_years}`);top.append(name,age);const complaint=make('div',item.chief_complaint);complaint.className='complaint';const score=make('div');score.className='score-row';const badge=make('span',item.ai_result.badge);badge.className='badge';const button=make('button','Override');button.className='override';button.addEventListener('click',()=>openOverride(item));score.append(badge,button);const explanation=make('p',item.ai_result.explanation_text);explanation.className='explanation';card.append(top,complaint,score,explanation);const workup=renderWorkup(item.ai_result);if(workup)card.append(workup);root.append(card)}}
+    function openOverride(item){state.selected=item;$('patientId').value=item.patient_id;$('selectedBadge').textContent=`${item.patient_id} · ${item.ai_result.badge}`;$('selectedExplanation').textContent=item.ai_result.explanation_text;$('overrideEsi').value='';$('reasonCode').value='';$('reasonText').value='';$('formError').textContent='';$('overrideDialog').showModal()}
+    $('overrideForm').addEventListener('submit',async event=>{event.preventDefault();const payload={patient_id:$('patientId').value,clinician_id:$('clinicianId').value.trim(),overridden_esi:Number($('overrideEsi').value),reason_code:$('reasonCode').value,reason_text:$('reasonText').value.trim()};if(payload.overridden_esi===state.selected.ai_result.point_estimate){$('formError').textContent='Choose an ESI different from the AI point estimate.';return}try{await api('/api/overrides',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});$('overrideDialog').close();$('status').textContent=`Override recorded for ${payload.patient_id}.`;await renderAudit()}catch(error){$('formError').textContent=error.message}});
+    async function renderAudit(){const events=(await api('/api/audit')).filter(event=>event.event_type==='clinician_esi_override').reverse();const body=$('events');body.replaceChildren();if(!events.length){const row=make('tr');const cell=make('td','No overrides recorded yet.');cell.colSpan=7;cell.className='empty';row.append(cell);body.append(row);return}for(const event of events){const row=make('tr');const values=[new Date(event.timestamp).toLocaleString(),event.patient_id,event.clinician_id,event.original_ai.badge,`ESI ${event.overridden_esi} (${event.override_direction})`,`${event.reason.label}: ${event.reason.free_text}`,event.event_id];for(const value of values)row.append(make('td',value));body.append(row)}}
+    document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',async()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===button));document.querySelectorAll('.panel').forEach(panel=>panel.hidden=panel.id!==button.dataset.view);if(button.dataset.view==='audit')await renderAudit()}));
+    $('refresh').addEventListener('click',renderAudit);$('cancel').addEventListener('click',()=>$('overrideDialog').close());init().catch(error=>{$('status').textContent=error.message;$('status').className='status error'});
+  </script>
+</body>
+</html>

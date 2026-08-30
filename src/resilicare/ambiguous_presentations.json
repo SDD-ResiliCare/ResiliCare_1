@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "purpose": "Prototype safety prompts, not diagnoses or autonomous test orders. Local clinician-approved pathways govern execution.",
+  "entries": [
+    {
+      "id": "ACUTE_CHEST_DISCOMFORT",
+      "label": "Acute chest discomfort",
+      "trigger_phrases": ["chest pain", "chest burning", "central chest burning", "chest pressure", "chest tightness"],
+      "maximum_allowed_esi": 3,
+      "differential_considerations": ["acute coronary syndrome", "acute aortic syndrome", "pulmonary embolism", "pneumothorax", "gastrointestinal or musculoskeletal cause"],
+      "required_safety_actions": ["12-lead ECG", "cardiac troponin pathway"],
+      "source_urls": ["https://professional.heart.org/en/guidelines-statements/2021-ahaaccasechestsaemscctscmr-guideline-for-the-evaluation-and-diagnosis-ofcir0000000000001029"]
+    },
+    {
+      "id": "SYNCOPE_OR_NEAR_SYNCOPE",
+      "label": "Syncope or near-syncope",
+      "trigger_phrases": ["syncope", "near syncope", "fainted", "fainting", "passed out"],
+      "maximum_allowed_esi": 3,
+      "differential_considerations": ["arrhythmia", "orthostatic or reflex syncope", "hemorrhage", "pulmonary embolism", "seizure mimic"],
+      "required_safety_actions": ["focused history and examination", "12-lead ECG"],
+      "source_urls": ["https://www.acc.org/guidelines/hubs/syncope"]
+    },
+    {
+      "id": "ACUTE_LOWER_ABDOMINAL_OR_PELVIC_PAIN",
+      "label": "Acute lower abdominal or pelvic pain",
+      "trigger_phrases": ["lower abdominal pain", "lower abdomen pain", "pelvic pain"],
+      "maximum_allowed_esi": 3,
+      "differential_considerations": ["appendicitis", "ectopic pregnancy when pregnancy is possible", "ovarian or testicular torsion", "renal colic", "gastrointestinal cause"],
+      "required_safety_actions": ["focused abdominal/pelvic assessment", "assess pregnancy possibility and use hCG/ultrasound when clinically applicable"],
+      "source_urls": ["https://www.acog.org/womens-health/faqs/ectopic-pregnancy"]
+    }
+  ]
+}

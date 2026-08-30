@@ -5,12 +5,16 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Lock
 from typing import Any, Iterable
+from uuid import uuid4
 
+from .differentials import match_ambiguous_presentations
 from .vitals import prepare_patient_vitals
 
 VITAL_FIELDS = ("hr_bpm", "rr_bpm", "spo2_pct", "sbp_mmhg", "dbp_mmhg", "temp_c")
 VALID_ESI = range(1, 6)
+_AUDIT_LOCK = Lock()
 
 
 def evaluate_safety_rules(patient: dict[str, Any], prediction_range: Iterable[int] | None = None) -> dict[str, Any]:
@@ -23,12 +27,20 @@ def evaluate_safety_rules(patient: dict[str, Any], prediction_range: Iterable[in
     def add(rule_id: str, level: int, rationale: str) -> None:
         matches.append((rule_id, level, rationale))
 
+    ambiguous_presentations = match_ambiguous_presentations(patient)
+
     if patient.get("immediate_lifesaving_intervention") is True:
         add("IMMEDIATE.LIFE_SAVING_INTERVENTION", 1, "Immediate life-saving intervention is likely.")
     if patient.get("high_risk_presentation") is True:
         add("HIGH_RISK.TIME_SENSITIVE_PRESENTATION", 2, "Presentation is marked high-risk or time-sensitive.")
     if patient.get("ambiguity_flag") is True:
         add("REVIEW.AMBIGUOUS_PRESENTATION", 3, "Symptoms have competing plausible interpretations.")
+    for pathway in ambiguous_presentations:
+        add(
+            f"REVIEW.DIFFERENTIAL.{pathway['pathway_id']}",
+            pathway["maximum_allowed_esi"],
+            f"{pathway['label']} matched a mandatory safety-workup pathway.",
+        )
 
     deviations = patient.get("vital_deviations") or {}
     missing_vitals = (
@@ -78,6 +90,7 @@ def evaluate_safety_rules(patient: dict[str, Any], prediction_range: Iterable[in
         "highlight_alert": level in {1, 2, 3},
         "regular_scorer_action": {1: "SKIP", 2: "RUN_WITH_CEILING", 3: "RUN_WITH_CEILING"}.get(level, "RUN"),
         "age_adjusted_vitals": patient.get("age_adjusted_vitals"),
+        "ambiguous_presentations": ambiguous_presentations,
     }
 
 
@@ -90,8 +103,7 @@ def apply_safety_ceiling(regular_esi: int, safety_result: dict[str, Any]) -> int
 
 
 def log_provisional_result(log_path: str | Path, patient_id: str, result: dict[str, Any]) -> dict[str, Any]:
-    event = {"event_type": "provisional_safety_result", "timestamp": _now(), "patient_id": patient_id, "result": result}
-    return _append_jsonl(log_path, event)
+    return append_audit_event(log_path, "provisional_safety_result", patient_id, {"result": result})
 
 
 def log_clinician_decision(
@@ -112,20 +124,37 @@ def log_clinician_decision(
     if decision == "override" and not reason.strip():
         raise ValueError("an override requires a reason")
     direction = "no_change" if final_esi == displayed_esi else ("escalation" if final_esi < displayed_esi else "de_escalation")
-    event = {
-        "event_type": "clinician_triage_decision", "timestamp": _now(), "patient_id": patient_id,
+    details = {
         "clinician_id": clinician_id, "decision": decision, "displayed_esi": displayed_esi,
         "final_esi": final_esi, "override_direction": direction, "reason": reason.strip() or None,
         "provisional_esi": result.get("provisional_esi"), "matched_rule_ids": result.get("matched_rule_ids", []),
     }
+    return append_audit_event(log_path, "clinician_triage_decision", patient_id, details)
+
+
+def append_audit_event(
+    log_path: str | Path, event_type: str, patient_id: str, details: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Append one timestamped event using the shared JSONL audit format."""
+    if not event_type or not patient_id:
+        raise ValueError("event_type and patient_id are required")
+    reserved = {"event_id", "event_type", "timestamp", "patient_id", "schema_version"}
+    if reserved.intersection(details or {}):
+        raise ValueError("audit details cannot override reserved event fields")
+    event = {
+        "event_id": str(uuid4()), "event_type": event_type, "timestamp": _now(),
+        "patient_id": patient_id, "schema_version": 1,
+    }
+    event.update(details or {})
     return _append_jsonl(log_path, event)
 
 
 def _append_jsonl(log_path: str | Path, event: dict[str, Any]) -> dict[str, Any]:
     path = Path(log_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as stream:
+    with _AUDIT_LOCK, path.open("a", encoding="utf-8") as stream:
         stream.write(json.dumps(event, separators=(",", ":")) + "\n")
+        stream.flush()
     return event
 
 
