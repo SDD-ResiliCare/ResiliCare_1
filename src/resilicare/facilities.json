@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "simulated_data": true,
+  "fictional_facilities": true,
+  "live_nhcx_integration": false,
+  "disclaimer": "Simulated scheme data — a live NHCX integration would replace this lookup table in production.",
+  "facilities": [
+    {
+      "facility_id": "SIM-FAC-001",
+      "name": "Aarogya One Community Hospital",
+      "fictional": true,
+      "facility_type": "Fast-track and day-care hospital",
+      "simulated_distance_km": 1.8,
+      "accepts_esi_levels": [4, 5],
+      "scheme_terms": {
+        "PM-JAY": {"cashless": true, "room_rent_cap_inr_per_day": 2500},
+        "Private Insurer X": {"cashless": false, "room_rent_cap_inr_per_day": 4000},
+        "Self-pay": {"cashless": false, "room_rent_cap_inr_per_day": null}
+      }
+    },
+    {
+      "facility_id": "SIM-FAC-002",
+      "name": "SevaSetu ESIC Fast-Track Clinic",
+      "fictional": true,
+      "facility_type": "ESIC-linked outpatient and observation clinic",
+      "simulated_distance_km": 2.4,
+      "accepts_esi_levels": [4, 5],
+      "scheme_terms": {
+        "ESIC": {"cashless": true, "room_rent_cap_inr_per_day": 2000},
+        "Self-pay": {"cashless": false, "room_rent_cap_inr_per_day": null}
+      }
+    },
+    {
+      "facility_id": "SIM-FAC-003",
+      "name": "Sahyog PM-JAY Day Care Centre",
+      "fictional": true,
+      "facility_type": "PM-JAY fast-track and outpatient centre",
+      "simulated_distance_km": 3.1,
+      "accepts_esi_levels": [4, 5],
+      "scheme_terms": {
+        "PM-JAY": {"cashless": true, "room_rent_cap_inr_per_day": 2200},
+        "Self-pay": {"cashless": false, "room_rent_cap_inr_per_day": null}
+      }
+    },
+    {
+      "facility_id": "SIM-FAC-004",
+      "name": "Meridian Private Outpatient Centre",
+      "fictional": true,
+      "facility_type": "Private fast-track and outpatient centre",
+      "simulated_distance_km": 2.0,
+      "accepts_esi_levels": [4, 5],
+      "scheme_terms": {
+        "Private Insurer X": {"cashless": true, "room_rent_cap_inr_per_day": 5000},
+        "Self-pay": {"cashless": false, "room_rent_cap_inr_per_day": null}
+      }
+    }
+  ]
+}

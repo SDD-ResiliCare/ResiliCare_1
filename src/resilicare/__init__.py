@@ -12,6 +12,7 @@ from .differentials import load_ambiguous_presentation_table, match_ambiguous_pr
 from .history import load_missingness_config, prepare_history_context, weighted_risk_signal
 from .waiting_room import complete_reassessment, create_waiting_entry, detect_vital_deterioration, load_waiting_room_config, tick_waiting_room
 from .vitals import get_age_profile, load_thresholds, normalize_vitals, prepare_patient_vitals
+from .routing import VALID_SCHEMES, load_facility_table, suggest_scheme_route
 
 __all__ = [
     "apply_safety_ceiling",
@@ -39,4 +40,7 @@ __all__ = [
     "build_score_explanation",
     "load_ambiguous_presentation_table",
     "match_ambiguous_presentations",
+    "VALID_SCHEMES",
+    "load_facility_table",
+    "suggest_scheme_route",
 ]

@@ -12,7 +12,13 @@ from urllib.parse import parse_qs, urlparse
 PROJECT_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from resilicare import REASON_CODES, read_audit_events, record_clinician_override, score_with_confidence  # noqa: E402
+from resilicare import (  # noqa: E402
+    REASON_CODES,
+    read_audit_events,
+    record_clinician_override,
+    score_with_confidence,
+    suggest_scheme_route,
+)
 
 
 def build_demo_suggestions(project_root: Path) -> dict[str, dict]:
@@ -22,7 +28,12 @@ def build_demo_suggestions(project_root: Path) -> dict[str, dict]:
         result = score_with_confidence(patient, int(patient["reference_esi"]))
         suggestions[patient["patient_id"]] = {
             "patient_id": patient["patient_id"], "age_years": patient["age_years"],
-            "chief_complaint": patient["chief_complaint"], "ai_result": result,
+            "chief_complaint": patient["chief_complaint"], "scheme": patient["scheme"],
+            "ai_result": result,
+            "routing_assessment": suggest_scheme_route(
+                patient, result["point_estimate"], clinician_confirmed=False,
+                confidence_result=result,
+            ),
             "score_source": "SYNTHETIC_REFERENCE_STUB_FOR_UI_DEMO",
         }
     return suggestions
@@ -35,6 +46,10 @@ def create_server(
     port: int = 8000,
 ) -> ThreadingHTTPServer:
     suggestions = build_demo_suggestions(project_root)
+    patients = {
+        item["patient_id"]: item
+        for item in json.loads((project_root / "data" / "simulated_patients.json").read_text(encoding="utf-8"))["patients"]
+    }
     audit_path = log_path or project_root / "data" / "audit_log.jsonl"
     page = (project_root / "demo" / "index.html").read_bytes()
 
@@ -54,7 +69,8 @@ def create_server(
                 self._json(404, {"error": "not found"})
 
         def do_POST(self):
-            if urlparse(self.path).path != "/api/overrides":
+            path = urlparse(self.path).path
+            if path not in {"/api/overrides", "/api/routing-preview"}:
                 return self._json(404, {"error": "not found"})
             try:
                 size = int(self.headers.get("Content-Length", "0"))
@@ -66,6 +82,12 @@ def create_server(
                 suggestion = suggestions.get(payload.get("patient_id"))
                 if not suggestion:
                     return self._json(404, {"error": "unknown patient_id"})
+                if path == "/api/routing-preview":
+                    result = suggestion["ai_result"]
+                    return self._json(200, suggest_scheme_route(
+                        patients[suggestion["patient_id"]], result["point_estimate"],
+                        clinician_confirmed=True, confidence_result=result,
+                    ))
                 event = record_clinician_override(
                     audit_path, patient_id=suggestion["patient_id"], clinician_id=payload.get("clinician_id", ""),
                     original_ai_result=suggestion["ai_result"], overridden_esi=payload.get("overridden_esi"),

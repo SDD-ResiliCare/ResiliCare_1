@@ -69,6 +69,33 @@ class AuditServerTests(unittest.TestCase):
         self.assertIn("Clinical rationale", page)
         self.assertIn("explanation", page)
         self.assertIn("Mandatory safety workup", page)
+        self.assertIn("Simulated scheme data — a live NHCX integration would replace this lookup table in production.", page)
+        self.assertIn("Demo: confirm ESI & show route", page)
+
+    def test_suggestions_expose_scheme_and_safety_gated_routing(self):
+        _, suggestions = self.request("/api/suggestions")
+        by_id = {item["patient_id"]: item for item in suggestions}
+        self.assertEqual(by_id["PT-016"]["scheme"], "ESIC")
+        self.assertEqual(by_id["PT-016"]["routing_assessment"]["status"], "CLINICIAN_CONFIRMATION_REQUIRED")
+        self.assertEqual(by_id["PT-015"]["routing_assessment"]["status"], "CLINICAL_ROUTING_BLOCKED")
+        self.assertEqual(by_id["PT-004"]["routing_assessment"]["status"], "NOT_LOW_ACUITY")
+
+    def test_route_preview_uses_canonical_score_and_returns_fictional_esic_route(self):
+        status, result = self.request("/api/routing-preview", "POST", {
+            "patient_id": "PT-016", "confirmed_esi": 5, "scheme": "Self-pay",
+        })
+        self.assertEqual(status, 200)
+        self.assertEqual(result["confirmed_esi"], 4)
+        self.assertEqual(result["scheme"], "ESIC")
+        self.assertEqual(result["status"], "ROUTE_SUGGESTED")
+        self.assertTrue(result["recommended_route"]["cashless_eligible"])
+        self.assertEqual(result["recommended_route"]["facility_name"], "SevaSetu ESIC Fast-Track Clinic")
+        self.assertFalse(result["live_nhcx_integration"])
+
+    def test_route_preview_keeps_uncertain_case_blocked(self):
+        _, result = self.request("/api/routing-preview", "POST", {"patient_id": "PT-015"})
+        self.assertEqual(result["status"], "CLINICAL_ROUTING_BLOCKED")
+        self.assertEqual(result["suggestions"], [])
 
 
 if __name__ == "__main__":

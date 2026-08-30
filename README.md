@@ -1,5 +1,28 @@
 # ResiliCare prototype
 
+## Task 13: simulated scheme-aware alternate-facility routing
+
+Every synthetic patient now carries one of four coverage labels: `PM-JAY`, `ESIC`,
+`Private Insurer X`, or `Self-pay`. `facilities.json` is a deliberately small, static table of
+four fictional nearby facilities, simulated distances, accepted schemes, cashless flags, and
+room-rent caps. The JSON, CSV, and XLSX datasets contain the same patient-to-scheme mapping.
+
+`suggest_scheme_route()` is downstream of triage and cannot change the ESI score or queue
+priority. It shows an alternate fast-track/outpatient option only for clinician-confirmed ESI 4/5
+cases. Routing is withheld if there is a hard safety override, mandatory safety workup, worsening
+vitals, or unresolved ESI uncertainty. The server derives the score and scheme from its canonical
+patient record rather than accepting them from the browser.
+
+The demo labels every scheme and route as simulated and displays: `Simulated scheme data — a live
+NHCX integration would replace this lookup table in production.` It does **not** call NHCX, verify
+beneficiary eligibility, confirm cashless authorization, check live capacity, or perform a transfer.
+The fictional values demonstrate the workflow and financial-routing differentiator only.
+
+Production integration would replace the table with payer and facility verification. NHCX is the
+Government of India's standardized health-claims exchange layer; scheme-specific eligibility and
+benefits still require authoritative payer workflows. Background sources: [ABDM NHCX FAQ](https://abdm.gov.in/DHIS/faqs),
+[ABDM FAQ](https://abdm.gov.in/FAQ), and [ESIC benefits](https://www.esic.gov.in/Publications/ESIAct1948Amendedupto010610.htm).
+
 ## Task 9: rule-based differential table for ambiguous presentations
 
 `ambiguous_presentations.json` contains three small, sourced pathways: acute chest discomfort,

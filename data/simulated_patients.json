@@ -1,6 +1,6 @@
 {
   "dataset_name": "ResiliCare Synthetic Patient Triage Dataset",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "generated_at": "2026-08-30T00:00:00+05:30",
   "timezone": "Asia/Kolkata",
   "synthetic_data_only": true,
@@ -13,6 +13,12 @@
       "type": "string",
       "unit_or_range": "",
       "description": "Unique synthetic encounter identifier"
+    },
+    {
+      "name": "scheme",
+      "type": "enum",
+      "unit_or_range": "PM-JAY | ESIC | Private Insurer X | Self-pay",
+      "description": "Simulated coverage category; not verified eligibility"
     },
     {
       "name": "age_years",
@@ -210,6 +216,7 @@
   "patients": [
     {
       "patient_id": "PT-001",
+      "scheme": "PM-JAY",
       "age_years": 44,
       "age_group": "Adult",
       "sex_at_birth": "Male",
@@ -245,6 +252,7 @@
     },
     {
       "patient_id": "PT-002",
+      "scheme": "ESIC",
       "age_years": 67,
       "age_group": "Geriatric",
       "sex_at_birth": "Female",
@@ -280,6 +288,7 @@
     },
     {
       "patient_id": "PT-003",
+      "scheme": "Private Insurer X",
       "age_years": 29,
       "age_group": "Adult",
       "sex_at_birth": "Female",
@@ -315,6 +324,7 @@
     },
     {
       "patient_id": "PT-004",
+      "scheme": "Self-pay",
       "age_years": 52,
       "age_group": "Adult",
       "sex_at_birth": "Male",
@@ -350,6 +360,7 @@
     },
     {
       "patient_id": "PT-005",
+      "scheme": "PM-JAY",
       "age_years": 61,
       "age_group": "Adult",
       "sex_at_birth": "Female",
@@ -385,6 +396,7 @@
     },
     {
       "patient_id": "PT-006",
+      "scheme": "ESIC",
       "age_years": 0.12,
       "age_group": "Pediatric",
       "sex_at_birth": "Male",
@@ -420,6 +432,7 @@
     },
     {
       "patient_id": "PT-007",
+      "scheme": "Private Insurer X",
       "age_years": 81,
       "age_group": "Geriatric",
       "sex_at_birth": "Female",
@@ -455,6 +468,7 @@
     },
     {
       "patient_id": "PT-008",
+      "scheme": "Self-pay",
       "age_years": 24,
       "age_group": "Adult",
       "sex_at_birth": "Male",
@@ -490,6 +504,7 @@
     },
     {
       "patient_id": "PT-009",
+      "scheme": "PM-JAY",
       "age_years": 35,
       "age_group": "Adult",
       "sex_at_birth": "Female",
@@ -525,6 +540,7 @@
     },
     {
       "patient_id": "PT-010",
+      "scheme": "ESIC",
       "age_years": 7,
       "age_group": "Pediatric",
       "sex_at_birth": "Male",
@@ -560,6 +576,7 @@
     },
     {
       "patient_id": "PT-011",
+      "scheme": "Private Insurer X",
       "age_years": 76,
       "age_group": "Geriatric",
       "sex_at_birth": "Female",
@@ -595,6 +612,7 @@
     },
     {
       "patient_id": "PT-012",
+      "scheme": "Self-pay",
       "age_years": 33,
       "age_group": "Adult",
       "sex_at_birth": "Female",
@@ -630,6 +648,7 @@
     },
     {
       "patient_id": "PT-013",
+      "scheme": "PM-JAY",
       "age_years": 41,
       "age_group": "Adult",
       "sex_at_birth": "Male",
@@ -665,6 +684,7 @@
     },
     {
       "patient_id": "PT-014",
+      "scheme": "ESIC",
       "age_years": 58,
       "age_group": "Adult",
       "sex_at_birth": "Female",
@@ -700,6 +720,7 @@
     },
     {
       "patient_id": "PT-015",
+      "scheme": "PM-JAY",
       "age_years": 14,
       "age_group": "Pediatric",
       "sex_at_birth": "Male",
@@ -735,6 +756,7 @@
     },
     {
       "patient_id": "PT-016",
+      "scheme": "ESIC",
       "age_years": 30,
       "age_group": "Adult",
       "sex_at_birth": "Female",
@@ -770,6 +792,7 @@
     },
     {
       "patient_id": "PT-017",
+      "scheme": "Private Insurer X",
       "age_years": 46,
       "age_group": "Adult",
       "sex_at_birth": "Male",
@@ -805,6 +828,7 @@
     },
     {
       "patient_id": "PT-018",
+      "scheme": "Self-pay",
       "age_years": 26,
       "age_group": "Adult",
       "sex_at_birth": "Female",
@@ -840,6 +864,7 @@
     },
     {
       "patient_id": "PT-019",
+      "scheme": "PM-JAY",
       "age_years": 70,
       "age_group": "Geriatric",
       "sex_at_birth": "Male",
@@ -875,6 +900,7 @@
     },
     {
       "patient_id": "PT-020",
+      "scheme": "Private Insurer X",
       "age_years": 38,
       "age_group": "Adult",
       "sex_at_birth": "Female",
