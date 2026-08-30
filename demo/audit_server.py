@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -26,6 +27,7 @@ from resilicare import (  # noqa: E402
     get_hospital_profile,
     load_simulated_patients,
     load_hospital_profiles,
+    match_ambiguous_presentations,
     patient_uid_for_source,
     previous_visits,
     read_audit_events,
@@ -37,6 +39,31 @@ from resilicare import (  # noqa: E402
     suggest_scheme_route,
     upsert_current_encounter,
 )
+# EXPERIMENTAL Task 12 spike, not part of the clinical scoring path — see nlp_kiosk.py's module
+# docstring and README's "Task 12" section. Imported explicitly (not via resilicare's __all__)
+# so this stays visibly opt-in; the text pipeline it exposes needs no ASR/torch/spaCy deps.
+from resilicare.nlp_kiosk import process_kiosk_text, resolve_kiosk_chief_complaint  # noqa: E402
+
+
+def _kiosk_differential_preview(kiosk_result: dict) -> list[dict]:
+    """Preview only: shows what the Task-9 differential table would say for the extracted
+    complaint. Does not score a real patient or touch the queue/audit log."""
+    complaint = resolve_kiosk_chief_complaint(kiosk_result)
+    if not complaint:
+        return []
+    return match_ambiguous_presentations({"chief_complaint": complaint})
+
+
+def _kiosk_audio_status() -> dict:
+    """Whether the audio-in half of Task 12 (VAD/Whisper via nlp_kiosk.TriageKioskAnalyzer) can
+    run in this environment. The text half (manual transcript entry) always works."""
+    missing = [name for name in ("torch", "librosa", "transformers", "spacy")
+               if importlib.util.find_spec(name) is None]
+    return {
+        "audio_pipeline_available": not missing, "missing_dependencies": missing,
+        "note": "Task 12 audio intake is an experimental spike, not a demo-ready feature. "
+                "Use manual transcript entry below regardless of this status.",
+    }
 
 
 def build_patient_suggestion(patient: dict, proposed_esi: int | None = None, queue_entry: dict | None = None) -> dict:
@@ -190,6 +217,8 @@ def create_server(
                     "visits": previous_visits(history_runtime, patient_uid, current_id),
                     "complete_ehr_history": False,
                 })
+            elif parsed.path == "/api/kiosk/status":
+                self._json(200, _kiosk_audio_status())
             elif parsed.path == "/api/fhir-export":
                 encounter_id = parse_qs(parsed.query).get("encounter_id", [""])[0]
                 try:
@@ -206,6 +235,7 @@ def create_server(
             if path not in {
                 "/api/overrides", "/api/routing-preview", "/api/surge/run", "/api/surge/reset",
                 "/api/surge/manual", "/api/combat/acknowledge", "/api/hospital-profile",
+                "/api/kiosk/text",
             }:
                 return self._json(404, {"error": "not found"})
             try:
@@ -228,6 +258,14 @@ def create_server(
                 if path == "/api/hospital-profile":
                     profile_id = payload.get("profile_id", "")
                     return self._json(200, switch_profile(profile_id))
+                if path == "/api/kiosk/text":
+                    transcript = payload.get("transcript", "")
+                    if not isinstance(transcript, str) or not transcript.strip():
+                        raise ValueError("transcript is required")
+                    kiosk_result = process_kiosk_text(transcript)
+                    kiosk_result["differential_matches"] = _kiosk_differential_preview(kiosk_result)
+                    kiosk_result["experimental"] = True
+                    return self._json(200, kiosk_result)
                 suggestion = current_suggestion(payload.get("patient_id"))
                 if not suggestion:
                     return self._json(404, {"error": "unknown patient_id"})

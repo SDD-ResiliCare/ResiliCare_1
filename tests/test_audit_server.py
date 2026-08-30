@@ -193,6 +193,42 @@ class AuditServerTests(unittest.TestCase):
         self.assertEqual(result["status"], "CLINICAL_ROUTING_BLOCKED")
         self.assertEqual(result["suggestions"], [])
 
+    def test_kiosk_status_reports_missing_optional_nlp_dependencies(self):
+        status, result = self.request("/api/kiosk/status")
+        self.assertEqual(status, 200)
+        self.assertIn("audio_pipeline_available", result)
+        self.assertIsInstance(result["missing_dependencies"], list)
+
+    def test_kiosk_text_extracts_complaint_and_previews_differential_table_only(self):
+        status, result = self.request("/api/kiosk/text", "POST", {"transcript": "seene mein dard ho raha hai"})
+        self.assertEqual(status, 200)
+        self.assertTrue(result["confidence_gate_passed"])
+        self.assertEqual(result["extracted_complaint"], "chest pain")
+        self.assertEqual(result["differential_matches"][0]["pathway_id"], "ACUTE_CHEST_DISCOMFORT")
+        self.assertTrue(result["experimental"])
+        # Preview only: no queue/audit side effects from a kiosk transcript.
+        _, ledger = self.request("/api/audit")
+        self.assertEqual(ledger, [])
+
+    def test_kiosk_text_negation_suppresses_the_red_flag(self):
+        _, result = self.request("/api/kiosk/text", "POST", {
+            "transcript": "I am not bleeding profusely, just tired",
+        })
+        self.assertEqual(result["clinical_acuity_red_flags"], [])
+
+    def test_kiosk_text_rejects_empty_transcript(self):
+        with self.assertRaises(urllib.error.HTTPError) as raised:
+            self.request("/api/kiosk/text", "POST", {"transcript": "  "})
+        self.assertEqual(raised.exception.code, 400)
+        raised.exception.close()
+
+    def test_page_contains_kiosk_manual_fallback(self):
+        with urllib.request.urlopen(self.base + "/") as response:
+            page = response.read().decode()
+        self.assertIn("Voice intake (experimental)", page)
+        self.assertIn("Manual transcript fallback", page)
+        self.assertIn("Extract complaint (preview only)", page)
+
 
 if __name__ == "__main__":
     unittest.main()
