@@ -17,7 +17,8 @@ class AuditServerTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.log = Path(self.temp.name) / "audit.jsonl"
-        self.server = create_server(ROOT, self.log, port=0)
+        self.history = Path(self.temp.name) / "history.json"
+        self.server = create_server(ROOT, self.log, port=0, history_path=self.history)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.base = f"http://127.0.0.1:{self.server.server_port}"
@@ -71,6 +72,74 @@ class AuditServerTests(unittest.TestCase):
         self.assertIn("Mandatory safety workup", page)
         self.assertIn("Simulated scheme data — a live NHCX integration would replace this lookup table in production.", page)
         self.assertIn("Demo: confirm ESI & show route", page)
+        self.assertIn("Open & acknowledge", page)
+        self.assertIn("Run 3× surge", page)
+        self.assertIn("full patient detail", page)
+        self.assertIn("History from previous ResiliCare visits only", page)
+        self.assertIn("Export as FHIR-shaped bundle", page)
+        self.assertIn("not validated or transmitted to ABDM/EHR", page)
+
+    def test_returning_patient_history_and_fhir_shaped_export(self):
+        _, quiet = self.request("/api/queue")
+        item = next(x for x in quiet["items"] if x["source_patient_id"] == "PT-016")
+        self.assertEqual(item["patient_uid"], "RC-P-016")
+        _, history = self.request(
+            f"/api/history?patient_uid={item['patient_uid']}&current_encounter_id={item['encounter_id']}"
+        )
+        self.assertEqual(history["label"], "History from previous ResiliCare visits only")
+        self.assertFalse(history["complete_ehr_history"])
+        self.assertEqual(history["visits"][0]["final_clinician_decision"]["decision"], "accepted")
+        _, exported = self.request(f"/api/fhir-export?encounter_id={item['encounter_id']}")
+        self.assertIn("not validated", exported["disclaimer"])
+        types = [entry["resource"]["resourceType"] for entry in exported["bundle"]["entry"]]
+        self.assertEqual(types[:2], ["Patient", "Encounter"])
+        self.assertIn("Observation", types)
+
+    def test_override_updates_current_encounter_history(self):
+        _, quiet = self.request("/api/queue")
+        item = quiet["items"][0]
+        point = item["ai_result"]["point_estimate"]
+        overridden = 2 if point != 2 else 3
+        _, event = self.request("/api/overrides", "POST", {
+            "patient_id": item["patient_id"], "clinician_id": "NURSE-16",
+            "overridden_esi": overridden, "reason_code": "AI_DISAGREEMENT", "reason_text": "Exam differs.",
+        })
+        stored = json.loads(self.history.read_text(encoding="utf-8"))
+        encounter = next(x for x in stored["encounters"] if x["encounter_id"] == item["encounter_id"])
+        self.assertEqual(encounter["final_clinician_decision"]["audit_event_id"], event["event_id"])
+
+    def test_three_x_surge_automatically_triggers_combat_mode_at_twenty(self):
+        _, quiet = self.request("/api/queue")
+        self.assertEqual(quiet["queue_length"], 7)
+        self.assertFalse(quiet["combat_mode"]["active"])
+        _, surge = self.request("/api/surge/run", "POST", {})
+        self.assertEqual(surge["queue_length"], 21)
+        self.assertEqual(surge["combat_mode"]["threshold"], 20)
+        self.assertEqual(surge["combat_mode"]["trigger"], "QUEUE_LENGTH")
+        self.assertFalse(surge["combat_mode"]["scoring_changed"])
+        quiet_second = next(item for item in quiet["items"] if item["patient_id"] == "Q-002")
+        surge_second = next(item for item in surge["items"] if item["patient_id"] == "Q-002")
+        self.assertEqual(quiet_second["ai_result"], surge_second["ai_result"])
+
+    def test_manual_surge_works_below_threshold(self):
+        _, result = self.request("/api/surge/manual", "POST", {"active": True})
+        self.assertEqual(result["queue_length"], 7)
+        self.assertEqual(result["combat_mode"]["trigger"], "MANUAL")
+
+    def test_combat_acknowledgement_uses_canonical_snapshot_and_is_logged(self):
+        _, surge = self.request("/api/surge/run", "POST", {})
+        item = surge["items"][0]
+        status, result = self.request("/api/combat/acknowledge", "POST", {
+            "patient_id": item["patient_id"], "clinician_id": "NURSE-14",
+            "current_ai": {"point_estimate": 5, "confidence_score": 0},
+        })
+        self.assertEqual(status, 201)
+        event = result["event"]
+        self.assertEqual(event["current_ai"]["point_estimate"], item["ai_result"]["point_estimate"])
+        self.assertEqual(event["safety_badge"], item["safety_badge"])
+        self.assertEqual(event["surge_state"]["trigger"], "QUEUE_LENGTH")
+        _, ledger = self.request("/api/audit")
+        self.assertEqual(ledger[0]["event_id"], event["event_id"])
 
     def test_suggestions_expose_scheme_and_safety_gated_routing(self):
         _, suggestions = self.request("/api/suggestions")

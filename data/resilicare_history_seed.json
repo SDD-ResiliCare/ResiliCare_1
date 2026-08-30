@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "simulated_data": true,
+  "storage_scope": "RESILICARE_LOCAL_ONLY",
+  "disclaimer": "History from previous ResiliCare visits only",
+  "patients": {
+    "RC-P-016": {
+      "patient_uid": "RC-P-016",
+      "source_patient_id": "PT-016",
+      "age_years": 30,
+      "age_group": "Adult",
+      "sex_at_birth": "Female",
+      "scheme": "ESIC",
+      "synthetic": true
+    }
+  },
+  "encounters": [
+    {
+      "encounter_id": "RC-E-016-20240815",
+      "patient_uid": "RC-P-016",
+      "source_patient_id": "PT-016",
+      "occurred_at": "2024-08-15T10:20:00+05:30",
+      "chief_complaint": "Burning urination",
+      "vitals": {"hr_bpm": 80, "rr_bpm": 16, "spo2_pct": 99, "sbp_mmhg": 118, "dbp_mmhg": 74, "temp_c": 36.9},
+      "suggested_esi": {"display_score": "4", "point_estimate": 4, "esi_set": [4], "confidence_score": 0.91, "confidence_label": "High", "badge": "ESI 4 — High confidence"},
+      "final_clinician_decision": {"decision": "accepted", "final_esi": 4, "clinician_id": "NURSE-SIM-2", "decided_at": "2024-08-15T10:24:00+05:30", "reason": "Clinician accepted the synthetic recommendation."},
+      "safety_flags": [{"level": "STANDARD", "label": "No critical safety flag", "reason": "No escalation-only safety rule matched in this synthetic prior visit."}],
+      "synthetic": true
+    }
+  ]
+}

@@ -1,5 +1,92 @@
 # ResiliCare prototype
 
+## Task 16: ResiliCare-local visit history and FHIR-shaped export
+
+The prototype now separates a stable `Patient` identity (`RC-P-016`) from individual triage
+`Encounter` identifiers (`PT-016`, or `Q-005` during queue replay), so one synthetic patient can
+have multiple ResiliCare visits. The committed `data/resilicare_history_seed.json` contains a
+clearly synthetic earlier visit for the returning-patient demo. On first run it is copied to the
+ignored `data/resilicare_history_runtime.json`; later demo visits and clinician overrides update
+that local runtime copy without rewriting the seed.
+
+Opening a patient's full details shows date/time, complaint, key vitals, suggested ESI and
+confidence, final clinician decision, and safety flags under the exact boundary label **“History
+from previous ResiliCare visits only.”** This is not presented as complete hospital/EHR history.
+PT-016/RC-P-016 is the seeded returning-patient path; other patients honestly show that no previous
+ResiliCare visit was found.
+
+`Export as FHIR-shaped bundle` downloads local JSON with `Patient`, `Encounter`, and vital-sign
+`Observation`-like resources inside a `Bundle`-like collection. The file and UI explicitly state
+that this is a **FHIR-shaped prototype, not a validated/conformant FHIR implementation**, and it is
+not transmitted to ABDM or an EHR. The shape follows the roles described by the official HL7 FHIR
+R4 documentation for [Patient](https://hl7.org/fhir/R4/patient.html),
+[Encounter](https://hl7.org/fhir/R4/encounter.html),
+[Observation](https://hl7.org/fhir/R4/observation.html), and
+[Bundle](https://hl7.org/fhir/R4/bundle.html).
+
+Production would replace local JSON with an authenticated, encrypted, access-controlled database
+and use authorized EHR/ABDM/FHIR integrations where available. Conformance profiles, terminology
+validation, consent/authorization, identity matching, transport security, and audit governance are
+future production work—not claims made by this hackathon prototype.
+
+## Task 14: queue-triggered Combat Mode
+
+The local demo starts with a 7-encounter quiet queue in the normal detailed layout. Running the
+Task-10 3× replay produces 21 encounters in the same 15-minute window; when queue length reaches
+the agreed threshold of **20**, the server automatically activates Combat Mode. A separate manual
+declaration control is available for drills, but keystroke monitoring is not used.
+
+Each Combat Mode card contains only the queue/patient ID, one prioritized safety badge with its
+reason, and `Open & acknowledge`. A clinician ID is required before that action can open the normal
+full-detail view. The append-only event captures clinician ID, UTC timestamp, patient ID, current AI
+score/set/confidence, surge trigger and queue length, and the exact safety badge shown. Full detail
+restores vitals, complaint, age, history/missingness, ESI confidence, explanation, workup flags,
+scheme-routing context, and override controls.
+
+Combat Mode calls the same scorer and does not change ESI, confidence, queue rank, safety rules, or
+routing. It changes information density only. The design framing is Wickens' multiple-resource
+model for overload-aware interface design and Sweller's cognitive-load work; this prototype does
+not claim those papers clinically validate this particular UI. Sources: [Wickens, 2008](https://doi.org/10.1518/001872008X288394)
+and [Sweller, 1988](https://doi.org/10.1207/s15516709cog1202_4).
+
+Run `python demo/audit_server.py`, open `http://127.0.0.1:8000`, enter a demo clinician ID, and
+select `Run 3× surge`. Use `Reset quiet shift` to return to the 7-encounter normal layout.
+
+## Task 12: multilingual voice intake — experimental, not demo-ready
+
+`nlp_kiosk.py` and the notebook are retained as an **experimental spike**, not a completed or
+validated feature. They are not imported by the clinical scoring path. The repository currently
+does not contain the required 2–3 prerecorded multilingual audio fixtures; the large ASR/VAD
+dependencies are optional and have not been installed or verified in the project's Python 3.14
+environment; transcript confidence is not yet robustly gated; and extracted complaints are not yet
+passed into the production differential/scoring flow.
+
+Do not include Task 12 in the live demo or claim it is complete. Completion requires team-recorded
+clips with documented language/expected transcript, a reproducible supported environment, tests
+for negation and low-confidence fallback, direct integration into the existing rule-based
+differential layer, and browser-visible manual fallback. The acoustic-distress and identity-binding
+experiments remain out of the clinical decision path.
+
+## Task 11: India jurisdiction and compliance note
+
+[`compliance.md`](compliance.md) now states the India assumption without claiming legal
+certification. It uses the DPDP Act's actual `certain legitimate use` terminology for a medical
+emergency, records the phased commencement date for sections 3–17, separates ABDM consent-driven
+sharing from local care, and adopts a three-year prototype retention baseline subject to longer
+hospital/state/legal-hold requirements. It removes the unsupported blanket seven-year retention,
+instant-erasure, and future camera/microphone compliance claims.
+
+## Task 10: deterministic 3× surge replay
+
+`replay_arrivals()` compares 7 baseline arrivals with exactly 21 arrivals in the same 15-minute
+window. Replayed records receive unique queue encounter IDs while preserving their synthetic source
+patient ID. The 21-patient run crosses the Combat Mode threshold of 20. Its deterioration case begins
+as a low-acuity encounter and demonstrably moves from queue rank 18 to 9 after age-normalized vital
+worsening and the existing escalation-only re-triage path; it is no longer an already-ESI-1 patient.
+
+Run `python examples/run_surge_simulation.py`. Automated tests verify the exact 3× rate, unique
+encounter IDs, threshold transition, forward re-sort, and unchanged scoring behavior.
+
 ## Task 13: simulated scheme-aware alternate-facility routing
 
 Every synthetic patient now carries one of four coverage labels: `PM-JAY`, `ESIC`,

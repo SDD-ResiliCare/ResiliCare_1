@@ -1,3 +1,10 @@
+"""EXPERIMENTAL Task 12 spike; not demo-ready and not part of the clinical scoring path.
+
+No repository audio fixtures or validated ASR environment are currently supplied. Instantiating
+the analyzer may download third-party models. Keep this module out of the live demo until the
+documented Task 12 completion gates in README.md are satisfied.
+"""
+
 import warnings
 import re
 import uuid
@@ -9,6 +16,8 @@ from transformers import pipeline
 import spacy
 
 warnings.filterwarnings("ignore")
+
+EXPERIMENTAL_NOT_DEMO_READY = True
 
 class TriageKioskAnalyzer:
     def __init__(self):

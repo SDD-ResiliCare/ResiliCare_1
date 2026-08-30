@@ -3,5 +3,6 @@ __pycache__/
 .pytest_cache/
 logs/*.jsonl
 data/audit_log*.jsonl
+data/resilicare_history_runtime.json
 ~$*.xlsx
 .venv/
