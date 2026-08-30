@@ -17,6 +17,7 @@ from .surge import BASELINE_ARRIVALS_PER_WINDOW, COMBAT_MODE_QUEUE_THRESHOLD, SU
 from .combat import combat_mode_state, critical_safety_badge, record_combat_acknowledgement
 from .history_store import HISTORY_SCOPE_LABEL, encounter_with_patient, initialize_history_store, patient_uid_for_source, previous_visits, record_history_override, upsert_current_encounter
 from .fhir_export import FHIR_SHAPED_DISCLAIMER, build_fhir_shaped_bundle
+from .hospital_config import PROFILE_IDS, assess_hospital_operations, get_hospital_profile, load_hospital_profiles
 
 __all__ = [
     "apply_safety_ceiling",
@@ -64,4 +65,8 @@ __all__ = [
     "record_history_override",
     "encounter_with_patient",
     "build_fhir_shaped_bundle",
+    "PROFILE_IDS",
+    "load_hospital_profiles",
+    "get_hospital_profile",
+    "assess_hospital_operations",
 ]

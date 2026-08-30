@@ -1,5 +1,34 @@
 # ResiliCare prototype
 
+## Task 17: simulated hospital capability profiles
+
+Hospital capability and operational assumptions now live in
+`src/resilicare/hospital_profiles.json`, separate from clinical scoring. Two fictional profiles are
+included:
+
+- `urban_trauma_center`: 36 ED beds, 24 ICU beds, and simulated trauma, cardiology, pediatrics,
+  surgery, neurology and other specialty coverage;
+- `rural_clinic`: four ED beds, eight inpatient beds, no ICU, general medicine only, and a
+  transfer-first pathway when a required specialty or critical-care capability is unavailable.
+
+The profile layer returns only operational information: unavailable-specialty and capacity alerts,
+whether clinician-led transfer coordination is recommended, a suggested local care/stabilization
+area, and a fictional escalation-contact identifier. It receives the already-computed ESI as an
+input and cannot change ESI, its uncertainty/confidence, safety rules, or queue rank.
+
+Run `python demo/audit_server.py` and use `Hospital profile · simulated` to swap profiles live.
+`Q-007` (the abdominal-pain encounter sourced from PT-009) is the clearest quiet-shift demo: its ESI
+badge remains identical, while the urban profile recommends its local monitored/surgical pathway
+and the rural profile highlights unavailable general surgery, local capacity pressure, and
+stabilize-and-transfer coordination. Combat Mode remains clinically and visually unchanged; the
+full operational assessment is restored after `Open & acknowledge`.
+
+All profile values and contacts are synthetic static configuration—not live bed availability,
+staffing, referral acceptance, or a completed transfer. Production must use authenticated,
+hospital-approved configuration plus real-time capability/occupancy and clinician-confirmed
+receiving-facility acceptance. The application must never delay stabilization or down-triage a
+patient because a capability is absent.
+
 ## Task 16: ResiliCare-local visit history and FHIR-shaped export
 
 The prototype now separates a stable `Patient` identity (`RC-P-016`) from individual triage

@@ -17,12 +17,15 @@ from resilicare import (  # noqa: E402
     FHIR_SHAPED_DISCLAIMER,
     HISTORY_SCOPE_LABEL,
     REASON_CODES,
+    assess_hospital_operations,
     build_fhir_shaped_bundle,
     combat_mode_state,
     critical_safety_badge,
     encounter_with_patient,
     initialize_history_store,
+    get_hospital_profile,
     load_simulated_patients,
+    load_hospital_profiles,
     patient_uid_for_source,
     previous_visits,
     read_audit_events,
@@ -92,12 +95,24 @@ def create_server(
     suggestions = build_demo_suggestions(project_root)
     patients = {item["patient_id"]: item for item in patient_list}
     queue_lock, queue_holder = Lock(), {"snapshot": build_queue_snapshot(patient_list, 1)}
+    profile_holder = {"profile_id": "urban_trauma_center"}
     audit_path = log_path or project_root / "data" / "audit_log.jsonl"
     history_runtime = initialize_history_store(
         project_root / "data" / "resilicare_history_seed.json",
         history_path or project_root / "data" / "resilicare_history_runtime.json",
     )
     page = (project_root / "demo" / "index.html").read_bytes()
+
+    def apply_profile(items, queue_length: int, profile_id: str) -> None:
+        for item in items:
+            item["hospital_operations"] = assess_hospital_operations(
+                item["patient"], item["ai_result"], profile_id, queue_length=queue_length,
+            )
+
+    def profile_summary(profile_id: str) -> dict:
+        profile = get_hospital_profile(profile_id)
+        return {"profile_id": profile_id, "display_name": profile["display_name"],
+                "facility_type": profile["facility_type"], "simulated": True}
 
     def persist_items(items) -> None:
         for item in items:
@@ -107,6 +122,9 @@ def create_server(
                 patient_uid=item["patient_uid"],
             )
 
+    apply_profile(suggestions.values(), queue_holder["snapshot"]["queue_length"], profile_holder["profile_id"])
+    apply_profile(queue_holder["snapshot"]["items"], queue_holder["snapshot"]["queue_length"], profile_holder["profile_id"])
+    queue_holder["snapshot"]["hospital_profile"] = profile_summary(profile_holder["profile_id"])
     persist_items(queue_holder["snapshot"]["items"])
 
     def queue_snapshot() -> dict:
@@ -115,10 +133,25 @@ def create_server(
 
     def replace_queue(multiplier: int, manually_declared: bool = False) -> dict:
         snapshot = build_queue_snapshot(patient_list, multiplier, manually_declared)
+        with queue_lock:
+            profile_id = profile_holder["profile_id"]
+        apply_profile(snapshot["items"], snapshot["queue_length"], profile_id)
+        apply_profile(suggestions.values(), snapshot["queue_length"], profile_id)
+        snapshot["hospital_profile"] = profile_summary(profile_id)
         persist_items(snapshot["items"])
         with queue_lock:
             queue_holder["snapshot"] = snapshot
         return snapshot
+
+    def switch_profile(profile_id: str) -> dict:
+        profile_summary(profile_id)  # validates before mutating state
+        with queue_lock:
+            snapshot = queue_holder["snapshot"]
+            profile_holder["profile_id"] = profile_id
+            apply_profile(snapshot["items"], snapshot["queue_length"], profile_id)
+            apply_profile(suggestions.values(), snapshot["queue_length"], profile_id)
+            snapshot["hospital_profile"] = profile_summary(profile_id)
+            return snapshot
 
     def current_suggestion(patient_id: str | None) -> dict | None:
         current = next((item for item in queue_snapshot()["items"] if item["patient_id"] == patient_id), None)
@@ -135,6 +168,14 @@ def create_server(
                 self._json(200, queue_snapshot())
             elif parsed.path == "/api/reasons":
                 self._json(200, REASON_CODES)
+            elif parsed.path == "/api/hospital-profiles":
+                table = load_hospital_profiles()
+                self._json(200, {
+                    "active_profile_id": profile_holder["profile_id"], "disclaimer": table["disclaimer"],
+                    "profiles": [{"profile_id": key, "display_name": value["display_name"],
+                                  "facility_type": value["facility_type"]}
+                                 for key, value in table["profiles"].items()],
+                })
             elif parsed.path == "/api/audit":
                 patient_id = parse_qs(parsed.query).get("patient_id", [None])[0]
                 self._json(200, read_audit_events(audit_path, patient_id=patient_id))
@@ -164,7 +205,7 @@ def create_server(
             path = urlparse(self.path).path
             if path not in {
                 "/api/overrides", "/api/routing-preview", "/api/surge/run", "/api/surge/reset",
-                "/api/surge/manual", "/api/combat/acknowledge",
+                "/api/surge/manual", "/api/combat/acknowledge", "/api/hospital-profile",
             }:
                 return self._json(404, {"error": "not found"})
             try:
@@ -184,6 +225,9 @@ def create_server(
                         raise ValueError("active must be boolean")
                     current = queue_snapshot()
                     return self._json(200, replace_queue(current["load_multiplier"], active))
+                if path == "/api/hospital-profile":
+                    profile_id = payload.get("profile_id", "")
+                    return self._json(200, switch_profile(profile_id))
                 suggestion = current_suggestion(payload.get("patient_id"))
                 if not suggestion:
                     return self._json(404, {"error": "unknown patient_id"})
@@ -254,8 +298,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    encounter_with_patient,
-    initialize_history_store,
-    patient_uid_for_source,
-    previous_visits,
-    record_history_override,

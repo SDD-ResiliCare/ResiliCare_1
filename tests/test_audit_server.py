@@ -78,6 +78,33 @@ class AuditServerTests(unittest.TestCase):
         self.assertIn("History from previous ResiliCare visits only", page)
         self.assertIn("Export as FHIR-shaped bundle", page)
         self.assertIn("not validated or transmitted to ABDM/EHR", page)
+        self.assertIn("Hospital profile · simulated", page)
+        self.assertIn("ESI unchanged", page)
+
+    def test_live_hospital_profile_swap_changes_operations_not_esi(self):
+        _, profiles = self.request("/api/hospital-profiles")
+        self.assertEqual(profiles["active_profile_id"], "urban_trauma_center")
+        self.assertEqual({item["profile_id"] for item in profiles["profiles"]},
+                         {"urban_trauma_center", "rural_clinic"})
+        _, urban = self.request("/api/queue")
+        urban_case = next(item for item in urban["items"] if item["source_patient_id"] == "PT-009")
+        self.assertEqual(urban_case["hospital_operations"]["status"], "LOCAL_CARE_AVAILABLE")
+        _, rural = self.request("/api/hospital-profile", "POST", {"profile_id": "rural_clinic"})
+        rural_case = next(item for item in rural["items"] if item["patient_id"] == urban_case["patient_id"])
+        self.assertEqual(rural_case["ai_result"], urban_case["ai_result"])
+        self.assertEqual(rural_case["queue"], urban_case["queue"])
+        self.assertEqual(rural_case["hospital_operations"]["status"], "TRANSFER_RECOMMENDED")
+        self.assertIn("general_surgery", rural_case["hospital_operations"]["unavailable_specialties"])
+        self.assertTrue(rural_case["hospital_operations"]["capacity_warning"])
+        self.assertTrue(rural_case["hospital_operations"]["clinical_priority_unchanged"])
+
+    def test_unknown_hospital_profile_is_rejected_without_changing_active_profile(self):
+        with self.assertRaises(urllib.error.HTTPError) as raised:
+            self.request("/api/hospital-profile", "POST", {"profile_id": "unknown"})
+        self.assertEqual(raised.exception.code, 400)
+        raised.exception.close()
+        _, profiles = self.request("/api/hospital-profiles")
+        self.assertEqual(profiles["active_profile_id"], "urban_trauma_center")
 
     def test_returning_patient_history_and_fhir_shaped_export(self):
         _, quiet = self.request("/api/queue")
