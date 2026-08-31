@@ -128,6 +128,8 @@ def score_with_confidence(
     return result
 
 
+import math
+
 def _validate_probabilities(values: Mapping[int | str, float] | None) -> dict[int, float]:
     if values is None:
         return {}
@@ -135,7 +137,7 @@ def _validate_probabilities(values: Mapping[int | str, float] | None) -> dict[in
         probabilities = {int(level): float(value) for level, value in values.items()}
     except (TypeError, ValueError) as exc:
         raise ValueError("class_probabilities must map ESI 1-5 to numeric values") from exc
-    if set(probabilities) != VALID_ESI or any(value < 0 or value > 1 for value in probabilities.values()):
+    if set(probabilities) != VALID_ESI or any(math.isnan(value) or value < 0 or value > 1 for value in probabilities.values()):
         raise ValueError("class_probabilities must contain one value from 0 to 1 for every ESI level")
     if abs(sum(probabilities.values()) - 1.0) > 1e-6:
         raise ValueError("class_probabilities must sum to 1")

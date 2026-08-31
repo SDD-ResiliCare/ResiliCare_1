@@ -79,23 +79,38 @@ def _passes_confidence_gate(text: str) -> bool:
     return True
 
 
+def _is_negated(text_lower: str, match_start: int) -> bool:
+    """Check if a match at `match_start` is negated within a 3-token backward window."""
+    prefix = text_lower[:match_start]
+    # Include apostrophes in words to keep "didn't", "don't" intact
+    prefix_tokens = re.findall(r"\b[\w']+\b|[.,!?;]", prefix)
+    
+    window = []
+    for token in reversed(prefix_tokens):
+        if re.match(r"[.,!?;]", token):
+            break
+        window.append(token)
+        if len(window) == 3:
+            break
+            
+    return any(neg in window for neg in NEGATION_TOKENS)
+
+
 def detect_acuity_with_negation(text: str) -> list[str]:
     """Match ESI red-flags but ignore any hit negated within a 3-token backward window."""
     text_lower = text.lower()
-    words = re.findall(r"\b\w+\b", text_lower)
     triggered = []
     for flag in RED_FLAGS:
-        phrase = next((p for p in flag["phrases"] if p in text_lower), None)
-        if not phrase:
-            continue
-        first_word = phrase.split()[0]
-        try:
-            idx = words.index(first_word)
-            window = words[max(0, idx - 3):idx]
-            negated = any(neg in window for neg in NEGATION_TOKENS)
-        except ValueError:
-            negated = False  # tokenizer split the phrase unexpectedly; fail open to the flag
-        if not negated:
+        flag_triggered = False
+        for phrase in flag["phrases"]:
+            matches = list(re.finditer(re.escape(phrase), text_lower))
+            for match in matches:
+                if not _is_negated(text_lower, match.start()):
+                    flag_triggered = True
+                    break
+            if flag_triggered:
+                break
+        if flag_triggered:
             triggered.append(flag["id"])
     return triggered
 
@@ -109,8 +124,11 @@ def extract_chief_complaint(text: str) -> Optional[str]:
     """
     text_lower = text.lower()
     for trigger_phrase, keywords in _COMPLAINT_KEYWORDS:
-        if any(keyword in text_lower for keyword in keywords):
-            return trigger_phrase
+        for keyword in keywords:
+            matches = list(re.finditer(re.escape(keyword), text_lower))
+            for match in matches:
+                if not _is_negated(text_lower, match.start()):
+                    return trigger_phrase
     return None
 
 

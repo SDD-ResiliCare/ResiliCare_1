@@ -124,10 +124,14 @@ def log_clinician_decision(
     if decision == "override" and not reason.strip():
         raise ValueError("an override requires a reason")
     direction = "no_change" if final_esi == displayed_esi else ("escalation" if final_esi < displayed_esi else "de_escalation")
+    displayed_rules = result.get("explanation_rule_ids")
+    if displayed_rules is None:
+        displayed_rules = result.get("matched_rule_ids", [])[:2]
+
     details = {
         "clinician_id": clinician_id, "decision": decision, "displayed_esi": displayed_esi,
         "final_esi": final_esi, "override_direction": direction, "reason": reason.strip() or None,
-        "provisional_esi": result.get("provisional_esi"), "matched_rule_ids": result.get("matched_rule_ids", []),
+        "provisional_esi": result.get("provisional_esi"), "matched_rule_ids": displayed_rules,
     }
     return append_audit_event(log_path, "clinician_triage_decision", patient_id, details)
 

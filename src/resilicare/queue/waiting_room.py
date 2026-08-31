@@ -115,7 +115,8 @@ def tick_waiting_room(
 
 
 def complete_reassessment(
-    entry: Mapping[str, Any], completed_at: datetime | str, clinician_id: str, *, log_path: str | Path | None = None
+    entry: Mapping[str, Any], completed_at: datetime | str, clinician_id: str, *, 
+    overridden_esi: int | None = None, log_path: str | Path | None = None
 ) -> dict[str, Any]:
     """Clear an active alert only after an identified clinician completes reassessment."""
     if not entry.get("reassessment_required") or not clinician_id.strip():
@@ -123,6 +124,12 @@ def complete_reassessment(
     timestamp, updated = _time(completed_at), dict(entry)
     if timestamp < _time(updated["last_alerted_at"]):
         raise ValueError("completed_at cannot precede the alert")
+        
+    if overridden_esi is not None:
+        if overridden_esi not in VALID_ESI:
+            raise ValueError("ESI must be from 1 to 5")
+        updated["current_esi"] = overridden_esi
+
     updated.update({
         "status": "WAITING", "reassessment_required": False, "queue_priority_boost": 0,
         "last_assessed_at": timestamp.isoformat(), "last_reassessed_by": clinician_id.strip(),

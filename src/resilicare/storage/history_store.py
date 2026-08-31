@@ -68,13 +68,13 @@ def upsert_current_encounter(
         decision = current.get("final_clinician_decision") if current else None
         encounter = {
             "encounter_id": encounter_id, "patient_uid": patient_uid, "source_patient_id": source_id,
-            "occurred_at": patient.get("arrival_timestamp"), "chief_complaint": patient.get("chief_complaint"),
+            "occurred_at": patient.get("arrived_at", patient.get("arrival_timestamp")), "chief_complaint": patient.get("chief_complaint"),
             "vitals": _vitals(patient),
             "suggested_esi": {key: ai_result.get(key) for key in (
                 "display_score", "point_estimate", "esi_set", "confidence_score", "confidence_label", "badge",
             )},
             "final_clinician_decision": decision or {"decision": "pending", "final_esi": None},
-            "safety_flags": [dict(safety_badge)], "synthetic": True,
+            "safety_flags": [dict(safety_badge)], "synthetic": True, "active_clone": True,
         }
         if current:
             store["encounters"][store["encounters"].index(current)] = encounter
@@ -86,7 +86,8 @@ def upsert_current_encounter(
 
 def previous_visits(path: str | Path, patient_uid: str, current_encounter_id: str | None = None) -> list[dict[str, Any]]:
     visits = [x for x in load_history_store(path)["encounters"]
-              if x.get("patient_uid") == patient_uid and x.get("encounter_id") != current_encounter_id]
+              if x.get("patient_uid") == patient_uid and x.get("encounter_id") != current_encounter_id
+              and not x.get("active_clone")]
     return sorted(visits, key=lambda x: x.get("occurred_at") or "", reverse=True)
 
 

@@ -29,6 +29,16 @@ class NegationAndRedFlagTests(unittest.TestCase):
     def test_hindi_phrase_variant_is_detected(self):
         self.assertEqual(detect_acuity_with_negation("saans nahi aa rahi hai"), ["cannot_breathe"])
 
+    def test_punctuation_breaks_negation_window(self):
+        # The comma should block the 'not' from negating 'chest pain'
+        flags = detect_acuity_with_negation("no, chest pain is present")
+        self.assertEqual(flags, ["chest_pain"])
+
+    def test_later_unnegated_occurrence_triggers_flag(self):
+        # "chest pain" is negated first, but un-negated second. It should trigger.
+        flags = detect_acuity_with_negation("no chest pain but later chest pain started")
+        self.assertEqual(flags, ["chest_pain"])
+
 
 class ComplaintExtractionTests(unittest.TestCase):
     def test_english_phrase_returns_canonical_trigger_phrase(self):
@@ -39,6 +49,9 @@ class ComplaintExtractionTests(unittest.TestCase):
 
     def test_no_match_returns_none(self):
         self.assertIsNone(extract_chief_complaint("mild headache since yesterday"))
+
+    def test_negation_awareness_rejects_negated_complaint(self):
+        self.assertIsNone(extract_chief_complaint("I do not have chest pain"))
 
     def test_extracted_complaint_feeds_the_existing_differential_table_unchanged(self):
         kiosk_result = process_kiosk_text("seene mein dard ho raha hai")
@@ -75,7 +88,7 @@ class ManualFallbackEntryPointTests(unittest.TestCase):
     def test_process_kiosk_text_matches_the_audio_pipeline_shape(self):
         """A clinician typing what was said should get the same result shape as the audio
         pipeline, without any audio, VAD, or ASR involved."""
-        result = process_kiosk_text("patient says I am not unconscious but pelvic pain is severe")
+        result = process_kiosk_text("patient says I am not unconscious, but pelvic pain is severe")
         self.assertEqual(result["clinical_acuity_red_flags"], [])
         self.assertEqual(result["extracted_complaint"], "pelvic pain")
         self.assertTrue(result["patient_alias"].startswith("Trauma-Unknown-"))

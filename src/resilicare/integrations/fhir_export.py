@@ -45,6 +45,13 @@ def build_fhir_shaped_bundle(patient: Mapping[str, Any], encounter: Mapping[str,
             )},
         ],
     }
+    
+    overridden_esi = decision.get("overridden_esi") or decision.get("final_esi")
+    if overridden_esi is not None and decision.get("decision") == "override":
+        encounter_resource["extension"].append(
+            {"url": "https://resilicare.local/overridden-esi", "valueInteger": int(overridden_esi)}
+        )
+
     entries = [{"resource": patient_resource}, {"resource": encounter_resource}]
     for key, (code, display, unit) in _OBSERVATIONS.items():
         value = encounter.get("vitals", {}).get(key)
