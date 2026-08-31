@@ -6,17 +6,22 @@ from .engine.safety import (
     log_provisional_result,
 )
 from .engine.confidence import load_confidence_config, score_with_confidence
-from .storage.audit import REASON_CODES, read_audit_events, record_clinician_override
+from .storage.audit import (
+    CLINICIAN_ROLES, REASON_CODES, compute_override_rates, read_audit_events,
+    record_clinician_override, redacted_compliance_events, validate_clinician_identity,
+    verify_audit_chain,
+)
 from .engine.explanations import build_score_explanation
 from .engine.differentials import load_ambiguous_presentation_table, match_ambiguous_presentations
 from .storage.history import load_missingness_config, prepare_history_context, weighted_risk_signal
 from .queue.waiting_room import complete_reassessment, create_waiting_entry, detect_vital_deterioration, load_waiting_room_config, tick_waiting_room
-from .engine.vitals import get_age_profile, load_thresholds, normalize_vitals, prepare_patient_vitals
+from .engine.vitals import get_age_profile, load_thresholds, normalize_vitals, prepare_patient_vitals, validate_threshold_provenance
 from .integrations.routing import VALID_SCHEMES, load_facility_table, suggest_scheme_route
 from .queue.surge import BASELINE_ARRIVALS_PER_WINDOW, COMBAT_MODE_QUEUE_THRESHOLD, SURGE_MULTIPLIER, load_simulated_patients, replay_arrivals
 from .queue.combat import combat_mode_state, critical_safety_badge, record_combat_acknowledgement
-from .storage.history_store import HISTORY_SCOPE_LABEL, encounter_with_patient, initialize_history_store, patient_uid_for_source, previous_visits, record_history_override, upsert_current_encounter
-from .integrations.fhir_export import FHIR_SHAPED_DISCLAIMER, build_fhir_shaped_bundle
+from .storage.confirmation import confirmation_status, pending_confirmation, record_clinician_confirmation
+from .storage.history_store import HISTORY_SCOPE_LABEL, encounter_with_patient, initialize_history_store, patient_uid_for_source, previous_visits, record_history_confirmation, record_history_override, upsert_current_encounter
+from .integrations.fhir_export import FHIR_SHAPED_DISCLAIMER, build_fhir_shaped_bundle, validate_fhir_shaped_bundle
 from .integrations.hospital_config import PROFILE_IDS, assess_hospital_operations, get_hospital_profile, load_hospital_profiles
 
 x = [
@@ -28,6 +33,7 @@ x = [
     "load_thresholds",
     "normalize_vitals",
     "prepare_patient_vitals",
+    "validate_threshold_provenance",
     "load_confidence_config",
     "score_with_confidence",
     "load_missingness_config",
@@ -40,8 +46,16 @@ x = [
     "tick_waiting_room",
     "complete_reassessment",
     "REASON_CODES",
+    "CLINICIAN_ROLES",
     "read_audit_events",
     "record_clinician_override",
+    "compute_override_rates",
+    "verify_audit_chain",
+    "redacted_compliance_events",
+    "validate_clinician_identity",
+    "pending_confirmation",
+    "confirmation_status",
+    "record_clinician_confirmation",
     "build_score_explanation",
     "load_ambiguous_presentation_table",
     "match_ambiguous_presentations",
@@ -63,8 +77,10 @@ x = [
     "upsert_current_encounter",
     "previous_visits",
     "record_history_override",
+    "record_history_confirmation",
     "encounter_with_patient",
     "build_fhir_shaped_bundle",
+    "validate_fhir_shaped_bundle",
     "PROFILE_IDS",
     "load_hospital_profiles",
     "get_hospital_profile",

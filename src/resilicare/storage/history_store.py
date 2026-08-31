@@ -71,7 +71,7 @@ def upsert_current_encounter(
             "occurred_at": patient.get("arrived_at", patient.get("arrival_timestamp")), "chief_complaint": patient.get("chief_complaint"),
             "vitals": _vitals(patient),
             "suggested_esi": {key: ai_result.get(key) for key in (
-                "display_score", "point_estimate", "esi_set", "confidence_score", "confidence_label", "badge",
+                "display_score", "point_estimate", "esi_set", "confidence_score", "confidence_label", "badge", "explanation_text",
             )},
             "final_clinician_decision": decision or {"decision": "pending", "final_esi": None},
             "safety_flags": [dict(safety_badge)], "synthetic": True, "active_clone": True,
@@ -101,8 +101,25 @@ def record_history_override(path: str | Path, encounter_id: str, event: Mapping[
             raise ValueError("unknown encounter_id in local history")
         encounter["final_clinician_decision"] = {
             "decision": "override", "final_esi": event["overridden_esi"],
-            "clinician_id": event["clinician_id"], "decided_at": event["timestamp"],
+            "clinician_id": event["clinician_id"], "clinician_role": event.get("clinician_role"), "decided_at": event["timestamp"],
             "reason": event["reason"], "audit_event_id": event["event_id"],
+        }
+        _write_store(target, store)
+        return encounter
+
+
+def record_history_confirmation(path: str | Path, encounter_id: str, event: Mapping[str, Any]) -> dict[str, Any]:
+    """Persist the accepted canonical suggestion without mutating the audit ledger."""
+    target = Path(path)
+    with _LOCK:
+        store = load_history_store(target)
+        encounter = next((x for x in store["encounters"] if x["encounter_id"] == encounter_id), None)
+        if encounter is None:
+            raise ValueError("unknown encounter_id in local history")
+        encounter["final_clinician_decision"] = {
+            "decision": "accepted", "final_esi": event["confirmed_esi"],
+            "clinician_id": event["clinician_id"], "clinician_role": event["clinician_role"],
+            "decided_at": event["timestamp"], "audit_event_id": event["event_id"],
         }
         _write_store(target, store)
         return encounter

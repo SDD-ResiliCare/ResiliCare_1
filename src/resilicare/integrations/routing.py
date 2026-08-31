@@ -25,6 +25,7 @@ def suggest_scheme_route(
     patient: Mapping[str, Any], confirmed_esi: int, *, clinician_confirmed: bool,
     safety_result: Mapping[str, Any] | None = None,
     confidence_result: Mapping[str, Any] | None = None,
+    operational_context: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Suggest a financial route only after clinical safety and uncertainty gates pass."""
     scheme = patient.get("scheme")
@@ -46,6 +47,7 @@ def suggest_scheme_route(
         "simulated_scheme_data": True, "live_nhcx_integration": False,
         "disclaimer": load_facility_table()["disclaimer"], "clinical_priority_unchanged": True,
         "blockers": list(dict.fromkeys(blockers)), "suggestions": [], "recommended_route": None,
+        "operational_context": _operational_context(operational_context),
     }
     if confirmed_esi not in {4, 5}:
         return result | {"status": "NOT_LOW_ACUITY", "message": "Alternate financial routing is limited to clinician-confirmed ESI 4/5."}
@@ -71,4 +73,25 @@ def suggest_scheme_route(
         "status": "ROUTE_SUGGESTED" if suggestions else "NO_MATCHING_FACILITY",
         "message": "Simulated alternate facility options found." if suggestions else "No simulated facility accepts this scheme.",
         "suggestions": suggestions, "recommended_route": suggestions[0] if suggestions else None,
+        "reasoning": _route_reasoning(suggestions[0], scheme, operational_context) if suggestions else None,
+    }
+
+
+def _operational_context(context: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    if not context:
+        return None
+    return {key: context.get(key) for key in (
+        "profile_id", "profile_name", "queue_length", "queue_capacity_warning_at", "capacity_warning",
+    )}
+
+
+def _route_reasoning(route: Mapping[str, Any], scheme: str, context: Mapping[str, Any] | None) -> dict[str, Any]:
+    return {
+        "scheme": f"{scheme} is accepted by the suggested fictional facility.",
+        "distance": f"Simulated distance: {route['simulated_distance_km']} km.",
+        "current_hospital_capacity": (
+            "Current simulated hospital capacity is under its warning threshold."
+            if not context or not context.get("capacity_warning") else
+            "Current simulated hospital queue has reached its capacity-warning threshold."
+        ),
     }

@@ -13,7 +13,22 @@ VITALS = ("hr_bpm", "rr_bpm", "spo2_pct", "sbp_mmhg", "temp_c")
 
 @lru_cache(maxsize=1)
 def load_thresholds() -> dict[str, Any]:
-    return json.loads((Path(__file__).parent.parent / "config" / "vital_thresholds.json").read_text(encoding="utf-8"))
+    table = json.loads((Path(__file__).parent.parent / "config" / "vital_thresholds.json").read_text(encoding="utf-8"))
+    validate_threshold_provenance(table)
+    return table
+
+
+def validate_threshold_provenance(table: dict[str, Any]) -> None:
+    """Require every configured threshold family to link to a named review source."""
+    sources, metric_sources = table.get("sources", {}), table.get("metric_sources", {})
+    if not isinstance(sources, dict) or not sources or not all(isinstance(url, str) and url.startswith("https://") for url in sources.values()):
+        raise ValueError("vital thresholds require HTTPS source links")
+    required = {"pediatric_hr_rr_sbp", "pediatric_temp_spo2", "adult_and_geriatric"}
+    if set(metric_sources) != required or any(source not in sources for source in metric_sources.values()):
+        raise ValueError("every vital threshold family must map to a configured source")
+    profiles = table.get("profiles") or []
+    if not profiles or any(not profile.get("anchor") for profile in profiles):
+        raise ValueError("every age profile requires a source anchor")
 
 
 def get_age_profile(age_years: float | int) -> dict[str, Any]:

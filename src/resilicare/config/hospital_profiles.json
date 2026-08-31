@@ -11,6 +11,7 @@
       "icu_available": true,
       "transfer_capability": {"outbound_enabled": true, "transfer_first_for_unsupported": false},
       "queue_capacity_warning_at": 30,
+      "combat_mode_queue_threshold": 20,
       "care_areas": {"1": "Resuscitation bay", "2": "High-acuity monitored bay", "3": "Monitored assessment", "4": "Fast-track", "5": "Ambulatory care"},
       "transfer_stabilization_area": "Resuscitation/transfer bay",
       "local_escalation_contacts": {"default": "URBAN_DUTY_LEAD_SIM", "cardiology": "CARDIOLOGY_REGISTRAR_SIM", "general_surgery": "SURGERY_REGISTRAR_SIM", "pediatrics": "PEDIATRIC_TEAM_SIM", "trauma": "TRAUMA_TEAM_SIM", "transfer_coordination": "URBAN_TRANSFER_DESK_SIM"}
@@ -23,6 +24,7 @@
       "icu_available": false,
       "transfer_capability": {"outbound_enabled": true, "transfer_first_for_unsupported": true},
       "queue_capacity_warning_at": 6,
+      "combat_mode_queue_threshold": 6,
       "care_areas": {"1": "Emergency stabilization bay", "2": "Emergency stabilization bay", "3": "Observation bed", "4": "Clinic treatment area", "5": "Outpatient desk"},
       "transfer_stabilization_area": "Emergency stabilization and transfer area",
       "local_escalation_contacts": {"default": "RURAL_MEDICAL_OFFICER_SIM", "transfer_coordination": "DISTRICT_TRANSFER_COORDINATOR_SIM"}

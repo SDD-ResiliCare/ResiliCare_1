@@ -52,6 +52,13 @@ def build_fhir_shaped_bundle(patient: Mapping[str, Any], encounter: Mapping[str,
             {"url": "https://resilicare.local/overridden-esi", "valueInteger": int(overridden_esi)}
         )
 
+    suggested = encounter["suggested_esi"]
+    encounter_resource["extension"].extend([
+        {"url": "https://resilicare.local/confidence-score", "valueDecimal": suggested.get("confidence_score")},
+        {"url": "https://resilicare.local/confidence-label", "valueString": suggested.get("confidence_label") or "Unknown"},
+        {"url": "https://resilicare.local/score-explanation", "valueString": suggested.get("explanation_text") or "Not recorded"},
+    ])
+
     entries = [{"resource": patient_resource}, {"resource": encounter_resource}]
     for key, (code, display, unit) in _OBSERVATIONS.items():
         value = encounter.get("vitals", {}).get(key)
@@ -66,9 +73,38 @@ def build_fhir_shaped_bundle(patient: Mapping[str, Any], encounter: Mapping[str,
             "effectiveDateTime": encounter.get("occurred_at"),
             "valueQuantity": {"value": value, "unit": unit, "system": "http://unitsofmeasure.org", "code": unit},
         }})
-    return {
+    bundle = {
         "resourceType": "Bundle", "type": "collection", "timestamp": encounter.get("occurred_at"),
         "identifier": {"system": "urn:resilicare:fhir-shaped-bundle", "value": f"bundle-{encounter_id}"},
         "extension": [{"url": "https://resilicare.local/fhir-shaped-disclaimer", "valueString": FHIR_SHAPED_DISCLAIMER}],
         "entry": entries,
     }
+    validate_fhir_shaped_bundle(bundle)
+    return bundle
+
+
+def validate_fhir_shaped_bundle(bundle: Mapping[str, Any]) -> None:
+    """Check the prototype's required FHIR R4-shaped structural invariants.
+
+    This is intentionally not a full conformance validator and does not alter the
+    prototype disclaimer.
+    """
+    if bundle.get("resourceType") != "Bundle" or bundle.get("type") != "collection":
+        raise ValueError("FHIR-shaped export must be a collection Bundle")
+    entries = bundle.get("entry")
+    if not isinstance(entries, list) or len(entries) < 2:
+        raise ValueError("FHIR-shaped export requires Patient and Encounter entries")
+    resources = [entry.get("resource") for entry in entries if isinstance(entry, Mapping)]
+    patient = next((item for item in resources if item and item.get("resourceType") == "Patient"), None)
+    encounter = next((item for item in resources if item and item.get("resourceType") == "Encounter"), None)
+    if not patient or not patient.get("id") or not encounter or not encounter.get("id"):
+        raise ValueError("FHIR-shaped export requires identified Patient and Encounter resources")
+    if encounter.get("subject", {}).get("reference") != f"Patient/{patient['id']}":
+        raise ValueError("Encounter subject must reference the exported Patient")
+    for observation in (item for item in resources if item and item.get("resourceType") == "Observation"):
+        if observation.get("status") != "final" or not observation.get("code"):
+            raise ValueError("Observation entries require final status and coding")
+        if observation.get("subject", {}).get("reference") != f"Patient/{patient['id']}":
+            raise ValueError("Observation subject must reference the exported Patient")
+        if observation.get("encounter", {}).get("reference") != f"Encounter/{encounter['id']}":
+            raise ValueError("Observation encounter must reference the exported Encounter")

@@ -25,7 +25,7 @@ class CombatModeTests(unittest.TestCase):
         badge = critical_safety_badge(ai)
         with tempfile.TemporaryDirectory() as directory:
             log = Path(directory) / "audit.jsonl"
-            event = record_combat_acknowledgement(log, patient_id="Q-001", clinician_id="NURSE-7", ai_result=ai, surge_state=surge, safety_badge=badge)
+            event = record_combat_acknowledgement(log, patient_id="Q-001", clinician_id="NURSE-7", clinician_role="RN", ai_result=ai, surge_state=surge, safety_badge=badge)
             self.assertEqual(read_audit_events(log), [event])
         self.assertEqual(event["event_type"], "combat_mode_acknowledgement")
         self.assertEqual(event["current_ai"]["confidence_score"], 0.91)
@@ -34,7 +34,7 @@ class CombatModeTests(unittest.TestCase):
     def test_acknowledgement_is_rejected_outside_combat_mode(self):
         with tempfile.TemporaryDirectory() as directory, self.assertRaises(ValueError):
             record_combat_acknowledgement(
-                Path(directory) / "audit.jsonl", patient_id="Q-001", clinician_id="NURSE-7",
+                Path(directory) / "audit.jsonl", patient_id="Q-001", clinician_id="NURSE-7", clinician_role="RN",
                 ai_result={"point_estimate": 3, "confidence_score": 0.8},
                 surge_state=combat_mode_state(7), safety_badge={"level": "STANDARD", "label": "None", "reason": "None"},
             )

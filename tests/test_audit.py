@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from resilicare import append_audit_event, read_audit_events, record_clinician_override
+from resilicare import append_audit_event, read_audit_events, record_clinician_override, verify_audit_chain
 
 
 def ai_result(point=3):
@@ -24,7 +24,7 @@ class OverrideAuditTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             log = Path(directory) / "audit.jsonl"
             event = record_clinician_override(
-                log, patient_id="PT-009", clinician_id="NURSE-7", original_ai_result=ai_result(),
+                log, patient_id="PT-009", clinician_id="NURSE-7", clinician_role="RN", original_ai_result=ai_result(),
                 overridden_esi=2, reason_code="CLINICAL_DETERIORATION", reason_text="New diaphoresis and increasing pain.",
             )
             stored = read_audit_events(log)[0]
@@ -35,6 +35,7 @@ class OverrideAuditTests(unittest.TestCase):
         self.assertEqual(stored["original_ai"]["ambiguous_presentations"][0]["pathway_id"], "TEST_PATHWAY")
         self.assertEqual(stored["overridden_esi"], 2)
         self.assertEqual(stored["override_direction"], "escalation")
+        self.assertEqual(stored["clinician_role"], "RN")
         self.assertTrue(stored["event_id"])
         self.assertTrue(stored["timestamp"].endswith("+00:00"))
 
@@ -44,14 +45,14 @@ class OverrideAuditTests(unittest.TestCase):
             for code, text in (("", "detail"), ("OTHER", ""), ("INVALID", "detail")):
                 with self.subTest(code=code, text=text), self.assertRaises(ValueError):
                     record_clinician_override(
-                        log, patient_id="PT-009", clinician_id="N1", original_ai_result=ai_result(),
+                        log, patient_id="PT-009", clinician_id="N1", clinician_role="RN", original_ai_result=ai_result(),
                         overridden_esi=2, reason_code=code, reason_text=text,
                     )
 
     def test_same_score_is_not_an_override(self):
         with tempfile.TemporaryDirectory() as directory, self.assertRaises(ValueError):
             record_clinician_override(
-                Path(directory) / "audit.jsonl", patient_id="PT-009", clinician_id="N1",
+                Path(directory) / "audit.jsonl", patient_id="PT-009", clinician_id="N1", clinician_role="RN",
                 original_ai_result=ai_result(3), overridden_esi=3,
                 reason_code="AI_DISAGREEMENT", reason_text="No score change.",
             )
@@ -65,6 +66,20 @@ class OverrideAuditTests(unittest.TestCase):
             filtered = read_audit_events(log, patient_id="PT-2")
         self.assertEqual(len(lines), 2)
         self.assertEqual(filtered[0]["event_type"], "second")
+        self.assertTrue(verify_audit_chain(log)["valid"])
+
+    def test_role_is_required_and_hash_chain_detects_tampering(self):
+        with tempfile.TemporaryDirectory() as directory:
+            log = Path(directory) / "audit.jsonl"
+            with self.assertRaises(ValueError):
+                record_clinician_override(
+                    log, patient_id="PT-009", clinician_id="N1", clinician_role="ADMIN", original_ai_result=ai_result(),
+                    overridden_esi=2, reason_code="OTHER", reason_text="Role is not clinical.",
+                )
+            append_audit_event(log, "first", "PT-1", {"value": 1})
+            event = read_audit_events(log)[0]
+            log.write_text(json.dumps(event | {"value": 2}) + "\n", encoding="utf-8")
+            self.assertFalse(verify_audit_chain(log)["valid"])
 
     def test_reserved_ledger_fields_cannot_be_overwritten(self):
         with tempfile.TemporaryDirectory() as directory, self.assertRaises(ValueError):

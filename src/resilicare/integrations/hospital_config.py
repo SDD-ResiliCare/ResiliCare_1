@@ -21,6 +21,8 @@ def load_hospital_profiles() -> dict[str, Any]:
             raise ValueError(f"{profile_id} bed counts must be non-negative integers")
         if type(profile.get("icu_available")) is not bool or profile["icu_available"] != (beds["icu"] > 0):
             raise ValueError(f"{profile_id} ICU capability conflicts with ICU bed count")
+        if type(profile.get("combat_mode_queue_threshold")) is not int or profile["combat_mode_queue_threshold"] < 1:
+            raise ValueError(f"{profile_id} requires a positive Combat Mode queue threshold")
         if not isinstance(profile.get("available_specialties"), list) or not profile.get("local_escalation_contacts"):
             raise ValueError(f"{profile_id} requires specialties and escalation contacts")
     return table
@@ -89,6 +91,7 @@ def assess_hospital_operations(
         "icu_available": profile["icu_available"], "transfer_recommended": transfer,
         "transfer_capability": dict(profile["transfer_capability"]), "capacity_warning": capacity_warning,
         "queue_length": queue_length, "queue_capacity_warning_at": profile["queue_capacity_warning_at"],
+        "combat_mode_queue_threshold": profile["combat_mode_queue_threshold"],
         "bed_counts": dict(profile["bed_counts"]), "suggested_care_area": care_area,
         "escalation_contact": contact, "alerts": alerts, "recommendation": recommendation,
         "simulated_profile": True, "disclaimer": load_hospital_profiles()["disclaimer"],

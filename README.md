@@ -251,4 +251,44 @@ venues, so Task 12 is built around pre-recorded clips and a manual fallback.
 - ResiliCare team (Samosa Driven Development) —
   [github.com/SDD-ResiliCare](https://github.com/SDD-ResiliCare)
 
-Replace this section with individual maintainer names and handles before publishing.
+Replace this section with individual maintainer names and handles before publishing.## Usage (Headless API)
+
+The monolithic frontend UI has been removed to keep this prototype strictly as a headless API and rules engine.
+
+Start the API server on port 8000:
+```bash
+$env:PYTHONPATH = "src"  # PowerShell
+# or
+export PYTHONPATH="src"  # Bash/Zsh
+
+python demo/backend/audit_server.py
+```
+
+### Available API Endpoints
+
+The API is logically separated into two distinct domains: one for hospital staff (nurses/admins) and one for patient-facing applications (kiosks/apps).
+
+#### Hospital-Facing API (Staff & Triage)
+**GET:**
+* `/api/hospital/suggestions`: Returns the current queue of patients and their AI-suggested ESI scores.
+* `/api/hospital/queue`: Returns global queue stats, load multiplier, and active hospital profile.
+* `/api/hospital/audit`: Returns the full append-only audit log of system events.
+* `/api/hospital/profiles`: Returns available simulated hospital profiles and capabilities.
+* `/api/hospital/fhir-export?encounter_id=X`: Returns a simulated FHIR-shaped export bundle for a given encounter.
+* `/api/hospital/override-rates`: (Task 15) Returns the rolling analytical override rate for each safety rule, highlighting de-escalations.
+
+**POST:**
+* `/api/hospital/surge/run`: Triggers a simulated 3x patient surge to test Combat Mode queue management.
+* `/api/hospital/surge/manual`: Manually toggle Combat Mode on/off.
+* `/api/hospital/overrides`: Submit a clinician override decision (escalation/de-escalation) which updates the queue and appends to the audit ledger.
+
+#### Patient-Facing API (Self-Service & Kiosk)
+**GET:**
+* `/api/patient/history?patient_uid=X`: Returns the local multi-visit history for a specific patient.
+* `/api/patient/kiosk-status`: Returns the availability of the experimental voice ASR models.
+
+**POST:**
+* `/api/patient/kiosk-text`: Submit a transcript for Multilingual NLP Intake triage (Task 12).
+* `/api/patient/routing-preview`: Previews simulated scheme-aware routing (insurance/financial routing) to alternate facilities for low-acuity cases (Task 13).
+
+

@@ -157,6 +157,9 @@ def _append_jsonl(log_path: str | Path, event: dict[str, Any]) -> dict[str, Any]
     path = Path(log_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with _AUDIT_LOCK, path.open("a", encoding="utf-8") as stream:
+        previous_hash = _last_event_hash(path)
+        event["previous_event_hash"] = previous_hash
+        event["event_hash"] = _event_hash(previous_hash, event)
         stream.write(json.dumps(event, separators=(",", ":")) + "\n")
         stream.flush()
     return event
@@ -164,3 +167,21 @@ def _append_jsonl(log_path: str | Path, event: dict[str, Any]) -> dict[str, Any]
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _last_event_hash(path: Path) -> str | None:
+    if not path.exists() or not path.stat().st_size:
+        return None
+    line = path.read_text(encoding="utf-8").splitlines()[-1]
+    try:
+        return json.loads(line).get("event_hash")
+    except json.JSONDecodeError as exc:
+        raise ValueError("cannot append to an audit log containing invalid JSON") from exc
+
+
+def _event_hash(previous_hash: str | None, event: dict[str, Any]) -> str:
+    import hashlib
+
+    payload_event = {key: value for key, value in event.items() if key not in {"event_hash", "previous_event_hash"}}
+    payload = json.dumps(payload_event, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(f"{previous_hash or ''}|{payload}".encode("utf-8")).hexdigest()
