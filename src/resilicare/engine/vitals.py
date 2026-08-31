@@ -13,7 +13,7 @@ VITALS = ("hr_bpm", "rr_bpm", "spo2_pct", "sbp_mmhg", "temp_c")
 
 @lru_cache(maxsize=1)
 def load_thresholds() -> dict[str, Any]:
-    return json.loads(Path(__file__).with_name("vital_thresholds.json").read_text(encoding="utf-8"))
+    return json.loads((Path(__file__).parent.parent / "config" / "vital_thresholds.json").read_text(encoding="utf-8"))
 
 
 def get_age_profile(age_years: float | int) -> dict[str, Any]:

@@ -8,7 +8,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
-sys.path.insert(0, str(ROOT / "demo"))
+sys.path.insert(0, str(ROOT / "demo" / "backend"))
 
 from audit_server import create_server  # noqa: E402
 
@@ -65,21 +65,24 @@ class AuditServerTests(unittest.TestCase):
     def test_page_contains_override_control_and_log_view(self):
         with urllib.request.urlopen(self.base + "/") as response:
             page = response.read().decode()
-        self.assertIn("Override AI suggestion", page)
-        self.assertIn("Audit log", page)
-        self.assertIn("Clinical rationale", page)
-        self.assertIn("explanation", page)
-        self.assertIn("Mandatory safety workup", page)
-        self.assertIn("Simulated scheme data — a live NHCX integration would replace this lookup table in production.", page)
-        self.assertIn("Demo: confirm ESI & show route", page)
-        self.assertIn("Open & acknowledge", page)
-        self.assertIn("Run 3× surge", page)
-        self.assertIn("full patient detail", page)
-        self.assertIn("History from previous ResiliCare visits only", page)
-        self.assertIn("Export as FHIR-shaped bundle", page)
-        self.assertIn("not validated or transmitted to ABDM/EHR", page)
-        self.assertIn("Hospital profile · simulated", page)
-        self.assertIn("ESI unchanged", page)
+        with urllib.request.urlopen(self.base + "/app.js") as response:
+            js = response.read().decode()
+        content = page + js
+        self.assertIn("Override AI suggestion", content)
+        self.assertIn("Audit log", content)
+        self.assertIn("Clinical rationale", content)
+        self.assertIn("explanation", content)
+        self.assertIn("Mandatory safety workup", content)
+        self.assertIn("Simulated scheme data — a live NHCX integration would replace this lookup table in production.", content)
+        self.assertIn("Demo: confirm ESI & show route", content)
+        self.assertIn("Open & acknowledge", content)
+        self.assertIn("Run 3× surge", content)
+        self.assertIn("full patient detail", content)
+        self.assertIn("History from previous ResiliCare visits only", content)
+        self.assertIn("Export as FHIR-shaped bundle", content)
+        self.assertIn("not validated or transmitted to ABDM/EHR", content)
+        self.assertIn("Hospital profile · simulated", content)
+        self.assertIn("ESI unchanged", content)
 
     def test_live_hospital_profile_swap_changes_operations_not_esi(self):
         _, profiles = self.request("/api/hospital-profiles")

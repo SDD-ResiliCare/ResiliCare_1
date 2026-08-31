@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from .waiting_room import create_waiting_entry, tick_waiting_room
+from resilicare.queue.waiting_room import create_waiting_entry, tick_waiting_room
 
 BASELINE_ARRIVALS_PER_WINDOW = 7
 SURGE_MULTIPLIER = 3

@@ -11,7 +11,7 @@ from typing import Any, Mapping
 
 @lru_cache(maxsize=1)
 def load_ambiguous_presentation_table() -> dict[str, Any]:
-    table = json.loads(Path(__file__).with_name("ambiguous_presentations.json").read_text(encoding="utf-8"))
+    table = json.loads((Path(__file__).parent.parent / "config" / "ambiguous_presentations.json").read_text(encoding="utf-8"))
     if table.get("schema_version") != 1 or not table.get("entries"):
         raise ValueError("ambiguous-presentation table must contain versioned entries")
     return table

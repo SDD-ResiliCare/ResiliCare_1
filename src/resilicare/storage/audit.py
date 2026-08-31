@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
-from .safety import append_audit_event
+from resilicare.engine.safety import append_audit_event
 
 REASON_CODES = {
     "CLINICAL_DETERIORATION": "Clinical deterioration",

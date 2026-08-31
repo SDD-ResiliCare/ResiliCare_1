@@ -11,7 +11,7 @@ from typing import Any, Mapping
 
 @lru_cache(maxsize=1)
 def load_missingness_config() -> dict[str, Any]:
-    return json.loads(Path(__file__).with_name("missingness_config.json").read_text(encoding="utf-8"))
+    return json.loads((Path(__file__).parent.parent / "config" / "missingness_config.json").read_text(encoding="utf-8"))
 
 
 def prepare_history_context(

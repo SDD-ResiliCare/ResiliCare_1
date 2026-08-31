@@ -11,16 +11,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Mapping
 
-from .explanations import build_score_explanation
-from .history import prepare_history_context
-from .safety import VITAL_FIELDS, apply_safety_ceiling, evaluate_safety_rules
+from resilicare.engine.explanations import build_score_explanation
+from resilicare.storage.history import prepare_history_context
+from resilicare.engine.safety import VITAL_FIELDS, apply_safety_ceiling, evaluate_safety_rules
 
 VALID_ESI = set(range(1, 6))
 
 
 @lru_cache(maxsize=1)
 def load_confidence_config() -> dict[str, Any]:
-    return json.loads(Path(__file__).with_name("confidence_config.json").read_text(encoding="utf-8"))
+    return json.loads((Path(__file__).parent.parent / "config" / "confidence_config.json").read_text(encoding="utf-8"))
 
 
 def score_with_confidence(

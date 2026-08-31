@@ -9,8 +9,8 @@ from threading import Lock
 from typing import Any, Iterable
 from uuid import uuid4
 
-from .differentials import match_ambiguous_presentations
-from .vitals import prepare_patient_vitals
+from resilicare.engine.differentials import match_ambiguous_presentations
+from resilicare.engine.vitals import prepare_patient_vitals
 
 VITAL_FIELDS = ("hr_bpm", "rr_bpm", "spo2_pct", "sbp_mmhg", "dbp_mmhg", "temp_c")
 VALID_ESI = range(1, 6)

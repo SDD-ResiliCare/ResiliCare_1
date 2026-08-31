@@ -7,15 +7,15 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Mapping
 
-from .confidence import score_with_confidence
-from .safety import evaluate_safety_rules
+from resilicare.engine.confidence import score_with_confidence
+from resilicare.engine.safety import evaluate_safety_rules
 
 VALID_SCHEMES = {"PM-JAY", "ESIC", "Private Insurer X", "Self-pay"}
 
 
 @lru_cache(maxsize=1)
 def load_facility_table() -> dict[str, Any]:
-    table = json.loads(Path(__file__).with_name("facilities.json").read_text(encoding="utf-8"))
+    table = json.loads((Path(__file__).parent.parent / "config" / "facilities.json").read_text(encoding="utf-8"))
     if not table.get("simulated_data") or not table.get("fictional_facilities") or table.get("live_nhcx_integration"):
         raise ValueError("facility table must remain explicitly simulated, fictional, and offline")
     return table

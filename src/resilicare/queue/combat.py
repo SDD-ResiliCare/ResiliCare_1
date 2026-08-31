@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
-from .safety import append_audit_event
-from .surge import COMBAT_MODE_QUEUE_THRESHOLD
+from resilicare.engine.safety import append_audit_event
+from resilicare.queue.surge import COMBAT_MODE_QUEUE_THRESHOLD
 
 
 def combat_mode_state(queue_length: int, *, manually_declared: bool = False) -> dict[str, Any]:

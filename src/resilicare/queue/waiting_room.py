@@ -8,16 +8,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
 
-from .confidence import score_with_confidence
-from .safety import VALID_ESI, VITAL_FIELDS, append_audit_event, evaluate_safety_rules
-from .vitals import VITALS, normalize_vitals
+from resilicare.engine.confidence import score_with_confidence
+from resilicare.engine.safety import VALID_ESI, VITAL_FIELDS, append_audit_event, evaluate_safety_rules
+from resilicare.engine.vitals import VITALS, normalize_vitals
 
 Rescorer = Callable[[dict[str, Any], int], int]
 
 
 @lru_cache(maxsize=1)
 def load_waiting_room_config() -> dict[str, Any]:
-    return json.loads(Path(__file__).with_name("waiting_room_config.json").read_text(encoding="utf-8"))
+    return json.loads((Path(__file__).parent.parent / "config" / "waiting_room_config.json").read_text(encoding="utf-8"))
 
 
 def create_waiting_entry(patient: Mapping[str, Any], current_esi: int, entered_at: datetime | str) -> dict[str, Any]:

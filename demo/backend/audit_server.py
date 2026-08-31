@@ -11,7 +11,7 @@ from pathlib import Path
 from threading import Lock
 from urllib.parse import parse_qs, urlparse
 
-PROJECT_ROOT = Path(__file__).parents[1]
+PROJECT_ROOT = Path(__file__).parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from resilicare import (  # noqa: E402
@@ -42,7 +42,7 @@ from resilicare import (  # noqa: E402
 # EXPERIMENTAL Task 12 spike, not part of the clinical scoring path — see nlp_kiosk.py's module
 # docstring and README's "Task 12" section. Imported explicitly (not via resilicare's __all__)
 # so this stays visibly opt-in; the text pipeline it exposes needs no ASR/torch/spaCy deps.
-from resilicare.nlp_kiosk import process_kiosk_text, resolve_kiosk_chief_complaint  # noqa: E402
+from resilicare.nlp import process_kiosk_text, resolve_kiosk_chief_complaint  # noqa: E402
 
 
 def _kiosk_differential_preview(kiosk_result: dict) -> list[dict]:
@@ -128,7 +128,7 @@ def create_server(
         project_root / "data" / "resilicare_history_seed.json",
         history_path or project_root / "data" / "resilicare_history_runtime.json",
     )
-    page = (project_root / "demo" / "index.html").read_bytes()
+    
 
     def apply_profile(items, queue_length: int, profile_id: str) -> None:
         for item in items:
@@ -187,57 +187,41 @@ def create_server(
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             parsed = urlparse(self.path)
-            if parsed.path == "/":
-                self._send(200, page, "text/html; charset=utf-8")
-            elif parsed.path == "/api/suggestions":
-                self._json(200, list(suggestions.values()))
-            elif parsed.path == "/api/queue":
-                self._json(200, queue_snapshot())
-            elif parsed.path == "/api/reasons":
-                self._json(200, REASON_CODES)
-            elif parsed.path == "/api/hospital-profiles":
-                table = load_hospital_profiles()
-                self._json(200, {
-                    "active_profile_id": profile_holder["profile_id"], "disclaimer": table["disclaimer"],
-                    "profiles": [{"profile_id": key, "display_name": value["display_name"],
-                                  "facility_type": value["facility_type"]}
-                                 for key, value in table["profiles"].items()],
-                })
-            elif parsed.path == "/api/audit":
-                patient_id = parse_qs(parsed.query).get("patient_id", [None])[0]
-                self._json(200, read_audit_events(audit_path, patient_id=patient_id))
-            elif parsed.path == "/api/history":
-                query = parse_qs(parsed.query)
-                patient_uid = query.get("patient_uid", [""])[0]
-                current_id = query.get("current_encounter_id", [None])[0]
-                if not patient_uid:
-                    return self._json(400, {"error": "patient_uid is required"})
-                self._json(200, {
-                    "label": HISTORY_SCOPE_LABEL, "patient_uid": patient_uid,
-                    "visits": previous_visits(history_runtime, patient_uid, current_id),
-                    "complete_ehr_history": False,
-                })
-            elif parsed.path == "/api/kiosk/status":
-                self._json(200, _kiosk_audio_status())
-            elif parsed.path == "/api/fhir-export":
-                encounter_id = parse_qs(parsed.query).get("encounter_id", [""])[0]
-                try:
-                    patient, encounter = encounter_with_patient(history_runtime, encounter_id)
-                except ValueError as exc:
-                    return self._json(404, {"error": str(exc)})
-                bundle = build_fhir_shaped_bundle(patient, encounter)
-                self._json(200, {"disclaimer": FHIR_SHAPED_DISCLAIMER, "bundle": bundle})
+            routes = {
+                "/": self.serve_index,
+                "/style.css": self.serve_css,
+                "/app.js": self.serve_js,
+                "/api/suggestions": self.get_suggestions,
+                "/api/queue": self.get_queue,
+                "/api/reasons": self.get_reasons,
+                "/api/hospital-profiles": self.get_hospital_profiles,
+                "/api/audit": self.get_audit,
+                "/api/history": self.get_history,
+                "/api/kiosk/status": self.get_kiosk_status,
+                "/api/fhir-export": self.get_fhir_export,
+            }
+            handler = routes.get(parsed.path)
+            if handler:
+                handler(parsed)
             else:
                 self._json(404, {"error": "not found"})
 
         def do_POST(self):
-            path = urlparse(self.path).path
-            if path not in {
-                "/api/overrides", "/api/routing-preview", "/api/surge/run", "/api/surge/reset",
-                "/api/surge/manual", "/api/combat/acknowledge", "/api/hospital-profile",
-                "/api/kiosk/text",
-            }:
+            parsed = urlparse(self.path)
+            routes = {
+                "/api/surge/run": self.post_surge_run,
+                "/api/surge/reset": self.post_surge_reset,
+                "/api/surge/manual": self.post_surge_manual,
+                "/api/hospital-profile": self.post_hospital_profile,
+                "/api/kiosk/text": self.post_kiosk_text,
+                "/api/combat/acknowledge": self.post_combat_acknowledge,
+                "/api/routing-preview": self.post_routing_preview,
+                "/api/overrides": self.post_overrides,
+            }
+            handler = routes.get(parsed.path)
+            if not handler:
                 return self._json(404, {"error": "not found"})
+            
             try:
                 size = int(self.headers.get("Content-Length", "0"))
                 if size <= 0 or size > 65536:
@@ -245,58 +229,129 @@ def create_server(
                 payload = json.loads(self.rfile.read(size))
                 if not isinstance(payload, dict):
                     raise ValueError("request body must be a JSON object")
-                if path == "/api/surge/run":
-                    return self._json(200, replace_queue(3))
-                if path == "/api/surge/reset":
-                    return self._json(200, replace_queue(1))
-                if path == "/api/surge/manual":
-                    active = payload.get("active")
-                    if type(active) is not bool:
-                        raise ValueError("active must be boolean")
-                    current = queue_snapshot()
-                    return self._json(200, replace_queue(current["load_multiplier"], active))
-                if path == "/api/hospital-profile":
-                    profile_id = payload.get("profile_id", "")
-                    return self._json(200, switch_profile(profile_id))
-                if path == "/api/kiosk/text":
-                    transcript = payload.get("transcript", "")
-                    if not isinstance(transcript, str) or not transcript.strip():
-                        raise ValueError("transcript is required")
-                    kiosk_result = process_kiosk_text(transcript)
-                    kiosk_result["differential_matches"] = _kiosk_differential_preview(kiosk_result)
-                    kiosk_result["experimental"] = True
-                    return self._json(200, kiosk_result)
-                suggestion = current_suggestion(payload.get("patient_id"))
-                if not suggestion:
-                    return self._json(404, {"error": "unknown patient_id"})
-                if path == "/api/combat/acknowledge":
-                    surge = queue_snapshot()["combat_mode"]
-                    event = record_combat_acknowledgement(
-                        audit_path, patient_id=suggestion["patient_id"],
-                        clinician_id=payload.get("clinician_id", ""), ai_result=suggestion["ai_result"],
-                        surge_state=surge, safety_badge=suggestion["safety_badge"],
-                    )
-                    return self._json(201, {"event": event, "patient": suggestion})
-                if path == "/api/routing-preview":
-                    result = suggestion["ai_result"]
-                    return self._json(200, suggest_scheme_route(
-                        suggestion.get("patient") or patients[suggestion["patient_id"]], result["point_estimate"],
-                        clinician_confirmed=True, confidence_result=result,
-                    ))
-                upsert_current_encounter(
-                    history_runtime, patient=suggestion["patient"], ai_result=suggestion["ai_result"],
-                    safety_badge=suggestion["safety_badge"], encounter_id=suggestion["encounter_id"],
-                    patient_uid=suggestion["patient_uid"],
-                )
-                event = record_clinician_override(
-                    audit_path, patient_id=suggestion["patient_id"], clinician_id=payload.get("clinician_id", ""),
-                    original_ai_result=suggestion["ai_result"], overridden_esi=payload.get("overridden_esi"),
-                    reason_code=payload.get("reason_code", ""), reason_text=payload.get("reason_text", ""),
-                )
-                record_history_override(history_runtime, suggestion["encounter_id"], event)
-                self._json(201, event)
+                handler(payload)
             except (ValueError, TypeError, json.JSONDecodeError) as exc:
                 self._json(400, {"error": str(exc)})
+
+        def serve_index(self, parsed):
+            self._send(200, (project_root / "demo" / "frontend" / "index.html").read_bytes(), "text/html; charset=utf-8")
+            
+        def serve_css(self, parsed):
+            self._send(200, (project_root / "demo" / "frontend" / "style.css").read_bytes(), "text/css; charset=utf-8")
+            
+        def serve_js(self, parsed):
+            self._send(200, (project_root / "demo" / "frontend" / "app.js").read_bytes(), "application/javascript; charset=utf-8")
+            
+        def get_suggestions(self, parsed):
+            self._json(200, list(suggestions.values()))
+            
+        def get_queue(self, parsed):
+            self._json(200, queue_snapshot())
+            
+        def get_reasons(self, parsed):
+            self._json(200, REASON_CODES)
+            
+        def get_hospital_profiles(self, parsed):
+            table = load_hospital_profiles()
+            self._json(200, {
+                "active_profile_id": profile_holder["profile_id"], "disclaimer": table["disclaimer"],
+                "profiles": [{"profile_id": key, "display_name": value["display_name"],
+                              "facility_type": value["facility_type"]}
+                             for key, value in table["profiles"].items()],
+            })
+            
+        def get_audit(self, parsed):
+            patient_id = parse_qs(parsed.query).get("patient_id", [None])[0]
+            self._json(200, read_audit_events(audit_path, patient_id=patient_id))
+            
+        def get_history(self, parsed):
+            query = parse_qs(parsed.query)
+            patient_uid = query.get("patient_uid", [""])[0]
+            current_id = query.get("current_encounter_id", [None])[0]
+            if not patient_uid:
+                return self._json(400, {"error": "patient_uid is required"})
+            self._json(200, {
+                "label": HISTORY_SCOPE_LABEL, "patient_uid": patient_uid,
+                "visits": previous_visits(history_runtime, patient_uid, current_id),
+                "complete_ehr_history": False,
+            })
+            
+        def get_kiosk_status(self, parsed):
+            self._json(200, _kiosk_audio_status())
+            
+        def get_fhir_export(self, parsed):
+            encounter_id = parse_qs(parsed.query).get("encounter_id", [""])[0]
+            try:
+                patient, encounter = encounter_with_patient(history_runtime, encounter_id)
+            except ValueError as exc:
+                return self._json(404, {"error": str(exc)})
+            bundle = build_fhir_shaped_bundle(patient, encounter)
+            self._json(200, {"disclaimer": FHIR_SHAPED_DISCLAIMER, "bundle": bundle})
+
+        def post_surge_run(self, payload):
+            self._json(200, replace_queue(3))
+            
+        def post_surge_reset(self, payload):
+            self._json(200, replace_queue(1))
+            
+        def post_surge_manual(self, payload):
+            active = payload.get("active")
+            if type(active) is not bool:
+                raise ValueError("active must be boolean")
+            current = queue_snapshot()
+            self._json(200, replace_queue(current["load_multiplier"], active))
+            
+        def post_hospital_profile(self, payload):
+            profile_id = payload.get("profile_id", "")
+            self._json(200, switch_profile(profile_id))
+            
+        def post_kiosk_text(self, payload):
+            transcript = payload.get("transcript", "")
+            if not isinstance(transcript, str) or not transcript.strip():
+                raise ValueError("transcript is required")
+            kiosk_result = process_kiosk_text(transcript)
+            kiosk_result["differential_matches"] = _kiosk_differential_preview(kiosk_result)
+            kiosk_result["experimental"] = True
+            self._json(200, kiosk_result)
+            
+        def post_combat_acknowledge(self, payload):
+            suggestion = current_suggestion(payload.get("patient_id"))
+            if not suggestion:
+                return self._json(404, {"error": "unknown patient_id"})
+            surge = queue_snapshot()["combat_mode"]
+            event = record_combat_acknowledgement(
+                audit_path, patient_id=suggestion["patient_id"],
+                clinician_id=payload.get("clinician_id", ""), ai_result=suggestion["ai_result"],
+                surge_state=surge, safety_badge=suggestion["safety_badge"],
+            )
+            self._json(201, {"event": event, "patient": suggestion})
+            
+        def post_routing_preview(self, payload):
+            suggestion = current_suggestion(payload.get("patient_id"))
+            if not suggestion:
+                return self._json(404, {"error": "unknown patient_id"})
+            result = suggestion["ai_result"]
+            self._json(200, suggest_scheme_route(
+                suggestion.get("patient") or patients[suggestion["patient_id"]], result["point_estimate"],
+                clinician_confirmed=True, confidence_result=result,
+            ))
+            
+        def post_overrides(self, payload):
+            suggestion = current_suggestion(payload.get("patient_id"))
+            if not suggestion:
+                return self._json(404, {"error": "unknown patient_id"})
+            upsert_current_encounter(
+                history_runtime, patient=suggestion["patient"], ai_result=suggestion["ai_result"],
+                safety_badge=suggestion["safety_badge"], encounter_id=suggestion["encounter_id"],
+                patient_uid=suggestion["patient_uid"],
+            )
+            event = record_clinician_override(
+                audit_path, patient_id=suggestion["patient_id"], clinician_id=payload.get("clinician_id", ""),
+                original_ai_result=suggestion["ai_result"], overridden_esi=payload.get("overridden_esi"),
+                reason_code=payload.get("reason_code", ""), reason_text=payload.get("reason_text", ""),
+            )
+            record_history_override(history_runtime, suggestion["encounter_id"], event)
+            self._json(201, event)
 
         def do_PUT(self): self._method_not_allowed()
         def do_PATCH(self): self._method_not_allowed()

@@ -12,7 +12,7 @@ from resilicare import (  # noqa: E402
     previous_visits, record_history_override, score_with_confidence,
     upsert_current_encounter,
 )
-from resilicare.combat import critical_safety_badge  # noqa: E402
+from resilicare.queue.combat import critical_safety_badge  # noqa: E402
 
 
 class HistoryStoreTests(unittest.TestCase):

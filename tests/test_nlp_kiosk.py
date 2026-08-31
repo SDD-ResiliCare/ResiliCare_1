@@ -6,7 +6,7 @@ confidence gate), so they run regardless of whether the optional NLP extras are 
 import unittest
 
 from resilicare import match_ambiguous_presentations
-from resilicare.nlp_kiosk import (
+from resilicare.nlp.text_pipeline import (
     detect_acuity_with_negation,
     extract_chief_complaint,
     patient_identity_binding,

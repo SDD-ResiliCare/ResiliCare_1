@@ -12,7 +12,7 @@ PROFILE_IDS = {"urban_trauma_center", "rural_clinic"}
 
 @lru_cache(maxsize=1)
 def load_hospital_profiles() -> dict[str, Any]:
-    table = json.loads(Path(__file__).with_name("hospital_profiles.json").read_text(encoding="utf-8"))
+    table = json.loads((Path(__file__).parent.parent / "config" / "hospital_profiles.json").read_text(encoding="utf-8"))
     if not table.get("simulated_profiles") or set(table.get("profiles", {})) != PROFILE_IDS:
         raise ValueError("exactly the two simulated hospital profiles are required")
     for profile_id, profile in table["profiles"].items():
