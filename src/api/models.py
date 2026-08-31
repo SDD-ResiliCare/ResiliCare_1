@@ -3,11 +3,11 @@
 import json
 from pathlib import Path
 
-from src.core.confidence_scoring import score_with_confidence
 from src.adapters.clinical_routing import suggest_scheme_route
+from src.core.confidence_scoring import score_with_confidence
 from src.data.history_store import patient_uid_for_source
-from src.workflows.queue_surge import replay_arrivals
 from src.workflows.combat_mode import combat_mode_state, critical_safety_badge
+from src.workflows.queue_surge import replay_arrivals
 
 
 def build_patient_suggestion(patient: dict, proposed_esi: int | None = None, queue_entry: dict | None = None) -> dict:
@@ -15,7 +15,7 @@ def build_patient_suggestion(patient: dict, proposed_esi: int | None = None, que
     source_patient_id = patient.get("source_patient_id", patient["patient_id"])
     item = {
         "patient_id": patient["patient_id"], "encounter_id": patient["patient_id"],
-        "source_patient_id": source_patient_id, "patient_uid": patient_uid_for_source(source_patient_id),
+        "source_patient_id": source_patient_id, "patient_uid": patient_uid_for_source(str(source_patient_id)),
         "age_years": patient["age_years"], "age_group": patient.get("age_group"),
         "chief_complaint": patient["chief_complaint"], "presenting_details": patient.get("presenting_details"),
         "scheme": patient["scheme"], "patient": patient, "ai_result": result,

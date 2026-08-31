@@ -28,7 +28,7 @@ def score_with_confidence(
     proposed_esi: int,
     *,
     safety_result: dict[str, Any] | None = None,
-    class_probabilities: Mapping[int | str, float] | None = None,
+    class_probabilities: Mapping[Any, float] | None = None,
     probabilities_calibrated: bool = False,
 ) -> dict[str, Any]:
     """Return a confidence-bearing ESI set; uncertain cases defer to senior review."""
@@ -130,11 +130,11 @@ def score_with_confidence(
 
 import math
 
-def _validate_probabilities(values: Mapping[int | str, float] | None) -> dict[int, float]:
+def _validate_probabilities(values: Mapping[Any, float] | None) -> dict[int, float]:
     if values is None:
         return {}
     try:
-        probabilities = {int(level): float(value) for level, value in values.items()}
+        probabilities = {int(level): value for level, value in values.items()}
     except (TypeError, ValueError) as exc:
         raise ValueError("class_probabilities must map ESI 1-5 to numeric values") from exc
     if set(probabilities) != VALID_ESI or any(math.isnan(value) or value < 0 or value > 1 for value in probabilities.values()):

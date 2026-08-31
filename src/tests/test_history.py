@@ -1,11 +1,12 @@
 import json
 import unittest
 from pathlib import Path
+from typing import Any
 
 from src import prepare_history_context, score_with_confidence, weighted_risk_signal
 
 
-def patient(has_prior_history=True, **changes):
+def patient(has_prior_history: Any = True, **changes):
     return {
         "has_prior_history": has_prior_history,
         "hr_bpm": 80, "rr_bpm": 16, "spo2_pct": 99, "sbp_mmhg": 120,

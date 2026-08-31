@@ -31,8 +31,10 @@ def validate_threshold_provenance(table: dict[str, Any]) -> None:
         raise ValueError("every age profile requires a source anchor")
 
 
-def get_age_profile(age_years: float | int) -> dict[str, Any]:
+def get_age_profile(age_years: float | int | None) -> dict[str, Any]:
     """Return the single half-open age profile containing age_years."""
+    if age_years is None:
+        raise ValueError("age_years is missing")
     try:
         age = float(age_years)
     except (TypeError, ValueError) as exc:

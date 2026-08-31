@@ -6,9 +6,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from src.api.state import ServerState
 import src.api.routes.hospital as hospital_routes
 import src.api.routes.patient as patient_routes
+from src.api.state import ServerState
 
 
 class APIRouter:
@@ -43,18 +43,18 @@ class APIRouter:
             }
         }
 
-    def handle(self, method: str, path: str, query: dict, payload: dict | None) -> tuple[int, dict]:
+    def handle(self, method: str, path: str, query: dict, payload: dict | None) -> tuple[int, dict | list]:
         if path == "/":
             return 200, {
                 "message": "ResiliCare API Server is running.",
                 "namespaces": {
                     "hospital_facing": {
                         "GET": list(self.routes["GET"].keys()),
-                        "POST": [p for p in self.routes["POST"].keys() if p.startswith("/api/hospital")]
+                        "POST": [p for p in self.routes["POST"] if p.startswith("/api/hospital")]
                     },
                     "patient_facing": {
-                        "GET": [p for p in self.routes["GET"].keys() if p.startswith("/api/patient")],
-                        "POST": [p for p in self.routes["POST"].keys() if p.startswith("/api/patient")]
+                        "GET": [p for p in self.routes["GET"] if p.startswith("/api/patient")],
+                        "POST": [p for p in self.routes["POST"] if p.startswith("/api/patient")]
                     }
                 }
             }
@@ -71,8 +71,8 @@ class APIRouter:
             if method == "GET":
                 return handler(self.state, query)
             else:
-                return handler(self.state, payload)
-        except Exception as exc:
+                return handler(self.state, payload or {})
+        except Exception as exc:  # noqa: BLE001
             return 400, {"error": str(exc)}
 
 
@@ -106,7 +106,7 @@ def create_server(
                     raise ValueError("request body must be between 1 and 65536 bytes")
                 payload = json.loads(self.rfile.read(size))
                 if not isinstance(payload, dict):
-                    raise ValueError("request body must be a JSON object")
+                    raise TypeError("request body must be a JSON object")
                 status, response = router.handle("POST", parsed.path, {}, payload)
                 self._json(status, response)
             except (ValueError, TypeError, json.JSONDecodeError) as exc:
@@ -131,7 +131,7 @@ def create_server(
             self.end_headers()
             self.wfile.write(body)
 
-        def log_message(self, _format, *_args):
+        def log_message(self, format, *args):
             pass
 
     return ThreadingHTTPServer((host, port), Handler)

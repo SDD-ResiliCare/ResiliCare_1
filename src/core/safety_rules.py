@@ -84,11 +84,11 @@ def evaluate_safety_rules(patient: dict[str, Any], prediction_range: Iterable[in
         "uncertainty_range": sorted(uncertainty) if uncertainty else None,
         "matched_rule_ids": [match[0] for match in matches],
         "rationale": [match[2] for match in matches],
-        "review_priority": {1: "IMMEDIATE", 2: "HIGH", 3: "MANDATORY"}.get(level, "STANDARD"),
+        "review_priority": {1: "IMMEDIATE", 2: "HIGH", 3: "MANDATORY"}.get(level or 0, "STANDARD"),
         "missing_or_conflicting_information": list(dict.fromkeys(missing_or_conflicting)),
         "requires_clinician_confirmation": True,
         "highlight_alert": level in {1, 2, 3},
-        "regular_scorer_action": {1: "SKIP", 2: "RUN_WITH_CEILING", 3: "RUN_WITH_CEILING"}.get(level, "RUN"),
+        "regular_scorer_action": {1: "SKIP", 2: "RUN_WITH_CEILING", 3: "RUN_WITH_CEILING"}.get(level or 0, "RUN"),
         "age_adjusted_vitals": patient.get("age_adjusted_vitals"),
         "ambiguous_presentations": ambiguous_presentations,
     }

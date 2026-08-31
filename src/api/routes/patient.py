@@ -28,7 +28,7 @@ def _kiosk_audio_status() -> dict:
     }
 
 
-def get_history(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_history(state: ServerState, query: dict) -> tuple[int, dict | list]:
     patient_uid = query.get("patient_uid", [""])[0]
     current_id = query.get("current_encounter_id", [None])[0]
     if not patient_uid:
@@ -40,11 +40,11 @@ def get_history(state: ServerState, query: dict) -> tuple[int, dict]:
     }
 
 
-def get_kiosk_status(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_kiosk_status(state: ServerState, query: dict) -> tuple[int, dict | list]:
     return 200, _kiosk_audio_status()
 
 
-def post_kiosk_text(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_kiosk_text(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     transcript = payload.get("transcript", "")
     if not isinstance(transcript, str) or not transcript.strip():
         return 400, {"error": "transcript is required"}
@@ -54,7 +54,7 @@ def post_kiosk_text(state: ServerState, payload: dict) -> tuple[int, dict]:
     return 200, kiosk_result
 
 
-def post_routing_preview(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_routing_preview(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     suggestion = state.current_suggestion(payload.get("patient_id"))
     if not suggestion:
         return 404, {"error": "unknown patient_id"}

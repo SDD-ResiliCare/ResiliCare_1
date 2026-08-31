@@ -84,6 +84,8 @@ class TriageKioskAnalyzer:
                 repo_or_dir="snakers4/silero-vad", model="silero_vad", force_reload=False, onnx=False,
             )
             self._vad_utils = utils
+        if self._vad_utils is None:
+            raise RuntimeError("VAD initialization failed")
         get_speech_timestamps, _, read_audio, _, _ = self._vad_utils
         return get_speech_timestamps, read_audio
 

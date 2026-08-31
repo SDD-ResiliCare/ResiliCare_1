@@ -135,7 +135,7 @@ def extract_chief_complaint(text: str) -> Optional[str]:
 def patient_identity_binding(text: str) -> str:
     """Extract a name via spaCy NER if available, else fall back to an ephemeral trauma alias."""
     try:
-        import spacy
+        import spacy  # type: ignore
     except ImportError:
         return _ephemeral_alias()
     try:
@@ -151,7 +151,10 @@ def _ephemeral_alias() -> str:
     return f"Trauma-Unknown-{str(uuid.uuid4())[:4]}"
 
 
+_SPACY_CACHE = None
+
 def _load_spacy_model(spacy_module):
-    if not hasattr(_load_spacy_model, "_cache"):
-        _load_spacy_model._cache = spacy_module.load("en_core_web_sm")
-    return _load_spacy_model._cache
+    global _SPACY_CACHE
+    if _SPACY_CACHE is None:
+        _SPACY_CACHE = spacy_module.load("en_core_web_sm")
+    return _SPACY_CACHE

@@ -13,7 +13,7 @@ from src.api.models import build_queue_snapshot, build_patient_suggestion
 from src.data.history_store import encounter_with_patient, record_history_override, record_history_confirmation, upsert_current_encounter
 
 
-def get_suggestions(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_suggestions(state: ServerState, query: dict) -> tuple[int, dict | list]:
     rendered = copy.deepcopy(list(state.suggestions.values()))
     for item in rendered:
         confirmation = state.confirmation_for(item)
@@ -22,15 +22,15 @@ def get_suggestions(state: ServerState, query: dict) -> tuple[int, dict]:
     return 200, rendered
 
 
-def get_queue(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_queue(state: ServerState, query: dict) -> tuple[int, dict | list]:
     return 200, state.render_queue_snapshot(state.queue_snapshot())
 
 
-def get_reasons(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_reasons(state: ServerState, query: dict) -> tuple[int, dict | list]:
     return 200, REASON_CODES
 
 
-def get_hospital_profiles(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_hospital_profiles(state: ServerState, query: dict) -> tuple[int, dict | list]:
     table = load_hospital_profiles()
     return 200, {
         "active_profile_id": state.profile_holder["profile_id"], "disclaimer": table["disclaimer"],
@@ -40,16 +40,16 @@ def get_hospital_profiles(state: ServerState, query: dict) -> tuple[int, dict]:
     }
 
 
-def get_audit(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_audit(state: ServerState, query: dict) -> tuple[int, dict | list]:
     patient_id = query.get("patient_id", [None])[0]
     return 200, read_audit_events(state.log_path, patient_id=patient_id)
 
 
-def get_compliance_export(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_compliance_export(state: ServerState, query: dict) -> tuple[int, dict | list]:
     return 200, redacted_compliance_events(state.log_path)
 
 
-def get_fhir_export(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_fhir_export(state: ServerState, query: dict) -> tuple[int, dict | list]:
     encounter_id = query.get("encounter_id", [""])[0]
     try:
         patient, encounter = encounter_with_patient(state.history_runtime, encounter_id)
@@ -59,11 +59,11 @@ def get_fhir_export(state: ServerState, query: dict) -> tuple[int, dict]:
     return 200, {"disclaimer": FHIR_SHAPED_DISCLAIMER, "bundle": bundle}
 
 
-def get_override_rates(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_override_rates(state: ServerState, query: dict) -> tuple[int, dict | list]:
     return 200, compute_override_rates(state.log_path)
 
 
-def get_surge_evidence(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_surge_evidence(state: ServerState, query: dict) -> tuple[int, dict | list]:
     profile_id = state.profile_holder["profile_id"]
     threshold = get_hospital_profile(profile_id)["combat_mode_queue_threshold"]
     quiet = build_queue_snapshot(state.patient_list, 1, combat_threshold=threshold)
@@ -82,7 +82,7 @@ def get_surge_evidence(state: ServerState, query: dict) -> tuple[int, dict]:
     return 200, {"hospital_profile": state.profile_summary(profile_id), "quiet_before": evidence(quiet), "surge_after": evidence(surge)}
 
 
-def get_profile_comparison(state: ServerState, query: dict) -> tuple[int, dict]:
+def get_profile_comparison(state: ServerState, query: dict) -> tuple[int, dict | list]:
     patient_id = query.get("patient_id", [None])[0]
     suggestion = state.current_suggestion(patient_id)
     if not suggestion:
@@ -100,15 +100,15 @@ def get_profile_comparison(state: ServerState, query: dict) -> tuple[int, dict]:
     return 200, {"patient_id": suggestion["patient_id"], "encounter_id": suggestion["encounter_id"], "comparison": comparison}
 
 
-def post_surge_run(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_surge_run(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     return 200, state.replace_queue(3)
 
 
-def post_surge_reset(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_surge_reset(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     return 200, state.replace_queue(1)
 
 
-def post_surge_manual(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_surge_manual(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     active = payload.get("active")
     if type(active) is not bool:
         return 400, {"error": "active must be boolean"}
@@ -116,12 +116,12 @@ def post_surge_manual(state: ServerState, payload: dict) -> tuple[int, dict]:
     return 200, state.replace_queue(current["load_multiplier"], active)
 
 
-def post_hospital_profile(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_hospital_profile(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     profile_id = payload.get("profile_id", "")
     return 200, state.switch_profile(profile_id)
 
 
-def post_confirmation(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_confirmation(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     suggestion = state.current_suggestion(payload.get("patient_id"))
     if not suggestion:
         return 404, {"error": "unknown patient_id"}
@@ -151,7 +151,7 @@ def post_confirmation(state: ServerState, payload: dict) -> tuple[int, dict]:
     return 201, {"event": event, "clinical_confirmation": confirmed, "routing_assessment": state.route_for(suggestion, confirmed)}
 
 
-def post_queue_vitals(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_queue_vitals(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     patient_id, vitals = payload.get("patient_id"), payload.get("vitals")
     if not isinstance(patient_id, str) or not isinstance(vitals, dict):
         return 400, {"error": "patient_id and vitals object are required"}
@@ -182,7 +182,7 @@ def post_queue_vitals(state: ServerState, payload: dict) -> tuple[int, dict]:
     return 200, state.render_queue_snapshot(snapshot)
 
 
-def post_combat_acknowledge(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_combat_acknowledge(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     suggestion = state.current_suggestion(payload.get("patient_id"))
     if not suggestion:
         return 404, {"error": "unknown patient_id"}
@@ -196,7 +196,7 @@ def post_combat_acknowledge(state: ServerState, payload: dict) -> tuple[int, dic
     return 201, {"event": event, "patient": suggestion}
 
 
-def post_overrides(state: ServerState, payload: dict) -> tuple[int, dict]:
+def post_overrides(state: ServerState, payload: dict) -> tuple[int, dict | list]:
     suggestion = state.current_suggestion(payload.get("patient_id"))
     if not suggestion:
         return 404, {"error": "unknown patient_id"}
@@ -207,7 +207,7 @@ def post_overrides(state: ServerState, payload: dict) -> tuple[int, dict]:
     )
     event = record_clinician_override(
         state.log_path, patient_id=suggestion["patient_id"], clinician_id=payload.get("clinician_id", ""), clinician_role=payload.get("clinician_role", ""),
-        original_ai_result=suggestion["ai_result"], overridden_esi=payload.get("overridden_esi"),
+        original_ai_result=suggestion["ai_result"], overridden_esi=int(payload.get("overridden_esi", 0)),
         reason_code=payload.get("reason_code", ""), reason_text=payload.get("reason_text", ""),
     )
     record_history_override(state.history_runtime, suggestion["encounter_id"], event)

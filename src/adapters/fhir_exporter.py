@@ -20,7 +20,7 @@ _OBSERVATIONS = {
 
 def build_fhir_shaped_bundle(patient: Mapping[str, Any], encounter: Mapping[str, Any]) -> dict[str, Any]:
     patient_id, encounter_id = patient["patient_uid"], encounter["encounter_id"]
-    gender = {"Female": "female", "Male": "male"}.get(patient.get("sex_at_birth"), "unknown")
+    gender = {"Female": "female", "Male": "male"}.get(patient.get("sex_at_birth") or "", "unknown")
     patient_resource = {
         "resourceType": "Patient", "id": patient_id, "active": True, "gender": gender,
         "identifier": [{"system": "urn:resilicare:patient", "value": patient_id}],

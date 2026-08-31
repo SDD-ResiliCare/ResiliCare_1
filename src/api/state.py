@@ -151,7 +151,7 @@ class ServerState:
 
     def current_suggestion(self, patient_id: str | None) -> dict | None:
         current = next((item for item in self.queue_snapshot()["items"] if item["patient_id"] == patient_id), None)
-        return current or deepcopy(self.suggestions.get(patient_id))
+        return current or deepcopy(self.suggestions.get(patient_id or ""))
 
     def compact_combat_item(self, item: dict) -> dict:
         return {
