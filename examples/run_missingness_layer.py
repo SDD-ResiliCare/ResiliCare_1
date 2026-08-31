@@ -1,4 +1,8 @@
-from resilicare import prepare_history_context, weighted_risk_signal
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parents[1]))
+
+from src.data.patient_history import prepare_history_context, weighted_risk_signal
 
 patient = {
     "has_prior_history": False,

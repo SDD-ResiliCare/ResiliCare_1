@@ -1,4 +1,8 @@
-from resilicare import score_with_confidence
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parents[1]))
+
+from src.core.confidence_scoring import score_with_confidence
 
 base = {
     "hr_bpm": 80, "rr_bpm": 16, "spo2_pct": 99, "sbp_mmhg": 120,

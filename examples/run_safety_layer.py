@@ -1,7 +1,11 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parents[1]))
+
 import json
 from pathlib import Path
 
-from resilicare import evaluate_safety_rules
+from src.core.safety_rules import evaluate_safety_rules
 
 root = Path(__file__).parents[1]
 patients = json.loads((root / "data" / "simulated_patients.json").read_text(encoding="utf-8"))["patients"]

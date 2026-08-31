@@ -7,7 +7,7 @@ from src.api.state import ServerState
 from src.data.audit_log import REASON_CODES, compute_override_rates, read_audit_events, record_clinician_override, redacted_compliance_events
 from src.workflows.combat_mode import record_combat_acknowledgement
 from src.data.clinical_confirmation import record_clinician_confirmation
-from src.adapters.hospital_config import load_hospital_profiles, assess_hospital_operations
+from src.adapters.hospital_config import load_hospital_profiles, assess_hospital_operations, get_hospital_profile
 from src.adapters.fhir_exporter import build_fhir_shaped_bundle, FHIR_SHAPED_DISCLAIMER
 from src.api.models import build_queue_snapshot, build_patient_suggestion
 from src.data.history_store import encounter_with_patient, record_history_override, record_history_confirmation, upsert_current_encounter
@@ -65,7 +65,6 @@ def get_override_rates(state: ServerState, query: dict) -> tuple[int, dict]:
 
 def get_surge_evidence(state: ServerState, query: dict) -> tuple[int, dict]:
     profile_id = state.profile_holder["profile_id"]
-    from src.adapters.hospital_config import get_hospital_profile
     threshold = get_hospital_profile(profile_id)["combat_mode_queue_threshold"]
     quiet = build_queue_snapshot(state.patient_list, 1, combat_threshold=threshold)
     surge = build_queue_snapshot(state.patient_list, 3, combat_threshold=threshold)

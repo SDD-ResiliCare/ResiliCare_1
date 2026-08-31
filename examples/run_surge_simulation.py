@@ -1,8 +1,12 @@
 """Replay the same 15-minute window at 1x and 3x arrival volume."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parents[1]))
+
 
 from pathlib import Path
 
-from resilicare import load_simulated_patients, replay_arrivals
+from src.workflows.queue_surge import load_simulated_patients, replay_arrivals
 
 def main() -> None:
     patients = load_simulated_patients(Path(__file__).parents[1] / "data" / "simulated_patients.json")
