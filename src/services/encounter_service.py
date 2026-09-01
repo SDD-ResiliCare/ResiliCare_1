@@ -4,12 +4,18 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.models.encounter import Encounter, EncounterParticipant
+from src.db.models.billing import Invoice, InvoiceItem, Payment
+from src.db.models.encounter import Encounter, EncounterParticipant, QueueEntry
+from src.db.models.medication import Prescription, PrescriptionItem
+from src.db.models.patient import Patient, PatientAllergy, PatientCondition
 from src.db.models.triage import (
+    AssessmentSafetyAction,
+    ClinicianDecision,
     EncounterClosure,
     EncounterDiagnosis,
     SymptomInterview,
     SymptomResponse,
+    TriageAssessment,
     VitalObservation,
 )
 from src.db.repositories.encounters import (
@@ -24,6 +30,7 @@ from src.schemas.encounter import (
     EncounterClosureCreate,
     EncounterCreate,
     EncounterDiagnosisCreate,
+    EncounterUpdate,
     ParticipantCreate,
     VitalObservationCreate,
 )
@@ -49,6 +56,213 @@ class EncounterService:
         if encounter is None:
             raise HTTPException(404, "encounter not found")
         return encounter
+
+    async def list(
+        self,
+        hospital_id: UUID,
+        *,
+        status: str | None,
+        patient_id: UUID | None,
+        doctor_id: UUID | None,
+        page: int,
+        page_size: int,
+    ) -> tuple[list[Encounter], int]:
+        statement = select(Encounter).where(Encounter.hospital_id == hospital_id)
+        count_statement = select(func.count(func.distinct(Encounter.id))).where(Encounter.hospital_id == hospital_id)
+        if doctor_id:
+            join_condition = EncounterParticipant.encounter_id == Encounter.id
+            statement = statement.join(EncounterParticipant, join_condition).where(
+                EncounterParticipant.staff_id == doctor_id,
+                EncounterParticipant.role == "primary_doctor",
+                EncounterParticipant.ended_at.is_(None),
+            )
+            count_statement = count_statement.join(EncounterParticipant, join_condition).where(
+                EncounterParticipant.staff_id == doctor_id,
+                EncounterParticipant.role == "primary_doctor",
+                EncounterParticipant.ended_at.is_(None),
+            )
+        if status:
+            statement = statement.where(Encounter.status == status)
+            count_statement = count_statement.where(Encounter.status == status)
+        if patient_id:
+            statement = statement.where(Encounter.patient_id == patient_id)
+            count_statement = count_statement.where(Encounter.patient_id == patient_id)
+        statement = statement.distinct().order_by(Encounter.arrived_at.desc())
+        items = list((await self.session.scalars(statement.limit(page_size).offset((page - 1) * page_size))).all())
+        total = await self.session.scalar(count_statement) or 0
+        return items, total
+
+    async def update(self, encounter_id: UUID, payload: EncounterUpdate) -> Encounter:
+        encounter = await self.get(encounter_id)
+        if encounter.status in {"completed", "entered_in_error"}:
+            raise HTTPException(409, "closed encounters cannot be edited")
+        for key, value in payload.model_dump(exclude_unset=True).items():
+            setattr(encounter, key, value)
+        await self.session.commit()
+        await self.session.refresh(encounter)
+        return encounter
+
+    async def mark_entered_in_error(self, encounter_id: UUID, reason: str) -> Encounter:
+        encounter = await self.get(encounter_id, for_update=True)
+        encounter.status = "entered_in_error"
+        encounter.data_quality_notes = f"{encounter.data_quality_notes or ''}\nEntered in error: {reason}".strip()
+        await self.session.commit()
+        return encounter
+
+    async def workspace(self, encounter_id: UUID) -> dict:
+        encounter = await self.get(encounter_id)
+        patient = await self.session.get(Patient, encounter.patient_id)
+        participants = list(
+            (
+                await self.session.scalars(
+                    select(EncounterParticipant)
+                    .where(EncounterParticipant.encounter_id == encounter_id)
+                    .order_by(EncounterParticipant.assigned_at)
+                )
+            ).all()
+        )
+        queue_entry = await self.session.scalar(
+            select(QueueEntry).where(QueueEntry.encounter_id == encounter_id, QueueEntry.exited_at.is_(None))
+        )
+        vitals = list(
+            (
+                await self.session.scalars(
+                    select(VitalObservation)
+                    .where(VitalObservation.encounter_id == encounter_id)
+                    .order_by(VitalObservation.observed_at.desc())
+                )
+            ).all()
+        )
+        interviews = list(
+            (
+                await self.session.scalars(
+                    select(SymptomInterview)
+                    .where(SymptomInterview.encounter_id == encounter_id)
+                    .order_by(SymptomInterview.interview_number)
+                )
+            ).all()
+        )
+        interview_ids = [item.id for item in interviews]
+        responses = (
+            list(
+                (
+                    await self.session.scalars(
+                        select(SymptomResponse)
+                        .where(SymptomResponse.interview_id.in_(interview_ids))
+                        .order_by(SymptomResponse.answered_at)
+                    )
+                ).all()
+            )
+            if interview_ids
+            else []
+        )
+        assessments = list(
+            (
+                await self.session.scalars(
+                    select(TriageAssessment)
+                    .where(TriageAssessment.encounter_id == encounter_id)
+                    .order_by(TriageAssessment.assessment_number.desc())
+                )
+            ).all()
+        )
+        assessment_ids = [item.id for item in assessments]
+        decisions = (
+            list(
+                (
+                    await self.session.scalars(
+                        select(ClinicianDecision).where(ClinicianDecision.assessment_id.in_(assessment_ids))
+                    )
+                ).all()
+            )
+            if assessment_ids
+            else []
+        )
+        safety_actions = (
+            list(
+                (
+                    await self.session.scalars(
+                        select(AssessmentSafetyAction).where(AssessmentSafetyAction.assessment_id.in_(assessment_ids))
+                    )
+                ).all()
+            )
+            if assessment_ids
+            else []
+        )
+        diagnoses = list(
+            (
+                await self.session.scalars(
+                    select(EncounterDiagnosis).where(EncounterDiagnosis.encounter_id == encounter_id)
+                )
+            ).all()
+        )
+        closure = await self.session.scalar(
+            select(EncounterClosure).where(EncounterClosure.encounter_id == encounter_id)
+        )
+        prescriptions = list(
+            (await self.session.scalars(select(Prescription).where(Prescription.encounter_id == encounter_id))).all()
+        )
+        prescription_ids = [item.id for item in prescriptions]
+        prescription_items = (
+            list(
+                (
+                    await self.session.scalars(
+                        select(PrescriptionItem).where(PrescriptionItem.prescription_id.in_(prescription_ids))
+                    )
+                ).all()
+            )
+            if prescription_ids
+            else []
+        )
+        invoices = list((await self.session.scalars(select(Invoice).where(Invoice.encounter_id == encounter_id))).all())
+        invoice_ids = [item.id for item in invoices]
+        invoice_items = (
+            list((await self.session.scalars(select(InvoiceItem).where(InvoiceItem.invoice_id.in_(invoice_ids)))).all())
+            if invoice_ids
+            else []
+        )
+        payments = (
+            list((await self.session.scalars(select(Payment).where(Payment.invoice_id.in_(invoice_ids)))).all())
+            if invoice_ids
+            else []
+        )
+        return {
+            "encounter": encounter,
+            "patient": patient,
+            "allergies": list(
+                (
+                    await self.session.scalars(
+                        select(PatientAllergy).where(PatientAllergy.patient_id == encounter.patient_id)
+                    )
+                ).all()
+            ),
+            "conditions": list(
+                (
+                    await self.session.scalars(
+                        select(PatientCondition).where(PatientCondition.patient_id == encounter.patient_id)
+                    )
+                ).all()
+            ),
+            "participants": participants,
+            "current_doctor": next(
+                (item for item in participants if item.role == "primary_doctor" and item.ended_at is None), None
+            ),
+            "queue_entry": queue_entry,
+            "latest_vitals": vitals[0] if vitals else None,
+            "vitals": vitals,
+            "interviews": interviews,
+            "symptom_responses": responses,
+            "latest_assessment": assessments[0] if assessments else None,
+            "assessments": assessments,
+            "clinician_decisions": decisions,
+            "safety_actions": safety_actions,
+            "diagnoses": diagnoses,
+            "prescriptions": prescriptions,
+            "prescription_items": prescription_items,
+            "invoices": invoices,
+            "invoice_items": invoice_items,
+            "payments": payments,
+            "closure": closure,
+        }
 
     async def add_participant(
         self, encounter_id: UUID, payload: ParticipantCreate, assigned_by: UUID | None

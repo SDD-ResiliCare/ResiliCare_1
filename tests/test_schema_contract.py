@@ -25,6 +25,20 @@ def test_schema_has_no_simulation_columns():
     assert "load_multiplier" not in columns
 
 
+def test_schema_allows_only_one_active_queue_per_hospital():
+    queue = Base.metadata.tables["queues"]
+    assert "uq_queues_active_hospital" in {index.name for index in queue.indexes}
+    migration = (ROOT / "supabase" / "migrations" / "004_one_active_queue_per_hospital.sql").read_text(encoding="utf-8")
+    assert "create unique index uq_queues_active_hospital" in migration
+
+
+def test_lifecycle_reasons_are_preserved_by_forward_migration():
+    migration = (ROOT / "supabase" / "migrations" / "005_lifecycle_reason_fields.sql").read_text(encoding="utf-8")
+    assert "exit_reason" in migration
+    assert "void_reason" in migration
+    assert "voided_by_staff_id" in migration
+
+
 def test_gcs_requires_all_components():
     with pytest.raises(ValidationError, match="all three GCS components"):
         VitalObservationCreate(source="manual", observed_at="2026-09-01T10:00:00Z", gcs_eye=4)

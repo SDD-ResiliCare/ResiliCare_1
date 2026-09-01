@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.models.encounter import Encounter, EncounterParticipant
 from src.db.models.feedback import FeedbackInvite, FeedbackSubmission, Review
 from src.db.repositories.feedback import FeedbackInviteRepository, FeedbackRepository, ReviewRepository
-from src.schemas.feedback import FeedbackCreate, ReviewCreate
+from src.schemas.feedback import FeedbackCreate, FeedbackStatusUpdate, ReviewCreate, ReviewModerationUpdate
 
 
 class FeedbackService:
@@ -77,6 +77,67 @@ class FeedbackService:
 
     async def submit_feedback(self, payload: FeedbackCreate) -> FeedbackSubmission:
         feedback = await self.feedback.add(FeedbackSubmission(**payload.model_dump(), status="new"))
+        await self.session.commit()
+        return feedback
+
+    async def list_reviews(self, hospital_id: UUID) -> list[Review]:
+        return list(
+            (
+                await self.session.scalars(
+                    select(Review)
+                    .join(Encounter, Encounter.id == Review.encounter_id)
+                    .where(Encounter.hospital_id == hospital_id)
+                    .order_by(Review.submitted_at.desc())
+                )
+            ).all()
+        )
+
+    async def get_review(self, review_id: UUID, hospital_id: UUID) -> Review:
+        review = await self.session.scalar(
+            select(Review)
+            .join(Encounter, Encounter.id == Review.encounter_id)
+            .where(Review.id == review_id, Encounter.hospital_id == hospital_id)
+        )
+        if review is None:
+            raise HTTPException(404, "review not found")
+        return review
+
+    async def moderate_review(self, review_id: UUID, payload: ReviewModerationUpdate, hospital_id: UUID) -> Review:
+        review = await self.get_review(review_id, hospital_id)
+        review.moderation_status = payload.moderation_status
+        await self.session.commit()
+        return review
+
+    async def list_feedback(self, hospital_id: UUID) -> list[FeedbackSubmission]:
+        return list(
+            (
+                await self.session.scalars(
+                    select(FeedbackSubmission)
+                    .where(FeedbackSubmission.hospital_id == hospital_id)
+                    .order_by(FeedbackSubmission.created_at.desc())
+                )
+            ).all()
+        )
+
+    async def get_feedback(self, feedback_id: UUID, hospital_id: UUID) -> FeedbackSubmission:
+        feedback = await self.session.scalar(
+            select(FeedbackSubmission).where(
+                FeedbackSubmission.id == feedback_id,
+                FeedbackSubmission.hospital_id == hospital_id,
+            )
+        )
+        if feedback is None:
+            raise HTTPException(404, "feedback not found")
+        return feedback
+
+    async def update_feedback(
+        self, feedback_id: UUID, payload: FeedbackStatusUpdate, hospital_id: UUID
+    ) -> FeedbackSubmission:
+        feedback = await self.get_feedback(feedback_id, hospital_id)
+        feedback.status = payload.status
+        feedback.assigned_to_staff_id = payload.assigned_to_staff_id
+        feedback.resolution_notes = payload.resolution_notes
+        feedback.resolved_at = datetime.now(UTC) if payload.status == "resolved" else None
         await self.session.commit()
         return feedback
 

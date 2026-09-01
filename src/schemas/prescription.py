@@ -1,6 +1,6 @@
 """Prescription contracts."""
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -31,3 +31,18 @@ class PrescriptionCreate(BaseModel):
     diagnosis_summary: str | None = None
     general_instructions: str | None = None
     items: list[PrescriptionItemCreate] = Field(min_length=1)
+
+
+class PrescriptionDraftUpdate(BaseModel):
+    diagnosis_summary: str | None = None
+    general_instructions: str | None = None
+
+
+class PrescriptionIssue(BaseModel):
+    issued_at: datetime
+    signed_at: datetime
+
+
+class PrescriptionCancel(BaseModel):
+    cancelled_at: datetime
+    reason: str = Field(min_length=1)

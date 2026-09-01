@@ -38,10 +38,8 @@ The source tree is intentionally flat under `src/`:
 Python 3.12 or newer is required.
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
 Copy-Item .env.example .env
+uv sync
 ```
 
 Set the real Supabase connection and authentication values in `.env`. Never commit `.env` or service-role credentials.
@@ -62,7 +60,7 @@ The committed migration order is:
 Run the API:
 
 ```powershell
-fastapi dev
+uv run fastapi dev
 ```
 
 The configured entrypoint is `src.main:app`. Development OpenAPI documentation is available at `http://127.0.0.1:8000/docs`; production disables interactive docs by default.
@@ -102,8 +100,8 @@ Clinical tables are not directly writable by browser roles. The migrations enabl
 ## Verification
 
 ```powershell
-python -m pytest -q
-ruff check src tests scripts
+uv run pytest -q
+uv run ruff check src tests scripts
 ```
 
 Current tests cover the existing clinical engine plus production API and schema contracts. A live Supabase instance is required for repository integration tests and applying migrations.

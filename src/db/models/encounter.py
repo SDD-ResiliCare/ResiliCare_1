@@ -13,7 +13,10 @@ from src.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 class Queue(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "queues"
-    __table_args__ = (UniqueConstraint("hospital_id", "queue_code"),)
+    __table_args__ = (
+        UniqueConstraint("hospital_id", "queue_code"),
+        Index("uq_queues_active_hospital", "hospital_id", unique=True, postgresql_where=text("status = 'active'")),
+    )
 
     hospital_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("hospitals.id"), nullable=False)
     ward_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("wards.id"))
@@ -59,6 +62,7 @@ class QueueEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     entered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     called_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     exited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    exit_reason: Mapped[str | None] = mapped_column(Text)
     priority_boost: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     priority_boost_reason: Mapped[str | None] = mapped_column(Text)
     priority_boost_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -36,3 +36,13 @@ class FeedbackCreate(BaseModel):
     rating: int | None = Field(default=None, ge=1, le=5)
     message: str = Field(min_length=1, max_length=8000)
     contact_permission: bool = False
+
+
+class ReviewModerationUpdate(BaseModel):
+    moderation_status: str
+
+
+class FeedbackStatusUpdate(BaseModel):
+    status: str
+    assigned_to_staff_id: UUID | None = None
+    resolution_notes: str | None = Field(default=None, max_length=8000)

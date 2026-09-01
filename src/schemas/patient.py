@@ -33,6 +33,20 @@ class PatientResponse(ResourceResponse, PatientCreate):
     status: str
 
 
+class PatientUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    date_of_birth: date | None = None
+    estimated_age_years: Decimal | None = Field(default=None, ge=0, le=130)
+    sex_at_birth: str | None = None
+    gender_identity: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    address: dict | None = None
+    preferred_language: str | None = None
+    profile_image_path: str | None = None
+
+
 class PatientIdentifierCreate(BaseModel):
     hospital_id: UUID
     identifier_type: str = "mrn"

@@ -40,6 +40,16 @@ class StaffResponse(ResourceResponse):
     joined_on: date
 
 
+class StaffUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    profile_image_path: str | None = None
+    employment_status: str | None = None
+    left_on: date | None = None
+
+
 class WardAssignmentCreate(BaseModel):
     ward_id: UUID
     role_in_ward: str

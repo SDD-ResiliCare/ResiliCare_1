@@ -31,6 +31,16 @@ class EncounterResponse(ResourceResponse, EncounterCreate):
     completed_at: datetime | None
 
 
+class EncounterUpdate(BaseModel):
+    arrival_mode: str | None = None
+    current_ward_id: UUID | None = None
+    chief_complaint: str | None = None
+    presenting_details: str | None = None
+    symptom_onset_at: datetime | None = None
+    symptom_onset_precision: str | None = None
+    data_quality_notes: str | None = None
+
+
 class ParticipantCreate(BaseModel):
     staff_id: UUID
     role: str
@@ -55,6 +65,28 @@ class QueueCreate(BaseModel):
     queue_code: str
     name: str
     queue_type: str
+
+
+class QueueUpdate(BaseModel):
+    name: str | None = None
+    ward_id: UUID | None = None
+
+
+class QueuePriorityUpdate(BaseModel):
+    priority_boost: int = Field(ge=0, le=5)
+    reason: str | None = Field(default=None, max_length=1000)
+    expires_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def require_boost_context(self) -> "QueuePriorityUpdate":
+        if self.priority_boost > 0 and (not self.reason or self.expires_at is None):
+            raise ValueError("a positive priority boost requires reason and expires_at")
+        return self
+
+
+class QueueEntryAction(BaseModel):
+    occurred_at: datetime
+    reason: str | None = Field(default=None, max_length=1000)
 
 
 class VitalObservationCreate(BaseModel):

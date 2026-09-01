@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.exception_handlers import register_exception_handlers
 from src.api.routers import (
+    app_context,
+    audit,
     auth,
     billing,
     encounters,
@@ -42,12 +44,14 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
 register_exception_handlers(app)
 
 for router in (
+    app_context.router,
+    audit.router,
     auth.router,
     hospitals.router,
     staff.router,

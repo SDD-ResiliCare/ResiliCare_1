@@ -28,3 +28,20 @@ class PaymentCreate(BaseModel):
     payment_method: str
     external_transaction_reference: str | None = None
     paid_at: datetime
+
+
+class InvoiceDraftUpdate(BaseModel):
+    due_at: datetime | None = None
+
+
+class InvoiceIssue(BaseModel):
+    issued_at: datetime
+
+
+class InvoiceVoid(BaseModel):
+    reason: str = Field(min_length=1)
+
+
+class PaymentRefund(BaseModel):
+    refunded_at: datetime
+    reason: str = Field(min_length=1)

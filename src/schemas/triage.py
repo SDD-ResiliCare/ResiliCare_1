@@ -66,3 +66,9 @@ class QuestionnaireCreate(BaseModel):
     version: int = Field(ge=1)
     language_code: str = "en"
     questions: list[QuestionnaireQuestionCreate] = Field(min_length=1)
+
+
+class QuestionnaireUpdate(BaseModel):
+    title: str | None = None
+    complaint_category: str | None = None
+    is_active: bool | None = None

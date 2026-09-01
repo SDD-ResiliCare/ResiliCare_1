@@ -24,6 +24,17 @@ class HospitalResponse(ResourceResponse, HospitalCreate):
     status: str
 
 
+class HospitalUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=200)
+    facility_type: str | None = None
+    address: dict | None = None
+    timezone: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    outbound_transfer_enabled: bool | None = None
+    profile_image_path: str | None = None
+
+
 class WardCreate(BaseModel):
     hospital_id: UUID
     ward_code: str
@@ -36,6 +47,14 @@ class WardCreate(BaseModel):
 
 class WardResponse(ResourceResponse, WardCreate):
     status: str
+
+
+class WardUpdate(BaseModel):
+    name: str | None = None
+    ward_type: str | None = None
+    floor_label: str | None = None
+    contact_extension: str | None = None
+    capacity: int | None = Field(default=None, ge=0)
 
 
 class EsiCareAreaRuleCreate(BaseModel):
