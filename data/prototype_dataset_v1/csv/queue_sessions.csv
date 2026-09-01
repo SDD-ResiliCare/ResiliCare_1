@@ -1,0 +1,5 @@
+queue_session_id,hospital_id,session_code,session_type,status,started_at,load_multiplier,operational_config_snapshot,version,is_synthetic
+QS-HSP-001-20260902,HSP-001,QS-20260902-HSP-001,DEMO,ACTIVE,2026-09-02T08:00:00+05:30,1,hospital-config-1,1,true
+QS-HSP-002-20260902,HSP-002,QS-20260902-HSP-002,DEMO,ACTIVE,2026-09-02T08:00:00+05:30,1,hospital-config-1,1,true
+QS-HSP-003-20260902,HSP-003,QS-20260902-HSP-003,DEMO,ACTIVE,2026-09-02T08:00:00+05:30,1,hospital-config-1,1,true
+QS-HSP-004-20260902,HSP-004,QS-20260902-HSP-004,DEMO,ACTIVE,2026-09-02T08:00:00+05:30,1,hospital-config-1,1,true

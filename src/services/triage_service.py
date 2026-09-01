@@ -62,15 +62,15 @@ class TriageService:
     async def create_assessment(
         self, encounter_id: UUID, payload: AssessmentCreate, created_by: UUID | None, hospital_id: UUID | None
     ) -> TriageAssessment:
-        row = (
-            await self.session.execute(
-                select(Patient, Encounter, VitalObservation)
-                .join_from(Patient, Encounter, Encounter.patient_id == Patient.id)
-                .outerjoin(VitalObservation, VitalObservation.id == payload.latest_vital_observation_id)
-                .where(Encounter.id == encounter_id)
-                .where(Encounter.hospital_id == hospital_id if hospital_id is not None else True)
-            )
-        ).first()
+        statement = (
+            select(Patient, Encounter, VitalObservation)
+            .join_from(Patient, Encounter, Encounter.patient_id == Patient.id)
+            .outerjoin(VitalObservation, VitalObservation.id == payload.latest_vital_observation_id)
+            .where(Encounter.id == encounter_id)
+        )
+        if hospital_id is not None:
+            statement = statement.where(Encounter.hospital_id == hospital_id)
+        row = (await self.session.execute(statement)).first()
         if row is None:
             raise HTTPException(404, "encounter not found")
         patient, encounter, vital = row

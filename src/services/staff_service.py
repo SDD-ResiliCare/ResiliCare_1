@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -95,7 +96,7 @@ class StaffService:
         await self.session.commit()
         return member
 
-    async def list_assignments(self, staff_id: UUID) -> list[StaffWardAssignment]:
+    async def list_assignments(self, staff_id: UUID) -> builtins.list[StaffWardAssignment]:
         await self.get(staff_id)
         return list(
             (

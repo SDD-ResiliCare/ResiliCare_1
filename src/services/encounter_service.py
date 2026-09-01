@@ -308,8 +308,10 @@ class EncounterService:
     async def record_vitals(self, encounter_id: UUID, payload: VitalObservationCreate) -> VitalObservation:
         await self.get(encounter_id)
         values = payload.model_dump()
-        components = (payload.gcs_eye, payload.gcs_verbal, payload.gcs_motor)
-        values["gcs_total"] = sum(components) if all(value is not None for value in components) else None
+        if payload.gcs_eye is not None and payload.gcs_verbal is not None and payload.gcs_motor is not None:
+            values["gcs_total"] = payload.gcs_eye + payload.gcs_verbal + payload.gcs_motor
+        else:
+            values["gcs_total"] = None
         observation = await self.vitals.add(VitalObservation(encounter_id=encounter_id, **values))
         await self.session.commit()
         return observation

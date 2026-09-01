@@ -95,7 +95,39 @@ Important workflows:
 
 Supabase Auth verifies identity. FastAPI binds the verified `auth.users.id` to a `staff` record or `patient_access_links` record and enforces application roles.
 
+Migration `006_auth_profiles_and_roles.sql` adds application-owned `user_profiles`
+and scoped `user_roles`. An Auth trigger creates a profile for each new Supabase
+user, and role changes synchronize the primary role plus the active role list into
+Auth app metadata. RLS is enabled and direct `anon`/`authenticated` access is
+revoked; only the server-side service role manages these records.
+
 Clinical tables are not directly writable by browser roles. The migrations enable RLS and revoke direct `anon` and `authenticated` table privileges; clinical writes go through FastAPI so service-level workflow and hospital isolation checks cannot be bypassed.
+
+### Prototype login accounts
+
+The compact four-hospital prototype dataset is stored in
+`data/prototype_dataset_v1/`. It includes 100 synthetic patients, 40 live
+encounters, 60 reserve patient profiles, and a 17-account login manifest.
+
+The login manifest contains no passwords or Supabase UUIDs. After the core seed
+rows have been imported, validate the account plan without changing Supabase:
+
+```powershell
+python scripts/provision_demo_auth_users.py
+```
+
+To provision the synthetic `.test` accounts, set `SUPABASE_URL`, a server-only
+`SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`), and
+`RESILICARE_DEMO_PASSWORD`, then run:
+
+```powershell
+python scripts/provision_demo_auth_users.py --apply
+```
+
+The script creates or updates each user's `user_profiles` and `user_roles` rows,
+links staff accounts through `staff.auth_user_id`, links patient accounts through
+`patient_access_links`, and gives only the single demo super-administrator the
+`platform_admin` role. Never run this demo-account flow for real users.
 
 ## Verification
 

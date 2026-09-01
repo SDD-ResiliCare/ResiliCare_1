@@ -1,0 +1,5 @@
+hospital_id,hospital_name,facility_level,city,hospital_type,icu_available,lab_24x7,imaging_available,outbound_transfer_enabled,operational_config_version,config_code,is_synthetic
+HSP-001,ResiliCare Central Hospital,WELL_EQUIPPED,Mumbai,Tertiary,true,true,true,true,1,hospital-config-1,true
+HSP-002,ResiliCare Metro Hospital,WELL_EQUIPPED,Bengaluru,Multispecialty,true,true,true,true,1,hospital-config-1,true
+HSP-003,ResiliCare District Hospital,RESOURCE_CONSTRAINED,Indore,District,false,true,true,true,1,hospital-config-1,true
+HSP-004,ResiliCare Rural Hospital,RESOURCE_CONSTRAINED,Nashik Rural,Rural,false,false,false,true,1,hospital-config-1,true

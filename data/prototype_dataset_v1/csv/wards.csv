@@ -1,0 +1,21 @@
+ward_id,hospital_id,ward_name,ward_type,total_beds,occupied_beds,available_beds,contact_extension,equipment_level,is_active
+HSP-001-W01,HSP-001,Emergency and Triage,COMMON,10,6,4,101,FULL,true
+HSP-001-W02,HSP-001,General Medicine,COMMON,18,12,6,201,FULL,true
+HSP-001-W03,HSP-001,General Surgery,COMMON,14,8,6,301,FULL,true
+HSP-001-W04,HSP-001,Cardiology,SPECIALITY,12,7,5,401,FULL,true
+HSP-001-W05,HSP-001,Intensive Care Unit,SPECIALITY,10,4,6,501,FULL,true
+HSP-002-W01,HSP-002,Emergency and Triage,COMMON,10,6,4,102,FULL,true
+HSP-002-W02,HSP-002,General Medicine,COMMON,18,12,6,202,FULL,true
+HSP-002-W03,HSP-002,General Surgery,COMMON,14,8,6,302,FULL,true
+HSP-002-W04,HSP-002,Paediatrics,SPECIALITY,14,9,5,402,FULL,true
+HSP-002-W05,HSP-002,Orthopaedics,SPECIALITY,12,7,5,502,FULL,true
+HSP-003-W01,HSP-003,Emergency and Triage,COMMON,9,5,4,103,LIMITED,true
+HSP-003-W02,HSP-003,General Medicine,COMMON,15,10,5,203,LIMITED,true
+HSP-003-W03,HSP-003,General Surgery,COMMON,12,7,5,303,LIMITED,true
+HSP-003-W04,HSP-003,Maternity,SPECIALITY,9,5,4,403,LIMITED,true
+HSP-003-W05,HSP-003,Isolation and Observation,SPECIALITY,7,3,4,503,LIMITED,true
+HSP-004-W01,HSP-004,Emergency and Triage,COMMON,7,4,3,104,LIMITED,true
+HSP-004-W02,HSP-004,General Medicine,COMMON,13,8,5,204,LIMITED,true
+HSP-004-W03,HSP-004,General Surgery,COMMON,10,6,4,304,LIMITED,true
+HSP-004-W04,HSP-004,Paediatrics,SPECIALITY,6,3,3,404,LIMITED,true
+HSP-004-W05,HSP-004,Trauma and Observation,SPECIALITY,4,1,3,504,LIMITED,true

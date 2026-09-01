@@ -13,6 +13,7 @@ from src.db.models.encounter import (
     RoutingRecommendation,
 )
 from src.db.models.feedback import FeedbackInvite, FeedbackSubmission, Review
+from src.db.models.identity import UserProfile, UserRole
 from src.db.models.medication import Prescription, PrescriptionItem
 from src.db.models.organization import (
     EscalationRoute,

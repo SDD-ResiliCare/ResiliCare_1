@@ -11,11 +11,14 @@ from src.schemas.feedback import ReviewCreate
 ROOT = Path(__file__).parents[1]
 
 
-def test_all_41_production_tables_are_mapped_and_migrated():
+def test_all_production_tables_are_mapped_and_migrated():
     application_tables = {name for name in Base.metadata.tables if not name.startswith("auth.")}
-    migration = (ROOT / "supabase" / "migrations" / "002_application_schema.sql").read_text(encoding="utf-8")
-    assert len(application_tables) == 41
-    assert all(f"CREATE TABLE {table}" in migration for table in application_tables)
+    migrations = "\n".join(
+        path.read_text(encoding="utf-8") for path in sorted((ROOT / "supabase" / "migrations").glob("*.sql"))
+    )
+    assert len(application_tables) == 43
+    normalized_migrations = migrations.lower().replace("create table public.", "create table ")
+    assert all(f"create table {table}" in normalized_migrations for table in application_tables)
 
 
 def test_schema_has_no_simulation_columns():
