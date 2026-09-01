@@ -6,3 +6,6 @@ data/audit_log*.jsonl
 data/resilicare_history_runtime.json
 ~$*.xlsx
 .venv/
+.env
+.coverage
+htmlcov/
