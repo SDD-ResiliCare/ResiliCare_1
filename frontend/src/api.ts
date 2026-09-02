@@ -211,6 +211,16 @@ export const api = {
       ];
     }
   },
+
+  getDoctorWorkloads: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/api/v1/staff/doctors/workloads');
+      return response.data || [];
+    } catch (error) {
+      console.warn("Failed to fetch doctor workloads");
+      return [];
+    }
+  },
   
   getSuggestions: async (): Promise<Patient[]> => {
     // Missing in backend.

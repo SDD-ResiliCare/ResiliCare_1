@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   ShieldAlert, Download, Server, Zap, Users, Activity, Plus, Search, 
   Building2, Bed, Stethoscope, CheckCircle2, AlertCircle, Clock, FileText, 
   TrendingUp, ActivitySquare, Settings, Star
 } from 'lucide-react';
+import { api } from '../api';
 
 export function AdminDashboard() {
   const [surgeActive, setSurgeActive] = useState(false);
+  const [doctorWorkloads, setDoctorWorkloads] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.getDoctorWorkloads().then(setDoctorWorkloads);
+  }, []);
 
   return (
     <div className="flex flex-1 overflow-hidden h-full">
@@ -147,12 +153,21 @@ export function AdminDashboard() {
               </div>
               
               <div className="space-y-4">
-                 {[
+                 {(doctorWorkloads.length > 0 ? doctorWorkloads.map((workload: any) => ({
+                   name: `Dr. ${workload.doctor.first_name} ${workload.doctor.last_name || ''}`.trim(),
+                   spec: 'Clinical staff',
+                   status: workload.availability === 'busy' ? 'Busy' : 'Free',
+                   ward: workload.current_patient?.ward?.name || workload.waiting_patients?.[0]?.ward?.name || 'Ward assignment',
+                   queue: workload.waiting_count ? `${workload.waiting_count} patients waiting` : 'No queue',
+                   color: workload.availability === 'busy' ? 'text-red-400' : 'text-[#D6FF38]',
+                   bg: workload.availability === 'busy' ? 'bg-red-500/10' : 'bg-[#D6FF38]/10',
+                   img: `https://i.pravatar.cc/150?u=${workload.doctor.id}`,
+                 })) : [
                    { name: 'Dr. Sarah Hayes', spec: 'Trauma Surgery', status: 'Assigned', ward: 'Trauma ICU', queue: '3 patients waiting', color: 'text-red-400', bg: 'bg-red-500/10', img: 'https://i.pravatar.cc/150?u=d1' },
                    { name: 'Dr. Marcus Kim', spec: 'Cardiology', status: 'Free', ward: 'Cardiology', queue: 'No queue', color: 'text-[#D6FF38]', bg: 'bg-[#D6FF38]/10', img: 'https://i.pravatar.cc/150?u=d2' },
                    { name: 'Dr. Elena Rivera', spec: 'Internal Medicine', status: 'Assigned', ward: 'General Med', queue: '1 patient assigned', color: 'text-white', bg: 'bg-white/10', img: 'https://i.pravatar.cc/150?u=d3' },
                    { name: 'Dr. Anil Patel', spec: 'Pediatrics', status: 'Free', ward: 'Pediatrics', queue: 'No queue', color: 'text-gray-400', bg: 'bg-white/5', img: 'https://i.pravatar.cc/150?u=d4' },
-                 ].map((doc, i) => (
+                 ]).map((doc, i) => (
                    <div key={i} className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-xl p-4">
                       <img src={doc.img} alt={doc.name} className="w-12 h-12 rounded-full object-cover" />
                       <div className="flex-1">

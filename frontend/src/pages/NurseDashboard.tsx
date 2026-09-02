@@ -4,7 +4,7 @@ import { cn } from '../lib/utils';
 import { api } from '../api';
 import { QueueSnapshot, Patient } from '../types';
 
-const AllocationSelector = ({ patient, onAllocate }: { patient: Patient; onAllocate: (data: any) => void }) => {
+const AllocationSelector = ({ patient, onAllocate }: { key?: React.Key; patient: Patient; onAllocate: (data: any) => void }) => {
   const [hospitals, setHospitals] = useState<any[]>([]);
   const [wards, setWards] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -27,7 +27,15 @@ const AllocationSelector = ({ patient, onAllocate }: { patient: Patient; onAlloc
 
   useEffect(() => {
     if (selectedWard) {
-      api.getDoctors(selectedWard).then(setDoctors);
+      Promise.all([api.getDoctors(selectedWard), api.getDoctorWorkloads()]).then(([wardDoctors, workloads]) => {
+        const workloadByDoctor = new Map(workloads.map((workload: any) => [workload.doctor.id, workload]));
+        setDoctors(wardDoctors.map((doctor: any) => {
+          const workload = workloadByDoctor.get(doctor.id);
+          return workload
+            ? { ...doctor, availability: workload.availability, waiting_count: workload.waiting_count }
+            : { ...doctor, availability: 'unknown', waiting_count: 0 };
+        }));
+      });
     } else {
       setDoctors([]);
     }
@@ -86,9 +94,11 @@ const AllocationSelector = ({ patient, onAllocate }: { patient: Patient; onAlloc
           onChange={(e) => setSelectedDoctor(e.target.value)}
           disabled={!selectedWard}
         >
-          <option value="" className="text-black">Unassigned</option>
+            <option value="" className="text-black">Unassigned</option>
           {doctors.map(d => (
-            <option key={d.id} value={d.id} className="text-black">Dr. {d.first_name} {d.last_name}</option>
+            <option key={d.id} value={d.id} className="text-black">
+              Dr. {d.first_name} {d.last_name} — {d.availability === 'busy' ? `${d.waiting_count || 0} waiting` : 'Free'}
+            </option>
           ))}
           {patient.allocation?.primary_doctor?.id && !doctors.find(d => d.id === patient.allocation!.primary_doctor!.id) && (
             <option value={patient.allocation.primary_doctor.id} className="text-black">Dr. {patient.allocation.primary_doctor.first_name} {patient.allocation.primary_doctor.last_name}</option>
@@ -417,7 +427,7 @@ export function NurseDashboard() {
                       
                       {patient.allocation && (
                         <div className={!isActive ? 'opacity-50 pointer-events-none' : ''}>
-                          <AllocationSelector key={`surge-${patient.id}`} patient={patient} onAllocate={(data) => {}} />
+                          <AllocationSelector patient={patient} onAllocate={(data) => {}} />
                         </div>
                       )}
                       
