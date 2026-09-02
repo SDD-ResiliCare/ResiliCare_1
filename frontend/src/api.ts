@@ -43,6 +43,7 @@ let mockQueue: Patient[] = [
     complaint: 'Chest pain, shortness of breath',
     status: 'waiting',
     timeInQueue: '15m',
+    aiOverview: 'High-risk symptoms and reduced oxygen saturation support ESI 2 and urgent monitored care. Nurse confirmation is required before assignment.',
     aiSuggestion: {
       esi: 2,
       redFlags: ['Cardiac', 'Respiratory'],
@@ -61,6 +62,7 @@ let mockQueue: Patient[] = [
     complaint: 'Severe abdominal pain',
     status: 'waiting',
     timeInQueue: '45m',
+    aiOverview: 'The recorded symptoms and stable vitals support ESI 3 and an acute assessment ward. Nurse confirmation is required before assignment.',
     aiSuggestion: {
       esi: 3,
       redFlags: ['Abdominal'],
@@ -79,6 +81,7 @@ let mockQueue: Patient[] = [
     complaint: 'Laceration on right arm',
     status: 'waiting',
     timeInQueue: '2h',
+    aiOverview: 'The localized injury and stable recorded vitals support ESI 4 and a lower-acuity treatment area. Nurse confirmation is required before assignment.',
     aiSuggestion: {
       esi: 4,
       redFlags: [],
@@ -133,18 +136,20 @@ export const api = {
         return {
           id: entry.patient.id,
           encounter_id: entry.encounter.id,
-          assessment_id: undefined, // Needs to be fetched if required
+          assessment_id: entry.triage?.assessment_id,
           name: patientName,
           age: age,
           avatar: entry.patient.profile_image_path || `https://i.pravatar.cc/150?u=${entry.patient.id}`,
           complaint: entry.encounter.chief_complaint || 'No complaint recorded',
           status: entry.queue_entry.status,
           timeInQueue: entry.queue_entry.entered_at,
-          esi: entry.final_esi,
+          esi: entry.final_esi || entry.triage?.predicted_esi,
           vitals: vitals,
+          aiOverview: entry.triage?.ai_overview,
+          aiOverviewFactors: entry.triage?.ai_overview_factors || {},
           allocation: entry.allocation,
           aiSuggestion: {
-            esi: entry.final_esi || 5,
+            esi: entry.final_esi || entry.triage?.predicted_esi || 5,
             redFlags: entry.safety_alert ? ['Safety Alert'] : [],
             differential: [],
             needsConfirmation: false // Assumed confirmed or logic goes here

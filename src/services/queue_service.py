@@ -213,7 +213,7 @@ class QueueService:
                     "encounter": encounter,
                     "final_esi": decision.final_esi if decision else None,
                     "safety_alert": safety_alert,
-                    "vitals": {k: getattr(vitals, k) for k in vitals.__table__.columns.keys()} if vitals else None,
+                    "vitals": {k: getattr(vitals, k) for k in vitals.__table__.columns} if vitals else None,
                     "triage": {
                         "assessment_id": assessment.id if assessment else None,
                         "assessment_status": assessment.assessment_status if assessment else None,
@@ -228,6 +228,8 @@ class QueueService:
                         "decision_id": decision.id if decision else None,
                         "final_esi": decision.final_esi if decision else None,
                         "decided_at": decision.decided_at if decision else None,
+                        "ai_overview": assessment.ai_overview if assessment else None,
+                        "ai_overview_factors": assessment.ai_overview_factors if assessment else {},
                     },
                     "allocation": {
                         "hospital_id": hospital.id,
@@ -248,6 +250,7 @@ class QueueService:
                             if active_location
                             else (participant.assigned_at if participant else None)
                         ),
+                        "allocation_overview": None,
                     },
                     "effective_esi": effective_esi,
                 }

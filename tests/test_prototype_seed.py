@@ -11,6 +11,9 @@ def test_default_seed_contains_only_40_live_patients_and_related_encounters():
     assert len(plan["vital_observations"]) == 46
     assert len(plan["symptom_responses"]) == 240
     assert len(plan["triage_assessments"]) == 40
+    assert all(row["ai_overview"].strip() for row in plan["triage_assessments"])
+    assert all(row["recommended_ward_id"] for row in plan["triage_assessments"])
+    assert all(row["allocation_overview"].strip() for row in plan["doctor_work_items"])
     assert len(plan["invoices"]) == 40
 
 

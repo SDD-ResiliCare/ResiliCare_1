@@ -389,10 +389,15 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
     )
 
     doctor_work_items = []
+    staff_source_by_id = {row["staff_id"]: row for row in staff_rows}
+    ward_source_by_id = {row["ward_id"]: row for row in ward_rows}
     for row in confirmed_doctor_rows:
         encounter = encounter_by_id[row["encounter_id"]]
         assessment = assessment_by_encounter[row["encounter_id"]]
         is_current = row["doctor_assignment_id"] in current_assignment_ids
+        doctor_name = staff_source_by_id[row["doctor_staff_id"]]["full_name"]
+        ward_name = ward_source_by_id[encounter["current_ward_id"]]["ward_name"]
+        work_status = "in_service" if is_current else "waiting"
         doctor_work_items.append(
             {
                 "id": _id("doctor_work_item", row["doctor_assignment_id"]),
@@ -400,12 +405,26 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
                 "encounter_id": encounter_ids[row["encounter_id"]],
                 "doctor_staff_id": staff_ids[row["doctor_staff_id"]],
                 "ward_id": ward_ids[encounter["current_ward_id"]],
-                "status": "in_service" if is_current else "waiting",
+                "status": work_status,
                 "priority_esi": int(assessment["recommended_esi_level"]),
                 "queued_at": row["assigned_at"],
                 "started_at": row["assigned_at"] if is_current else None,
                 "assigned_by_staff_id": staff_ids[nurse_by_encounter[row["encounter_id"]]["nurse_staff_id"]],
                 "allocation_reason": "Synthetic nurse-confirmed initial allocation",
+                "allocation_overview": (
+                    f"{ward_name} was confirmed for ESI {assessment['recommended_esi_level']}. "
+                    f"{doctor_name} is assigned to that ward; the synthetic doctor-work status is {work_status}."
+                ),
+                "allocation_overview_factors": {
+                    "final_esi": int(assessment["recommended_esi_level"]),
+                    "ward_id": ward_ids[encounter["current_ward_id"]],
+                    "ward_name": ward_name,
+                    "doctor_staff_id": staff_ids[row["doctor_staff_id"]],
+                    "doctor_name": doctor_name,
+                    "doctor_was_busy": not is_current,
+                    "allocator_reason": "Synthetic nurse-confirmed initial allocation",
+                    "method": "SYNTHETIC_RULE_TEMPLATE",
+                },
             }
         )
 
@@ -508,6 +527,23 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
             "interview_external_id": interview_by_encounter[row["encounter_id"]]["symptom_interview_id"],
         }
         serialized_input = json.dumps(input_snapshot, sort_keys=True, separators=(",", ":"))
+        recommended_esi = int(row["recommended_esi_level"])
+        recommended_rule = next(
+            rule
+            for rule in esi_rules
+            if rule["operational_config_id"] == config_ids[encounter["hospital_id"]]
+            and rule["esi_level"] == recommended_esi
+        )
+        recommended_ward = next(item for item in ward_rows if ward_ids[item["ward_id"]] == recommended_rule["ward_id"])
+        review_text = (
+            "Senior nurse review is required before assignment."
+            if _bool(row["mandatory_safety_workup"])
+            else "A nurse or clinician must confirm the recommendation before assignment."
+        )
+        clinical_reason = (
+            f"Recommended ESI {recommended_esi} from the recorded symptoms and latest encounter vitals. "
+            f"Hospital routing maps this acuity to {recommended_ward['ward_name']}. {review_text}"
+        )
         assessments.append(
             {
                 "id": assessment_id,
@@ -521,13 +557,32 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
                 "assessment_status": row["clinician_confirmation_status"].casefold(),
                 "proposed_esi": int(row["recommended_esi_level"]),
                 "maximum_allowed_esi": _int(row["maximum_allowed_esi_level"]),
-                "recommended_esi": int(row["recommended_esi_level"]),
-                "possible_esi_levels": [int(row["recommended_esi_level"])],
+                "recommended_esi": recommended_esi,
+                "recommended_ward_id": recommended_rule["ward_id"],
+                "possible_esi_levels": [recommended_esi],
                 "uncertainty_label": "limited_input" if row["input_quality"] != "COMPLETE" else "prototype",
                 "requires_senior_review": _bool(row["mandatory_safety_workup"]),
                 "matched_safety_rules": {"prototype_mandatory_workup": _bool(row["mandatory_safety_workup"])},
                 "matched_clinical_pathways": {},
                 "missing_input_flags": [] if row["input_quality"] == "COMPLETE" else ["prototype_incomplete_input"],
+                "ai_overview": clinical_reason,
+                "ai_overview_factors": {
+                    "recommended_esi": recommended_esi,
+                    "possible_esi_levels": [recommended_esi],
+                    "confidence_label": "limited_input" if row["input_quality"] != "COMPLETE" else "prototype",
+                    "requires_senior_review": _bool(row["mandatory_safety_workup"]),
+                    "explanation_lines": [
+                        f"Recommended ESI {recommended_esi} from recorded symptoms and encounter vitals."
+                    ],
+                    "explanation_rule_ids": [],
+                    "matched_safety_rules": [],
+                    "uncertainty_reasons": (
+                        [] if row["input_quality"] == "COMPLETE" else ["prototype_incomplete_input"]
+                    ),
+                    "recommended_ward_id": recommended_rule["ward_id"],
+                    "recommended_ward_name": recommended_ward["ward_name"],
+                    "method": "SYNTHETIC_RULE_TEMPLATE",
+                },
                 "input_snapshot": input_snapshot,
                 "input_hash": hashlib.sha256(serialized_input.encode()).hexdigest(),
                 "score_source": row["score_source"].casefold(),

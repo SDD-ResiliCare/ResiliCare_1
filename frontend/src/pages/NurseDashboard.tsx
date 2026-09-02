@@ -390,7 +390,7 @@ export function NurseDashboard() {
                        </div>
                      </div>
                      <p className="text-[11px] text-gray-400 font-medium leading-relaxed relative z-10 mb-3">
-                       AI suggests ESI Level {patient.aiSuggestion?.esi || patient.esi || 'Unknown'}.
+                       {patient.aiOverview || `AI suggests ESI Level ${patient.aiSuggestion?.esi || patient.esi || 'Unknown'}.`}
                      </p>
                      
                      <div className="flex gap-3 mt-auto pt-4 border-t border-white/10 relative z-10">
@@ -522,7 +522,9 @@ export function NurseDashboard() {
              </span>
            </div>
            
-           <p className="text-[11px] text-gray-400 font-medium leading-relaxed relative z-10 mb-3">AI Suggests ESI Level {activePatient.aiSuggestion?.esi || activePatient.esi || 'Unknown'}</p>
+           <p className="text-[11px] text-gray-300 font-medium leading-relaxed relative z-10 mb-3">
+             {activePatient.aiOverview || `AI suggests ESI Level ${activePatient.aiSuggestion?.esi || activePatient.esi || 'Unknown'}.`}
+           </p>
            
            <div className="space-y-3 relative z-10 flex-1 mb-2">
               <div className="flex flex-col gap-1">

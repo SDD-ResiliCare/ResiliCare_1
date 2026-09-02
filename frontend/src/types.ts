@@ -21,10 +21,14 @@ export interface Patient {
   };
   timeInQueue?: string;
   assignedTo?: string;
+  aiOverview?: string;
+  aiOverviewFactors?: Record<string, unknown>;
   allocation?: {
+    hospital_id?: string;
     hospital_name?: string;
     suggested_ward?: { name: string; ward_code: string; id: string };
     primary_doctor?: { first_name: string; last_name: string; employee_code: string; id: string };
+    allocation_overview?: string;
   };
   aiSuggestion?: {
     esi: number;

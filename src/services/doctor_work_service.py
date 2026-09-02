@@ -153,6 +153,8 @@ class DoctorWorkService:
             "queue_position": queue_position,
             "queued_at": work_item.queued_at,
             "started_at": work_item.started_at,
+            "allocation_overview": work_item.allocation_overview,
+            "allocation_overview_factors": work_item.allocation_overview_factors,
         }
 
     @staticmethod

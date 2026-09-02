@@ -56,6 +56,7 @@ The committed migration order is:
 1. PostgreSQL extensions and shared trigger helpers.
 2. Production application tables and foreign keys.
 3. Clinical constraints, partial unique indexes, audit immutability, grants, and RLS enablement.
+4. Forward workflow migrations, including doctor work queues and versioned clinical/allocation overviews.
 
 Run the API:
 
@@ -87,6 +88,7 @@ Important workflows:
 - Vitals are append-only observations. GCS total is derived from eye, verbal, and motor components.
 - Follow-up symptom questions retain questionnaire version, question ordering, branching conditions, response source, and the exact displayed question text.
 - Every triage run creates a new immutable assessment version. Clinician decisions do not overwrite generated assessments.
+- Every triage assessment stores a short deterministic AI overview, its structured clinical factors, and the ward suggested by the hospital's ESI routing configuration. The confirmed doctor work item separately snapshots why the selected ward and doctor were used, including whether the doctor was free or the patient's doctor-queue position.
 - The current queue exposes each patient's pending AI recommendation and confirmed ESI separately. An authorized allocator may confirm a ward and primary-doctor allocation only after the latest assessment has a clinician decision; the ward location, doctor participation, and combined audit event are persisted atomically.
 - Nurses and receptionists can perform the post-triage allocation. Allocation closes the hospital triage-queue entry and creates a doctor work item: it starts immediately when that doctor is free, otherwise it joins the doctor's ESI-ordered waiting list. Closing the current encounter promotes the next waiting patient.
 - An encounter closure records the medication decision. Actual prescriptions are created only when medication is ordered.

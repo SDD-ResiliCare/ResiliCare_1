@@ -52,6 +52,8 @@ def _work_row(doctor, ward, status, queued_at, esi):
         started_at=queued_at if status == "in_service" else None,
         assigned_by_staff_id=uuid4(),
         allocation_reason="Synthetic allocation",
+        allocation_overview=f"Synthetic {status} allocation overview.",
+        allocation_overview_factors={"doctor_was_busy": status == "waiting"},
     )
     return item, encounter, patient, ward
 
@@ -86,6 +88,8 @@ async def test_workload_exposes_busy_doctor_current_patient_and_ordered_waiting_
     assert workload["waiting_count"] == 2
     assert [item["queue_position"] for item in workload["waiting_patients"]] == [1, 2]
     assert [item["confirmed_esi"] for item in workload["waiting_patients"]] == [2, 4]
+    assert workload["current_patient"]["allocation_overview"]
+    assert workload["waiting_patients"][0]["allocation_overview_factors"]["doctor_was_busy"] is True
 
 
 @pytest.mark.asyncio
@@ -130,6 +134,10 @@ def test_doctor_work_queue_schema_and_frontend_routes_are_present():
         encoding="utf-8"
     )
     assert "create table doctor_work_items" in migration.lower()
+    overview_migration = (
+        Path(__file__).parents[1] / "supabase" / "migrations" / "009_clinical_allocation_overviews.sql"
+    ).read_text(encoding="utf-8")
+    assert "allocation_overview" in overview_migration
     paths = app.openapi()["paths"]
     assert "/api/v1/staff/doctors/workloads" in paths
     assert "/api/v1/staff/doctors/{doctor_id}/workload" in paths

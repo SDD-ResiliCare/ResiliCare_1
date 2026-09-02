@@ -46,6 +46,7 @@ from src.schemas.encounter import (
 )
 from src.schemas.triage import SymptomInterviewCreate, SymptomResponseCreate
 from src.services.audit_service import record_audit_event
+from src.services.clinical_overview_service import build_allocation_overview
 from src.services.doctor_work_service import DoctorWorkService
 
 
@@ -406,6 +407,21 @@ class EncounterService:
             started_at=payload.transferred_at if replacement_status == "in_service" else None,
             assigned_by_staff_id=assigned_by,
             allocation_reason=payload.reason,
+            allocation_overview=(
+                f"The confirmed ward remained unchanged for ESI {work_item.priority_esi}. "
+                f"Primary-doctor care was transferred to {new_doctor.first_name} "
+                f"{new_doctor.last_name or ''} for the recorded reason: {payload.reason}."
+            ).replace("  ", " "),
+            allocation_overview_factors={
+                "transfer": True,
+                "final_esi": work_item.priority_esi,
+                "ward_id": str(encounter.current_ward_id),
+                "previous_doctor_staff_id": str(current.staff_id),
+                "doctor_staff_id": str(new_doctor.id),
+                "doctor_was_busy": new_doctor_current is not None,
+                "allocator_reason": payload.reason,
+                "method": "RULE_TEMPLATE",
+            },
         )
         self.session.add(replacement_work)
         if was_in_service:
@@ -516,6 +532,13 @@ class EncounterService:
             .order_by(EsiCareAreaRule.is_default.desc(), EsiCareAreaRule.priority)
             .limit(1)
         )
+        suggested_ward = (
+            ward
+            if suggested_rule is not None and suggested_rule.ward_id == ward.id
+            else await self.session.get(Ward, suggested_rule.ward_id)
+            if suggested_rule is not None
+            else None
+        )
 
         current_location = await self.session.scalar(
             select(EncounterLocationHistory)
@@ -570,6 +593,19 @@ class EncounterService:
             self.session.add(current_doctor)
 
         work_status = "waiting" if current_doctor_work is not None else "in_service"
+        doctor_name = " ".join(part for part in (doctor.first_name, doctor.last_name) if part)
+        allocation_overview, allocation_overview_factors = build_allocation_overview(
+            final_esi=decision.final_esi,
+            ward_id=ward.id,
+            ward_name=ward.name,
+            suggested_ward_id=suggested_rule.ward_id if suggested_rule else None,
+            suggested_ward_name=suggested_ward.name if suggested_ward else None,
+            doctor_id=doctor.id,
+            doctor_name=doctor_name,
+            doctor_was_busy=current_doctor_work is not None,
+            doctor_queue_position=None,
+            allocator_reason=payload.reason,
+        )
         doctor_work_item = DoctorWorkItem(
             hospital_id=hospital_id,
             encounter_id=encounter_id,
@@ -581,6 +617,8 @@ class EncounterService:
             started_at=payload.confirmed_at if work_status == "in_service" else None,
             assigned_by_staff_id=confirmed_by_staff_id,
             allocation_reason=payload.reason,
+            allocation_overview=allocation_overview,
+            allocation_overview_factors=allocation_overview_factors,
         )
         self.session.add(doctor_work_item)
 
@@ -611,6 +649,20 @@ class EncounterService:
                     ),
                 )
             )
+        allocation_overview, allocation_overview_factors = build_allocation_overview(
+            final_esi=decision.final_esi,
+            ward_id=ward.id,
+            ward_name=ward.name,
+            suggested_ward_id=suggested_rule.ward_id if suggested_rule else None,
+            suggested_ward_name=suggested_ward.name if suggested_ward else None,
+            doctor_id=doctor.id,
+            doctor_name=doctor_name,
+            doctor_was_busy=current_doctor_work is not None,
+            doctor_queue_position=doctor_queue_position,
+            allocator_reason=payload.reason,
+        )
+        doctor_work_item.allocation_overview = allocation_overview
+        doctor_work_item.allocation_overview_factors = allocation_overview_factors
         await record_audit_event(
             self.session,
             hospital_id=hospital_id,
@@ -636,6 +688,7 @@ class EncounterService:
                 "doctor_queue_position": doctor_queue_position,
                 "hospital_queue_status": queue_entry.status,
                 "reason": payload.reason,
+                "allocation_overview": allocation_overview,
             },
         )
         await self.session.commit()
@@ -658,6 +711,8 @@ class EncounterService:
             "doctor_work_item_id": doctor_work_item.id,
             "doctor_work_status": doctor_work_item.status,
             "doctor_queue_position": doctor_queue_position,
+            "ai_overview": assessment.ai_overview,
+            "allocation_overview": allocation_overview,
             "confirmed_by_staff_id": confirmed_by_staff_id,
             "confirmed_at": payload.confirmed_at,
         }

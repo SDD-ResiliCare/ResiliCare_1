@@ -121,8 +121,11 @@ async def test_confirmed_allocation_persists_location_doctor_and_audit_together(
         assessment_status="confirmed",
         proposed_esi=3,
         recommended_esi=3,
+        recommended_ward_id=ward_id,
         possible_esi_levels=[3],
         uncertainty_label="high_confidence",
+        ai_overview="ESI 3 and Acute Care are recommended from the recorded encounter inputs.",
+        ai_overview_factors={"recommended_esi": 3, "recommended_ward_id": str(ward_id)},
         input_snapshot={},
         input_hash="0" * 64,
         score_source="test",
@@ -182,6 +185,8 @@ async def test_confirmed_allocation_persists_location_doctor_and_audit_together(
             started_at=confirmed_at,
             assigned_by_staff_id=nurse_id,
             allocation_reason="Existing synthetic patient",
+            allocation_overview="Existing patient is currently with this doctor.",
+            allocation_overview_factors={"doctor_was_busy": True},
         )
         if doctor_busy
         else None
@@ -260,6 +265,10 @@ async def test_confirmed_allocation_persists_location_doctor_and_audit_together(
     assert response["doctor_participant_id"] == participant.id
     assert response["doctor_work_item_id"] == work_item.id
     assert response["doctor_queue_position"] == (1 if doctor_busy else None)
+    assert response["ai_overview"] == assessment.ai_overview
+    assert response["allocation_overview"] == work_item.allocation_overview
+    assert doctor.first_name in work_item.allocation_overview
+    assert work_item.allocation_overview_factors["doctor_was_busy"] is doctor_busy
     session.commit.assert_awaited_once()
 
 
@@ -286,6 +295,8 @@ async def test_allocation_is_blocked_until_latest_assessment_is_confirmed():
         recommended_esi=3,
         possible_esi_levels=[3],
         uncertainty_label="high_confidence",
+        ai_overview="Pending test recommendation.",
+        ai_overview_factors={"recommended_esi": 3},
         input_snapshot={},
         input_hash="0" * 64,
         score_source="test",

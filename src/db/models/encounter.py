@@ -167,6 +167,8 @@ class DoctorWorkItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     assigned_by_staff_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("staff.id"), nullable=False)
     allocation_reason: Mapped[str] = mapped_column(Text, nullable=False)
+    allocation_overview: Mapped[str] = mapped_column(Text, nullable=False)
+    allocation_overview_factors: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     end_reason: Mapped[str | None] = mapped_column(Text)
 
 

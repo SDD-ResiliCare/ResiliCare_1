@@ -42,6 +42,22 @@ def test_lifecycle_reasons_are_preserved_by_forward_migration():
     assert "voided_by_staff_id" in migration
 
 
+def test_triage_and_allocation_overviews_are_durable_and_linked():
+    assessment = Base.metadata.tables["triage_assessments"]
+    doctor_work = Base.metadata.tables["doctor_work_items"]
+    assert {"recommended_ward_id", "ai_overview", "ai_overview_factors"} <= {
+        column.name for column in assessment.columns
+    }
+    assert {"allocation_overview", "allocation_overview_factors"} <= {
+        column.name for column in doctor_work.columns
+    }
+    migration = (ROOT / "supabase" / "migrations" / "009_clinical_allocation_overviews.sql").read_text(
+        encoding="utf-8"
+    )
+    assert "alter table triage_assessments" in migration
+    assert "alter table doctor_work_items" in migration
+
+
 def test_gcs_requires_all_components():
     with pytest.raises(ValidationError, match="all three GCS components"):
         VitalObservationCreate(source="manual", observed_at="2026-09-01T10:00:00Z", gcs_eye=4)

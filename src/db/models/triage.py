@@ -4,7 +4,18 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    SmallInteger,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -104,7 +115,10 @@ class SymptomResponse(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class TriageAssessment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "triage_assessments"
-    __table_args__ = (UniqueConstraint("encounter_id", "assessment_number"),)
+    __table_args__ = (
+        UniqueConstraint("encounter_id", "assessment_number"),
+        Index("ix_triage_assessments_recommended_ward", "recommended_ward_id"),
+    )
 
     encounter_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
     assessment_number: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -119,12 +133,15 @@ class TriageAssessment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     proposed_esi: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     maximum_allowed_esi: Mapped[int | None] = mapped_column(SmallInteger)
     recommended_esi: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    recommended_ward_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("wards.id"))
     possible_esi_levels: Mapped[list[int]] = mapped_column(ARRAY(SmallInteger), nullable=False)
     uncertainty_label: Mapped[str] = mapped_column(String(40), nullable=False)
     requires_senior_review: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     matched_safety_rules: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     matched_clinical_pathways: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     missing_input_flags: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False, default=list)
+    ai_overview: Mapped[str] = mapped_column(Text, nullable=False)
+    ai_overview_factors: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     input_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False)
     input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     score_source: Mapped[str] = mapped_column(String(40), nullable=False)

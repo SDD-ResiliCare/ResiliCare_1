@@ -164,6 +164,8 @@ class DoctorWorkPatientSummary(BaseModel):
     queue_position: int | None
     queued_at: datetime
     started_at: datetime | None
+    allocation_overview: str
+    allocation_overview_factors: dict
 
 
 class DoctorWorkloadResponse(BaseModel):
@@ -186,6 +188,8 @@ class QueueTriageSummary(BaseModel):
     decision_id: UUID | None
     final_esi: int | None
     decided_at: datetime | None
+    ai_overview: str | None
+    ai_overview_factors: dict
 
 
 class QueueAllocationSummary(BaseModel):
@@ -197,6 +201,7 @@ class QueueAllocationSummary(BaseModel):
     primary_doctor: QueueDoctorSummary | None
     assigned_by_staff_id: UUID | None
     assigned_at: datetime | None
+    allocation_overview: str | None = None
 
 
 class RankedQueueEntryResponse(BaseModel):
@@ -237,6 +242,8 @@ class EncounterAllocationResponse(BaseModel):
     doctor_work_item_id: UUID
     doctor_work_status: str
     doctor_queue_position: int | None
+    ai_overview: str
+    allocation_overview: str
     confirmed_by_staff_id: UUID
     confirmed_at: datetime
 

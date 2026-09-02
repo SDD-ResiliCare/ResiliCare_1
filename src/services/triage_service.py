@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.confidence_scoring import score_with_confidence
 from src.db.models.encounter import Encounter
+from src.db.models.organization import EsiCareAreaRule, HospitalOperationalConfig, Ward
 from src.db.models.patient import Patient
 from src.db.models.triage import (
     AssessmentSafetyAction,
@@ -22,6 +23,7 @@ from src.db.models.triage import (
 )
 from src.db.repositories.triage import ClinicianDecisionRepository, TriageAssessmentRepository
 from src.schemas.triage import AssessmentCreate, ClinicianDecisionCreate, QuestionnaireCreate
+from src.services.clinical_overview_service import build_triage_overview
 
 
 class TriageService:
@@ -74,8 +76,40 @@ class TriageService:
         if row is None:
             raise HTTPException(404, "encounter not found")
         patient, encounter, vital = row
+        if payload.latest_vital_observation_id is not None and (
+            vital is None or vital.encounter_id != encounter_id
+        ):
+            raise HTTPException(422, "latest vital observation must belong to this encounter")
+        operational_config = await self.session.scalar(
+            select(HospitalOperationalConfig).where(
+                HospitalOperationalConfig.id == payload.operational_config_id,
+                HospitalOperationalConfig.hospital_id == encounter.hospital_id,
+            )
+        )
+        if operational_config is None:
+            raise HTTPException(422, "operational config must belong to the encounter hospital")
         engine_input = self._engine_input(patient, encounter, vital)
         result = score_with_confidence(engine_input, payload.proposed_esi)
+        recommendation = (
+            await self.session.execute(
+                select(EsiCareAreaRule, Ward)
+                .join(Ward, Ward.id == EsiCareAreaRule.ward_id)
+                .where(
+                    EsiCareAreaRule.operational_config_id == payload.operational_config_id,
+                    EsiCareAreaRule.esi_level == result["point_estimate"],
+                    Ward.hospital_id == encounter.hospital_id,
+                    Ward.status == "active",
+                )
+                .order_by(EsiCareAreaRule.is_default.desc(), EsiCareAreaRule.priority)
+                .limit(1)
+            )
+        ).first()
+        recommended_rule, recommended_ward = recommendation if recommendation else (None, None)
+        ai_overview, ai_overview_factors = build_triage_overview(
+            result,
+            ward_id=recommended_rule.ward_id if recommended_rule else None,
+            ward_name=recommended_ward.name if recommended_ward else None,
+        )
         next_number = (
             await self.session.scalar(
                 select(func.coalesce(func.max(TriageAssessment.assessment_number), 0) + 1).where(
@@ -101,12 +135,15 @@ class TriageService:
                 proposed_esi=payload.proposed_esi,
                 maximum_allowed_esi=result.get("safety_ceiling"),
                 recommended_esi=result["point_estimate"],
+                recommended_ward_id=recommended_rule.ward_id if recommended_rule else None,
                 possible_esi_levels=result["esi_set"],
                 uncertainty_label=result["confidence_label"],
                 requires_senior_review=result["defer_to_senior_nurse"],
                 matched_safety_rules={"rule_ids": result.get("matched_safety_rules", [])},
                 matched_clinical_pathways={"pathways": result.get("ambiguous_presentations", [])},
                 missing_input_flags=result.get("uncertainty_reasons", []),
+                ai_overview=ai_overview,
+                ai_overview_factors=ai_overview_factors,
                 input_snapshot=snapshot,
                 input_hash=hashlib.sha256(encoded).hexdigest(),
                 score_source=payload.score_source,
