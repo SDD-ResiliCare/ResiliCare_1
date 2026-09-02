@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import re
 import uuid
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 EXPERIMENTAL_NOT_DEMO_READY = True
 
@@ -54,7 +55,7 @@ def process_kiosk_text(transcript: str) -> dict[str, Any]:
     return result
 
 
-def resolve_kiosk_chief_complaint(kiosk_result: Mapping[str, Any]) -> Optional[str]:
+def resolve_kiosk_chief_complaint(kiosk_result: Mapping[str, Any]) -> str | None:
     """Return the extracted complaint text, ready to drop into a patient dict's chief_complaint.
 
     Usage: ``patient = {**patient, "chief_complaint": resolve_kiosk_chief_complaint(kiosk_result)}``
@@ -64,19 +65,16 @@ def resolve_kiosk_chief_complaint(kiosk_result: Mapping[str, Any]) -> Optional[s
 
 
 def _passes_confidence_gate(text: str) -> bool:
-    """Reject empty, too-short, or degenerate (single word repeated) transcripts.
-
-    Honest limitation: the HuggingFace ASR pipeline used below does not return per-token
-    confidence/logprobs by default, so this is a text-shape heuristic, not a calibrated ASR
-    confidence score. A real confidence gate would need `return_dict_in_generate` + logprob
-    extraction from Whisper directly; that has not been built or validated here.
-    """
+    """Reject empty, too-short, or degenerate (single word repeated) transcripts."""
     if len(text) < 2:
         return False
     words = text.lower().split()
-    if len(words) >= 3 and len(set(words)) == 1:
-        return False  # e.g. "the the the" - garbage/repetition artifact
-    return True
+    return not (len(words) >= 3 and len(set(words)) == 1)
+
+
+
+# Spoken conjunctions that break a negation clause when punctuation is missing from ASR.
+CONJUNCTION_BREAKS = {"but", "however", "although", "lekin", "magar", "par", "parantu", "except"}
 
 
 def _is_negated(text_lower: str, match_start: int) -> bool:
@@ -87,13 +85,14 @@ def _is_negated(text_lower: str, match_start: int) -> bool:
     
     window = []
     for token in reversed(prefix_tokens):
-        if re.match(r"[.,!?;]", token):
+        if re.match(r"[.,!?;]", token) or token in CONJUNCTION_BREAKS:
             break
         window.append(token)
         if len(window) == 3:
             break
             
     return any(neg in window for neg in NEGATION_TOKENS)
+
 
 
 def detect_acuity_with_negation(text: str) -> list[str]:
@@ -115,7 +114,7 @@ def detect_acuity_with_negation(text: str) -> list[str]:
     return triggered
 
 
-def extract_chief_complaint(text: str) -> Optional[str]:
+def extract_chief_complaint(text: str) -> str | None:
     """Map transcript text to a canonical differential-table trigger phrase.
 
     Returns the exact string an entry in ambiguous_presentations.json expects in

@@ -1,0 +1,241 @@
+symptom_response_id,symptom_interview_id,question_code,question_text_snapshot,answer_value,answer_source,answered_at,notes
+RESP-ENC-HSP-001-001-01,INT-ENC-HSP-001-001-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T08:14:00+05:30,Synthetic response
+RESP-ENC-HSP-001-001-02,INT-ENC-HSP-001-001-01,Q-SEVERITY,How severe is it right now from 0 to 10?,9,REPORTED,2026-09-02T08:15:00+05:30,Synthetic response
+RESP-ENC-HSP-001-001-03,INT-ENC-HSP-001-001-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:16:00+05:30,Synthetic response
+RESP-ENC-HSP-001-001-04,INT-ENC-HSP-001-001-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T08:17:00+05:30,Synthetic response
+RESP-ENC-HSP-001-001-05,INT-ENC-HSP-001-001-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T08:18:00+05:30,Synthetic response
+RESP-ENC-HSP-001-001-06,INT-ENC-HSP-001-001-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:19:00+05:30,Synthetic response
+RESP-ENC-HSP-001-002-01,INT-ENC-HSP-001-002-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T08:21:00+05:30,Synthetic response
+RESP-ENC-HSP-001-002-02,INT-ENC-HSP-001-002-01,Q-SEVERITY,How severe is it right now from 0 to 10?,9,REPORTED,2026-09-02T08:22:00+05:30,Synthetic response
+RESP-ENC-HSP-001-002-03,INT-ENC-HSP-001-002-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:23:00+05:30,Synthetic response
+RESP-ENC-HSP-001-002-04,INT-ENC-HSP-001-002-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T08:24:00+05:30,Synthetic response
+RESP-ENC-HSP-001-002-05,INT-ENC-HSP-001-002-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T08:25:00+05:30,Synthetic response
+RESP-ENC-HSP-001-002-06,INT-ENC-HSP-001-002-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:26:00+05:30,Synthetic response
+RESP-ENC-HSP-001-003-01,INT-ENC-HSP-001-003-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T08:28:00+05:30,Synthetic response
+RESP-ENC-HSP-001-003-02,INT-ENC-HSP-001-003-01,Q-SEVERITY,How severe is it right now from 0 to 10?,9,REPORTED,2026-09-02T08:29:00+05:30,Synthetic response
+RESP-ENC-HSP-001-003-03,INT-ENC-HSP-001-003-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:30:00+05:30,Synthetic response
+RESP-ENC-HSP-001-003-04,INT-ENC-HSP-001-003-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T08:31:00+05:30,Synthetic response
+RESP-ENC-HSP-001-003-05,INT-ENC-HSP-001-003-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T08:32:00+05:30,Synthetic response
+RESP-ENC-HSP-001-003-06,INT-ENC-HSP-001-003-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:33:00+05:30,Synthetic response
+RESP-ENC-HSP-001-004-01,INT-ENC-HSP-001-004-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T09:35:00+05:30,Synthetic response
+RESP-ENC-HSP-001-004-02,INT-ENC-HSP-001-004-01,Q-SEVERITY,How severe is it right now from 0 to 10?,9,REPORTED,2026-09-02T09:36:00+05:30,Synthetic response
+RESP-ENC-HSP-001-004-03,INT-ENC-HSP-001-004-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:37:00+05:30,Synthetic response
+RESP-ENC-HSP-001-004-04,INT-ENC-HSP-001-004-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T09:38:00+05:30,Synthetic response
+RESP-ENC-HSP-001-004-05,INT-ENC-HSP-001-004-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T09:39:00+05:30,Synthetic response
+RESP-ENC-HSP-001-004-06,INT-ENC-HSP-001-004-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:40:00+05:30,Synthetic response
+RESP-ENC-HSP-001-005-01,INT-ENC-HSP-001-005-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T09:42:00+05:30,Synthetic response
+RESP-ENC-HSP-001-005-02,INT-ENC-HSP-001-005-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T09:43:00+05:30,Synthetic response
+RESP-ENC-HSP-001-005-03,INT-ENC-HSP-001-005-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:44:00+05:30,Synthetic response
+RESP-ENC-HSP-001-005-04,INT-ENC-HSP-001-005-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T09:45:00+05:30,Synthetic response
+RESP-ENC-HSP-001-005-05,INT-ENC-HSP-001-005-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T09:46:00+05:30,Synthetic response
+RESP-ENC-HSP-001-005-06,INT-ENC-HSP-001-005-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:47:00+05:30,Synthetic response
+RESP-ENC-HSP-001-006-01,INT-ENC-HSP-001-006-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T09:49:00+05:30,Synthetic response
+RESP-ENC-HSP-001-006-02,INT-ENC-HSP-001-006-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T09:50:00+05:30,Synthetic response
+RESP-ENC-HSP-001-006-03,INT-ENC-HSP-001-006-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:51:00+05:30,Synthetic response
+RESP-ENC-HSP-001-006-04,INT-ENC-HSP-001-006-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T09:52:00+05:30,Synthetic response
+RESP-ENC-HSP-001-006-05,INT-ENC-HSP-001-006-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T09:53:00+05:30,Synthetic response
+RESP-ENC-HSP-001-006-06,INT-ENC-HSP-001-006-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:54:00+05:30,Synthetic response
+RESP-ENC-HSP-001-007-01,INT-ENC-HSP-001-007-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T09:56:00+05:30,Synthetic response
+RESP-ENC-HSP-001-007-02,INT-ENC-HSP-001-007-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T09:57:00+05:30,Synthetic response
+RESP-ENC-HSP-001-007-03,INT-ENC-HSP-001-007-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:58:00+05:30,Synthetic response
+RESP-ENC-HSP-001-007-04,INT-ENC-HSP-001-007-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T09:59:00+05:30,Synthetic response
+RESP-ENC-HSP-001-007-05,INT-ENC-HSP-001-007-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:00:00+05:30,Synthetic response
+RESP-ENC-HSP-001-007-06,INT-ENC-HSP-001-007-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:01:00+05:30,Synthetic response
+RESP-ENC-HSP-001-008-01,INT-ENC-HSP-001-008-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T11:03:00+05:30,Synthetic response
+RESP-ENC-HSP-001-008-02,INT-ENC-HSP-001-008-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T11:04:00+05:30,Synthetic response
+RESP-ENC-HSP-001-008-03,INT-ENC-HSP-001-008-01,Q-ASSOCIATED,What other symptoms are present?,Fever and fatigue,REPORTED,2026-09-02T11:05:00+05:30,Synthetic response
+RESP-ENC-HSP-001-008-04,INT-ENC-HSP-001-008-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T11:06:00+05:30,Synthetic response
+RESP-ENC-HSP-001-008-05,INT-ENC-HSP-001-008-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T11:07:00+05:30,Synthetic response
+RESP-ENC-HSP-001-008-06,INT-ENC-HSP-001-008-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T11:08:00+05:30,Synthetic response
+RESP-ENC-HSP-001-009-01,INT-ENC-HSP-001-009-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T10:10:00+05:30,Synthetic response
+RESP-ENC-HSP-001-009-02,INT-ENC-HSP-001-009-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T10:11:00+05:30,Synthetic response
+RESP-ENC-HSP-001-009-03,INT-ENC-HSP-001-009-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:12:00+05:30,Synthetic response
+RESP-ENC-HSP-001-009-04,INT-ENC-HSP-001-009-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T10:13:00+05:30,Synthetic response
+RESP-ENC-HSP-001-009-05,INT-ENC-HSP-001-009-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T10:14:00+05:30,Synthetic response
+RESP-ENC-HSP-001-009-06,INT-ENC-HSP-001-009-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:15:00+05:30,Synthetic response
+RESP-ENC-HSP-001-010-01,INT-ENC-HSP-001-010-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T10:17:00+05:30,Synthetic response
+RESP-ENC-HSP-001-010-02,INT-ENC-HSP-001-010-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T10:18:00+05:30,Synthetic response
+RESP-ENC-HSP-001-010-03,INT-ENC-HSP-001-010-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:19:00+05:30,Synthetic response
+RESP-ENC-HSP-001-010-04,INT-ENC-HSP-001-010-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T10:20:00+05:30,Synthetic response
+RESP-ENC-HSP-001-010-05,INT-ENC-HSP-001-010-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:21:00+05:30,Synthetic response
+RESP-ENC-HSP-001-010-06,INT-ENC-HSP-001-010-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:22:00+05:30,Synthetic response
+RESP-ENC-HSP-002-001-01,INT-ENC-HSP-002-001-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T08:17:00+05:30,Synthetic response
+RESP-ENC-HSP-002-001-02,INT-ENC-HSP-002-001-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T08:18:00+05:30,Synthetic response
+RESP-ENC-HSP-002-001-03,INT-ENC-HSP-002-001-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:19:00+05:30,Synthetic response
+RESP-ENC-HSP-002-001-04,INT-ENC-HSP-002-001-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T08:20:00+05:30,Synthetic response
+RESP-ENC-HSP-002-001-05,INT-ENC-HSP-002-001-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T08:21:00+05:30,Synthetic response
+RESP-ENC-HSP-002-001-06,INT-ENC-HSP-002-001-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:22:00+05:30,Synthetic response
+RESP-ENC-HSP-002-002-01,INT-ENC-HSP-002-002-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T08:24:00+05:30,Synthetic response
+RESP-ENC-HSP-002-002-02,INT-ENC-HSP-002-002-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T08:25:00+05:30,Synthetic response
+RESP-ENC-HSP-002-002-03,INT-ENC-HSP-002-002-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:26:00+05:30,Synthetic response
+RESP-ENC-HSP-002-002-04,INT-ENC-HSP-002-002-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T08:27:00+05:30,Synthetic response
+RESP-ENC-HSP-002-002-05,INT-ENC-HSP-002-002-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T08:28:00+05:30,Synthetic response
+RESP-ENC-HSP-002-002-06,INT-ENC-HSP-002-002-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:29:00+05:30,Synthetic response
+RESP-ENC-HSP-002-003-01,INT-ENC-HSP-002-003-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T08:31:00+05:30,Synthetic response
+RESP-ENC-HSP-002-003-02,INT-ENC-HSP-002-003-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T08:32:00+05:30,Synthetic response
+RESP-ENC-HSP-002-003-03,INT-ENC-HSP-002-003-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:33:00+05:30,Synthetic response
+RESP-ENC-HSP-002-003-04,INT-ENC-HSP-002-003-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T08:34:00+05:30,Synthetic response
+RESP-ENC-HSP-002-003-05,INT-ENC-HSP-002-003-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T08:35:00+05:30,Synthetic response
+RESP-ENC-HSP-002-003-06,INT-ENC-HSP-002-003-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:36:00+05:30,Synthetic response
+RESP-ENC-HSP-002-004-01,INT-ENC-HSP-002-004-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T09:38:00+05:30,Synthetic response
+RESP-ENC-HSP-002-004-02,INT-ENC-HSP-002-004-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T09:39:00+05:30,Synthetic response
+RESP-ENC-HSP-002-004-03,INT-ENC-HSP-002-004-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:40:00+05:30,Synthetic response
+RESP-ENC-HSP-002-004-04,INT-ENC-HSP-002-004-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T09:41:00+05:30,Synthetic response
+RESP-ENC-HSP-002-004-05,INT-ENC-HSP-002-004-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T09:42:00+05:30,Synthetic response
+RESP-ENC-HSP-002-004-06,INT-ENC-HSP-002-004-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:43:00+05:30,Synthetic response
+RESP-ENC-HSP-002-005-01,INT-ENC-HSP-002-005-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T09:45:00+05:30,Synthetic response
+RESP-ENC-HSP-002-005-02,INT-ENC-HSP-002-005-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T09:46:00+05:30,Synthetic response
+RESP-ENC-HSP-002-005-03,INT-ENC-HSP-002-005-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:47:00+05:30,Synthetic response
+RESP-ENC-HSP-002-005-04,INT-ENC-HSP-002-005-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T09:48:00+05:30,Synthetic response
+RESP-ENC-HSP-002-005-05,INT-ENC-HSP-002-005-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T09:49:00+05:30,Synthetic response
+RESP-ENC-HSP-002-005-06,INT-ENC-HSP-002-005-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:50:00+05:30,Synthetic response
+RESP-ENC-HSP-002-006-01,INT-ENC-HSP-002-006-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T09:52:00+05:30,Synthetic response
+RESP-ENC-HSP-002-006-02,INT-ENC-HSP-002-006-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T09:53:00+05:30,Synthetic response
+RESP-ENC-HSP-002-006-03,INT-ENC-HSP-002-006-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:54:00+05:30,Synthetic response
+RESP-ENC-HSP-002-006-04,INT-ENC-HSP-002-006-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T09:55:00+05:30,Synthetic response
+RESP-ENC-HSP-002-006-05,INT-ENC-HSP-002-006-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T09:56:00+05:30,Synthetic response
+RESP-ENC-HSP-002-006-06,INT-ENC-HSP-002-006-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:57:00+05:30,Synthetic response
+RESP-ENC-HSP-002-007-01,INT-ENC-HSP-002-007-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T09:59:00+05:30,Synthetic response
+RESP-ENC-HSP-002-007-02,INT-ENC-HSP-002-007-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T10:00:00+05:30,Synthetic response
+RESP-ENC-HSP-002-007-03,INT-ENC-HSP-002-007-01,Q-ASSOCIATED,What other symptoms are present?,Fever and fatigue,REPORTED,2026-09-02T10:01:00+05:30,Synthetic response
+RESP-ENC-HSP-002-007-04,INT-ENC-HSP-002-007-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:02:00+05:30,Synthetic response
+RESP-ENC-HSP-002-007-05,INT-ENC-HSP-002-007-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:03:00+05:30,Synthetic response
+RESP-ENC-HSP-002-007-06,INT-ENC-HSP-002-007-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:04:00+05:30,Synthetic response
+RESP-ENC-HSP-002-008-01,INT-ENC-HSP-002-008-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T11:06:00+05:30,Synthetic response
+RESP-ENC-HSP-002-008-02,INT-ENC-HSP-002-008-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T11:07:00+05:30,Synthetic response
+RESP-ENC-HSP-002-008-03,INT-ENC-HSP-002-008-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T11:08:00+05:30,Synthetic response
+RESP-ENC-HSP-002-008-04,INT-ENC-HSP-002-008-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T11:09:00+05:30,Synthetic response
+RESP-ENC-HSP-002-008-05,INT-ENC-HSP-002-008-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T11:10:00+05:30,Synthetic response
+RESP-ENC-HSP-002-008-06,INT-ENC-HSP-002-008-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T11:11:00+05:30,Synthetic response
+RESP-ENC-HSP-002-009-01,INT-ENC-HSP-002-009-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T10:13:00+05:30,Synthetic response
+RESP-ENC-HSP-002-009-02,INT-ENC-HSP-002-009-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T10:14:00+05:30,Synthetic response
+RESP-ENC-HSP-002-009-03,INT-ENC-HSP-002-009-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:15:00+05:30,Synthetic response
+RESP-ENC-HSP-002-009-04,INT-ENC-HSP-002-009-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:16:00+05:30,Synthetic response
+RESP-ENC-HSP-002-009-05,INT-ENC-HSP-002-009-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T10:17:00+05:30,Synthetic response
+RESP-ENC-HSP-002-009-06,INT-ENC-HSP-002-009-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:18:00+05:30,Synthetic response
+RESP-ENC-HSP-002-010-01,INT-ENC-HSP-002-010-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T10:20:00+05:30,Synthetic response
+RESP-ENC-HSP-002-010-02,INT-ENC-HSP-002-010-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T10:21:00+05:30,Synthetic response
+RESP-ENC-HSP-002-010-03,INT-ENC-HSP-002-010-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:22:00+05:30,Synthetic response
+RESP-ENC-HSP-002-010-04,INT-ENC-HSP-002-010-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:23:00+05:30,Synthetic response
+RESP-ENC-HSP-002-010-05,INT-ENC-HSP-002-010-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:24:00+05:30,Synthetic response
+RESP-ENC-HSP-002-010-06,INT-ENC-HSP-002-010-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:25:00+05:30,Synthetic response
+RESP-ENC-HSP-003-001-01,INT-ENC-HSP-003-001-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T08:20:00+05:30,Synthetic response
+RESP-ENC-HSP-003-001-02,INT-ENC-HSP-003-001-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T08:21:00+05:30,Synthetic response
+RESP-ENC-HSP-003-001-03,INT-ENC-HSP-003-001-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:22:00+05:30,Synthetic response
+RESP-ENC-HSP-003-001-04,INT-ENC-HSP-003-001-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T08:23:00+05:30,Synthetic response
+RESP-ENC-HSP-003-001-05,INT-ENC-HSP-003-001-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T08:24:00+05:30,Synthetic response
+RESP-ENC-HSP-003-001-06,INT-ENC-HSP-003-001-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:25:00+05:30,Synthetic response
+RESP-ENC-HSP-003-002-01,INT-ENC-HSP-003-002-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T08:27:00+05:30,Synthetic response
+RESP-ENC-HSP-003-002-02,INT-ENC-HSP-003-002-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T08:28:00+05:30,Synthetic response
+RESP-ENC-HSP-003-002-03,INT-ENC-HSP-003-002-01,Q-ASSOCIATED,What other symptoms are present?,Fever and fatigue,REPORTED,2026-09-02T08:29:00+05:30,Synthetic response
+RESP-ENC-HSP-003-002-04,INT-ENC-HSP-003-002-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T08:30:00+05:30,Synthetic response
+RESP-ENC-HSP-003-002-05,INT-ENC-HSP-003-002-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T08:31:00+05:30,Synthetic response
+RESP-ENC-HSP-003-002-06,INT-ENC-HSP-003-002-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:32:00+05:30,Synthetic response
+RESP-ENC-HSP-003-003-01,INT-ENC-HSP-003-003-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T08:34:00+05:30,Synthetic response
+RESP-ENC-HSP-003-003-02,INT-ENC-HSP-003-003-01,Q-SEVERITY,How severe is it right now from 0 to 10?,6,REPORTED,2026-09-02T08:35:00+05:30,Synthetic response
+RESP-ENC-HSP-003-003-03,INT-ENC-HSP-003-003-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:36:00+05:30,Synthetic response
+RESP-ENC-HSP-003-003-04,INT-ENC-HSP-003-003-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T08:37:00+05:30,Synthetic response
+RESP-ENC-HSP-003-003-05,INT-ENC-HSP-003-003-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T08:38:00+05:30,Synthetic response
+RESP-ENC-HSP-003-003-06,INT-ENC-HSP-003-003-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:39:00+05:30,Synthetic response
+RESP-ENC-HSP-003-004-01,INT-ENC-HSP-003-004-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T09:41:00+05:30,Synthetic response
+RESP-ENC-HSP-003-004-02,INT-ENC-HSP-003-004-01,Q-SEVERITY,How severe is it right now from 0 to 10?,6,REPORTED,2026-09-02T09:42:00+05:30,Synthetic response
+RESP-ENC-HSP-003-004-03,INT-ENC-HSP-003-004-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:43:00+05:30,Synthetic response
+RESP-ENC-HSP-003-004-04,INT-ENC-HSP-003-004-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T09:44:00+05:30,Synthetic response
+RESP-ENC-HSP-003-004-05,INT-ENC-HSP-003-004-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T09:45:00+05:30,Synthetic response
+RESP-ENC-HSP-003-004-06,INT-ENC-HSP-003-004-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:46:00+05:30,Synthetic response
+RESP-ENC-HSP-003-005-01,INT-ENC-HSP-003-005-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T09:48:00+05:30,Synthetic response
+RESP-ENC-HSP-003-005-02,INT-ENC-HSP-003-005-01,Q-SEVERITY,How severe is it right now from 0 to 10?,6,REPORTED,2026-09-02T09:49:00+05:30,Synthetic response
+RESP-ENC-HSP-003-005-03,INT-ENC-HSP-003-005-01,Q-ASSOCIATED,What other symptoms are present?,Fever and fatigue,REPORTED,2026-09-02T09:50:00+05:30,Synthetic response
+RESP-ENC-HSP-003-005-04,INT-ENC-HSP-003-005-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T09:51:00+05:30,Synthetic response
+RESP-ENC-HSP-003-005-05,INT-ENC-HSP-003-005-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T09:52:00+05:30,Synthetic response
+RESP-ENC-HSP-003-005-06,INT-ENC-HSP-003-005-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:53:00+05:30,Synthetic response
+RESP-ENC-HSP-003-006-01,INT-ENC-HSP-003-006-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T09:55:00+05:30,Synthetic response
+RESP-ENC-HSP-003-006-02,INT-ENC-HSP-003-006-01,Q-SEVERITY,How severe is it right now from 0 to 10?,6,REPORTED,2026-09-02T09:56:00+05:30,Synthetic response
+RESP-ENC-HSP-003-006-03,INT-ENC-HSP-003-006-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:57:00+05:30,Synthetic response
+RESP-ENC-HSP-003-006-04,INT-ENC-HSP-003-006-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T09:58:00+05:30,Synthetic response
+RESP-ENC-HSP-003-006-05,INT-ENC-HSP-003-006-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T09:59:00+05:30,Synthetic response
+RESP-ENC-HSP-003-006-06,INT-ENC-HSP-003-006-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:00:00+05:30,Synthetic response
+RESP-ENC-HSP-003-007-01,INT-ENC-HSP-003-007-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T10:02:00+05:30,Synthetic response
+RESP-ENC-HSP-003-007-02,INT-ENC-HSP-003-007-01,Q-SEVERITY,How severe is it right now from 0 to 10?,6,REPORTED,2026-09-02T10:03:00+05:30,Synthetic response
+RESP-ENC-HSP-003-007-03,INT-ENC-HSP-003-007-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:04:00+05:30,Synthetic response
+RESP-ENC-HSP-003-007-04,INT-ENC-HSP-003-007-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:05:00+05:30,Synthetic response
+RESP-ENC-HSP-003-007-05,INT-ENC-HSP-003-007-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:06:00+05:30,Synthetic response
+RESP-ENC-HSP-003-007-06,INT-ENC-HSP-003-007-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:07:00+05:30,Synthetic response
+RESP-ENC-HSP-003-008-01,INT-ENC-HSP-003-008-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T10:09:00+05:30,Synthetic response
+RESP-ENC-HSP-003-008-02,INT-ENC-HSP-003-008-01,Q-SEVERITY,How severe is it right now from 0 to 10?,6,REPORTED,2026-09-02T10:10:00+05:30,Synthetic response
+RESP-ENC-HSP-003-008-03,INT-ENC-HSP-003-008-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:11:00+05:30,Synthetic response
+RESP-ENC-HSP-003-008-04,INT-ENC-HSP-003-008-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:12:00+05:30,Synthetic response
+RESP-ENC-HSP-003-008-05,INT-ENC-HSP-003-008-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:13:00+05:30,Synthetic response
+RESP-ENC-HSP-003-008-06,INT-ENC-HSP-003-008-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:14:00+05:30,Synthetic response
+RESP-ENC-HSP-003-009-01,INT-ENC-HSP-003-009-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T10:16:00+05:30,Synthetic response
+RESP-ENC-HSP-003-009-02,INT-ENC-HSP-003-009-01,Q-SEVERITY,How severe is it right now from 0 to 10?,5,REPORTED,2026-09-02T10:17:00+05:30,Synthetic response
+RESP-ENC-HSP-003-009-03,INT-ENC-HSP-003-009-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:18:00+05:30,Synthetic response
+RESP-ENC-HSP-003-009-04,INT-ENC-HSP-003-009-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:19:00+05:30,Synthetic response
+RESP-ENC-HSP-003-009-05,INT-ENC-HSP-003-009-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T10:20:00+05:30,Synthetic response
+RESP-ENC-HSP-003-009-06,INT-ENC-HSP-003-009-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:21:00+05:30,Synthetic response
+RESP-ENC-HSP-003-010-01,INT-ENC-HSP-003-010-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T10:23:00+05:30,Synthetic response
+RESP-ENC-HSP-003-010-02,INT-ENC-HSP-003-010-01,Q-SEVERITY,How severe is it right now from 0 to 10?,5,REPORTED,2026-09-02T10:24:00+05:30,Synthetic response
+RESP-ENC-HSP-003-010-03,INT-ENC-HSP-003-010-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:25:00+05:30,Synthetic response
+RESP-ENC-HSP-003-010-04,INT-ENC-HSP-003-010-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:26:00+05:30,Synthetic response
+RESP-ENC-HSP-003-010-05,INT-ENC-HSP-003-010-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:27:00+05:30,Synthetic response
+RESP-ENC-HSP-003-010-06,INT-ENC-HSP-003-010-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:28:00+05:30,Synthetic response
+RESP-ENC-HSP-004-001-01,INT-ENC-HSP-004-001-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T08:23:00+05:30,Synthetic response
+RESP-ENC-HSP-004-001-02,INT-ENC-HSP-004-001-01,Q-SEVERITY,How severe is it right now from 0 to 10?,5,REPORTED,2026-09-02T08:24:00+05:30,Synthetic response
+RESP-ENC-HSP-004-001-03,INT-ENC-HSP-004-001-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:25:00+05:30,Synthetic response
+RESP-ENC-HSP-004-001-04,INT-ENC-HSP-004-001-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T08:26:00+05:30,Synthetic response
+RESP-ENC-HSP-004-001-05,INT-ENC-HSP-004-001-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T08:27:00+05:30,Synthetic response
+RESP-ENC-HSP-004-001-06,INT-ENC-HSP-004-001-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:28:00+05:30,Synthetic response
+RESP-ENC-HSP-004-002-01,INT-ENC-HSP-004-002-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T08:30:00+05:30,Synthetic response
+RESP-ENC-HSP-004-002-02,INT-ENC-HSP-004-002-01,Q-SEVERITY,How severe is it right now from 0 to 10?,5,REPORTED,2026-09-02T08:31:00+05:30,Synthetic response
+RESP-ENC-HSP-004-002-03,INT-ENC-HSP-004-002-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:32:00+05:30,Synthetic response
+RESP-ENC-HSP-004-002-04,INT-ENC-HSP-004-002-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T08:33:00+05:30,Synthetic response
+RESP-ENC-HSP-004-002-05,INT-ENC-HSP-004-002-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T08:34:00+05:30,Synthetic response
+RESP-ENC-HSP-004-002-06,INT-ENC-HSP-004-002-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:35:00+05:30,Synthetic response
+RESP-ENC-HSP-004-003-01,INT-ENC-HSP-004-003-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T08:37:00+05:30,Synthetic response
+RESP-ENC-HSP-004-003-02,INT-ENC-HSP-004-003-01,Q-SEVERITY,How severe is it right now from 0 to 10?,6,REPORTED,2026-09-02T08:38:00+05:30,Synthetic response
+RESP-ENC-HSP-004-003-03,INT-ENC-HSP-004-003-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T08:39:00+05:30,Synthetic response
+RESP-ENC-HSP-004-003-04,INT-ENC-HSP-004-003-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T08:40:00+05:30,Synthetic response
+RESP-ENC-HSP-004-003-05,INT-ENC-HSP-004-003-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T08:41:00+05:30,Synthetic response
+RESP-ENC-HSP-004-003-06,INT-ENC-HSP-004-003-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T08:42:00+05:30,Synthetic response
+RESP-ENC-HSP-004-004-01,INT-ENC-HSP-004-004-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T09:44:00+05:30,Synthetic response
+RESP-ENC-HSP-004-004-02,INT-ENC-HSP-004-004-01,Q-SEVERITY,How severe is it right now from 0 to 10?,6,REPORTED,2026-09-02T09:45:00+05:30,Synthetic response
+RESP-ENC-HSP-004-004-03,INT-ENC-HSP-004-004-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:46:00+05:30,Synthetic response
+RESP-ENC-HSP-004-004-04,INT-ENC-HSP-004-004-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T09:47:00+05:30,Synthetic response
+RESP-ENC-HSP-004-004-05,INT-ENC-HSP-004-004-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T09:48:00+05:30,Synthetic response
+RESP-ENC-HSP-004-004-06,INT-ENC-HSP-004-004-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:49:00+05:30,Synthetic response
+RESP-ENC-HSP-004-005-01,INT-ENC-HSP-004-005-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T09:51:00+05:30,Synthetic response
+RESP-ENC-HSP-004-005-02,INT-ENC-HSP-004-005-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T09:52:00+05:30,Synthetic response
+RESP-ENC-HSP-004-005-03,INT-ENC-HSP-004-005-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T09:53:00+05:30,Synthetic response
+RESP-ENC-HSP-004-005-04,INT-ENC-HSP-004-005-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T09:54:00+05:30,Synthetic response
+RESP-ENC-HSP-004-005-05,INT-ENC-HSP-004-005-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T09:55:00+05:30,Synthetic response
+RESP-ENC-HSP-004-005-06,INT-ENC-HSP-004-005-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T09:56:00+05:30,Synthetic response
+RESP-ENC-HSP-004-006-01,INT-ENC-HSP-004-006-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T09:58:00+05:30,Synthetic response
+RESP-ENC-HSP-004-006-02,INT-ENC-HSP-004-006-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T09:59:00+05:30,Synthetic response
+RESP-ENC-HSP-004-006-03,INT-ENC-HSP-004-006-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:00:00+05:30,Synthetic response
+RESP-ENC-HSP-004-006-04,INT-ENC-HSP-004-006-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T10:01:00+05:30,Synthetic response
+RESP-ENC-HSP-004-006-05,INT-ENC-HSP-004-006-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T10:02:00+05:30,Synthetic response
+RESP-ENC-HSP-004-006-06,INT-ENC-HSP-004-006-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:03:00+05:30,Synthetic response
+RESP-ENC-HSP-004-007-01,INT-ENC-HSP-004-007-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T10:05:00+05:30,Synthetic response
+RESP-ENC-HSP-004-007-02,INT-ENC-HSP-004-007-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T10:06:00+05:30,Synthetic response
+RESP-ENC-HSP-004-007-03,INT-ENC-HSP-004-007-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:07:00+05:30,Synthetic response
+RESP-ENC-HSP-004-007-04,INT-ENC-HSP-004-007-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T10:08:00+05:30,Synthetic response
+RESP-ENC-HSP-004-007-05,INT-ENC-HSP-004-007-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:09:00+05:30,Synthetic response
+RESP-ENC-HSP-004-007-06,INT-ENC-HSP-004-007-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:10:00+05:30,Synthetic response
+RESP-ENC-HSP-004-008-01,INT-ENC-HSP-004-008-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T10:12:00+05:30,Synthetic response
+RESP-ENC-HSP-004-008-02,INT-ENC-HSP-004-008-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T10:13:00+05:30,Synthetic response
+RESP-ENC-HSP-004-008-03,INT-ENC-HSP-004-008-01,Q-ASSOCIATED,What other symptoms are present?,Fever and fatigue,REPORTED,2026-09-02T10:14:00+05:30,Synthetic response
+RESP-ENC-HSP-004-008-04,INT-ENC-HSP-004-008-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:15:00+05:30,Synthetic response
+RESP-ENC-HSP-004-008-05,INT-ENC-HSP-004-008-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:16:00+05:30,Synthetic response
+RESP-ENC-HSP-004-008-06,INT-ENC-HSP-004-008-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:17:00+05:30,Synthetic response
+RESP-ENC-HSP-004-009-01,INT-ENC-HSP-004-009-01,Q-ONSET,When did the current problem begin?,Within the last 24 hours,REPORTED,2026-09-02T10:19:00+05:30,Synthetic response
+RESP-ENC-HSP-004-009-02,INT-ENC-HSP-004-009-01,Q-SEVERITY,How severe is it right now from 0 to 10?,7,REPORTED,2026-09-02T10:20:00+05:30,Synthetic response
+RESP-ENC-HSP-004-009-03,INT-ENC-HSP-004-009-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:21:00+05:30,Synthetic response
+RESP-ENC-HSP-004-009-04,INT-ENC-HSP-004-009-01,Q-WORSENING,Is the problem getting worse?,No,REPORTED,2026-09-02T10:22:00+05:30,Synthetic response
+RESP-ENC-HSP-004-009-05,INT-ENC-HSP-004-009-01,Q-MEDICATION,Was any medicine taken for this problem?,Unspecified over-the-counter medicine; verify,REPORTED,2026-09-02T10:23:00+05:30,Synthetic response
+RESP-ENC-HSP-004-009-06,INT-ENC-HSP-004-009-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:24:00+05:30,Synthetic response
+RESP-ENC-HSP-004-010-01,INT-ENC-HSP-004-010-01,Q-ONSET,When did the current problem begin?,Earlier today,REPORTED,2026-09-02T10:26:00+05:30,Synthetic response
+RESP-ENC-HSP-004-010-02,INT-ENC-HSP-004-010-01,Q-SEVERITY,How severe is it right now from 0 to 10?,8,REPORTED,2026-09-02T10:27:00+05:30,Synthetic response
+RESP-ENC-HSP-004-010-03,INT-ENC-HSP-004-010-01,Q-ASSOCIATED,What other symptoms are present?,No additional symptom volunteered,REPORTED,2026-09-02T10:28:00+05:30,Synthetic response
+RESP-ENC-HSP-004-010-04,INT-ENC-HSP-004-010-01,Q-WORSENING,Is the problem getting worse?,Yes,REPORTED,2026-09-02T10:29:00+05:30,Synthetic response
+RESP-ENC-HSP-004-010-05,INT-ENC-HSP-004-010-01,Q-MEDICATION,Was any medicine taken for this problem?,None reported,REPORTED,2026-09-02T10:30:00+05:30,Synthetic response
+RESP-ENC-HSP-004-010-06,INT-ENC-HSP-004-010-01,Q-ALLERGY,Are there any known medicine allergies?,No known allergy reported,REPORTED,2026-09-02T10:31:00+05:30,Synthetic response

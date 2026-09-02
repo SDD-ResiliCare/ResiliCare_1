@@ -1,0 +1,41 @@
+staff_id,hospital_id,full_name,staff_role,specialization,demo_registration_number,default_shift,is_active,is_synthetic
+HSP-001-D01,HSP-001,Aarav Mehta,DOCTOR,Emergency Medicine,DEMO-MED-101,MORNING,true,true
+HSP-001-D02,HSP-001,Diya Kapoor,DOCTOR,General Medicine,DEMO-MED-102,EVENING,true,true
+HSP-001-D03,HSP-001,Kabir Rao,DOCTOR,General Surgery,DEMO-MED-103,ROTATING,true,true
+HSP-001-D04,HSP-001,Meera Nair,DOCTOR,Cardiology,DEMO-MED-104,ROTATING,true,true
+HSP-001-D05,HSP-001,Vihaan Shah,DOCTOR,Critical Care,DEMO-MED-105,ROTATING,true,true
+HSP-001-N01,HSP-001,Ananya Iyer,NURSE,Triage Nursing,DEMO-NUR-101,MORNING,true,true
+HSP-001-N02,HSP-001,Arjun Patel,NURSE,General Nursing,DEMO-NUR-102,ROTATING,true,true
+HSP-001-N03,HSP-001,Ishita Joshi,NURSE,General Nursing,DEMO-NUR-103,ROTATING,true,true
+HSP-001-R01,HSP-001,Rohan Das,RECEPTIONIST,Front Desk,,MORNING,true,true
+HSP-001-R02,HSP-001,Sara Khan,RECEPTIONIST,Front Desk,,ROTATING,true,true
+HSP-002-D01,HSP-002,Aditya Menon,DOCTOR,Emergency Medicine,DEMO-MED-201,MORNING,true,true
+HSP-002-D02,HSP-002,Kavya Reddy,DOCTOR,General Medicine,DEMO-MED-202,EVENING,true,true
+HSP-002-D03,HSP-002,Neil Thomas,DOCTOR,General Surgery,DEMO-MED-203,ROTATING,true,true
+HSP-002-D04,HSP-002,Priya Bhat,DOCTOR,Paediatrics,DEMO-MED-204,ROTATING,true,true
+HSP-002-D05,HSP-002,Siddharth Jain,DOCTOR,Orthopaedics,DEMO-MED-205,ROTATING,true,true
+HSP-002-N01,HSP-002,Tara Kulkarni,NURSE,Triage Nursing,DEMO-NUR-201,MORNING,true,true
+HSP-002-N02,HSP-002,Yash Verma,NURSE,General Nursing,DEMO-NUR-202,ROTATING,true,true
+HSP-002-N03,HSP-002,Naina Bose,NURSE,General Nursing,DEMO-NUR-203,ROTATING,true,true
+HSP-002-R01,HSP-002,Rahul Sethi,RECEPTIONIST,Front Desk,,MORNING,true,true
+HSP-002-R02,HSP-002,Zoya Ali,RECEPTIONIST,Front Desk,,ROTATING,true,true
+HSP-003-D01,HSP-003,Akash Gupta,DOCTOR,Emergency Medicine,DEMO-MED-301,MORNING,true,true
+HSP-003-D02,HSP-003,Bhavna Desai,DOCTOR,General Medicine,DEMO-MED-302,EVENING,true,true
+HSP-003-D03,HSP-003,Chirag Malhotra,DOCTOR,General Surgery,DEMO-MED-303,ROTATING,true,true
+HSP-003-D04,HSP-003,Deepa Pillai,DOCTOR,Obstetrics,DEMO-MED-304,ROTATING,true,true
+HSP-003-D05,HSP-003,Eshan Roy,DOCTOR,Family Medicine,DEMO-MED-305,ROTATING,true,true
+HSP-003-N01,HSP-003,Farah Siddiqui,NURSE,Triage Nursing,DEMO-NUR-301,MORNING,true,true
+HSP-003-N02,HSP-003,Gaurav Arora,NURSE,General Nursing,DEMO-NUR-302,ROTATING,true,true
+HSP-003-N03,HSP-003,Heena Sheikh,NURSE,General Nursing,DEMO-NUR-303,ROTATING,true,true
+HSP-003-R01,HSP-003,Imran Qureshi,RECEPTIONIST,Front Desk,,MORNING,true,true
+HSP-003-R02,HSP-003,Juhi Saxena,RECEPTIONIST,Front Desk,,ROTATING,true,true
+HSP-004-D01,HSP-004,Karan Chawla,DOCTOR,Emergency Medicine,DEMO-MED-401,MORNING,true,true
+HSP-004-D02,HSP-004,Leena Dsouza,DOCTOR,Family Medicine,DEMO-MED-402,EVENING,true,true
+HSP-004-D03,HSP-004,Manav Agrawal,DOCTOR,General Surgery,DEMO-MED-403,ROTATING,true,true
+HSP-004-D04,HSP-004,Neha Pawar,DOCTOR,Paediatrics,DEMO-MED-404,ROTATING,true,true
+HSP-004-D05,HSP-004,Om Prakash,DOCTOR,Trauma Care,DEMO-MED-405,ROTATING,true,true
+HSP-004-N01,HSP-004,Pooja Naidu,NURSE,Triage Nursing,DEMO-NUR-401,MORNING,true,true
+HSP-004-N02,HSP-004,Qadir Hussain,NURSE,General Nursing,DEMO-NUR-402,ROTATING,true,true
+HSP-004-N03,HSP-004,Ritu Anand,NURSE,General Nursing,DEMO-NUR-403,ROTATING,true,true
+HSP-004-R01,HSP-004,Sameer Walia,RECEPTIONIST,Front Desk,,MORNING,true,true
+HSP-004-R02,HSP-004,Tanvi Ghosh,RECEPTIONIST,Front Desk,,ROTATING,true,true

@@ -1,0 +1,7 @@
+question_code,question_category,answer_type,question_text,answer_source
+Q-ONSET,Symptom onset,TEXT,When did the current problem begin?,reported
+Q-SEVERITY,Current severity,NUMBER_0_10,How severe is it right now from 0 to 10?,reported
+Q-ASSOCIATED,Associated symptoms,TEXT,What other symptoms are present?,reported
+Q-WORSENING,Change over time,BOOLEAN,Is the problem getting worse?,reported
+Q-MEDICATION,Medication already taken,TEXT,Was any medicine taken for this problem?,reported
+Q-ALLERGY,Allergy confirmation,TEXT,Are there any known medicine allergies?,reported

@@ -1,294 +1,152 @@
-# ResiliCare prototype
+# ResiliCare
 
-ResiliCare is a hackathon prototype of a safety-first emergency-department triage
-support tool. It suggests an Emergency Severity Index (ESI) level with an explicit
-confidence range, applies deterministic clinical safety ceilings that can escalate
-but never autonomously downgrade acuity, explains every score in one or two lines,
-re-assesses waiting patients as their vitals change, and records every clinician
-override in an append-only audit ledger.
+ResiliCare is a production-oriented emergency-department triage platform. It stores hospital operations, staff, patients, encounters, repeated vital observations, guided symptom interviews, versioned triage assessments, clinician decisions, prescriptions, billing, reviews, and append-only audit events in Supabase Postgres. FastAPI is the only application write path for clinical and financial data.
 
-It also demonstrates operational layers around triage: a deterministic 3x surge
-replay, a queue-length-triggered reduced-density "Combat Mode" display, simulated
-scheme-aware alternate-facility routing, simulated hospital capability profiles, and
-a ResiliCare-local visit history with a FHIR-shaped export.
+The clinical engine supports safety ceilings, uncertainty-aware senior review, age-adjusted vital interpretation, waiting-room reassessment, and clinician confirmation or override. Financial coverage and referral routing are operational outputs only and never alter ESI acuity.
 
-This is an educational prototype, not a clinically validated medical device. Every
-patient, facility, scheme, contact, and capability value in this repository is
-synthetic. Reference ESI labels and local safety-rule inputs require review by
-qualified emergency clinicians before any clinical evaluation.
 
 ## Table of contents
 
 - Requirements
-- Recommended optional dependencies
 - Installation
 - Configuration
-- Troubleshooting
-- FAQ
+- Troubleshooting & FAQ
 - Maintainers
+- Architecture
+- Core API groups
+- Clinical boundary
+
 
 ## Requirements
 
-The clinical scorer, the demo server, the example scripts, and the full test suite
-run on the Python standard library alone. There are no required third-party
-packages, no build step, no database, and no network access.
+This project requires the following software:
 
-- Python 3.10 or newer. Developed and verified on CPython 3.14.6 (Windows 11).
-- A modern browser for the demo UI (the interface uses `<dialog>` and `fetch`).
+- Python 3.12 or newer
+- [uv](https://github.com/astral-sh/uv) (for Python package management)
+- [Supabase CLI](https://supabase.com/docs/guides/cli) (for database management and local development)
+- A running Supabase Postgres instance
 
-Optional, and needed only for the experimental Task 12 audio pipeline, are the
-packages listed under "Recommended optional dependencies" below.
-
-## Recommended optional dependencies
-
-These enhance the project but are not needed to run, demo, or test it. This is the
-Drupal template's "Recommended modules" slot, adapted for a Python project.
-
-- `requirements_nlp.txt` (torch, torchaudio, transformers, librosa, soundfile,
-  spaCy) enables the experimental Task 12 audio intake — Silero voice-activity
-  detection, a Librosa acoustic-distress heuristic, and Whisper speech-to-text.
-  Without them, `resilicare.nlp_kiosk` still imports and its text pipeline still
-  works; only the audio methods raise a clear error.
-- The `en_core_web_sm` spaCy model enables name extraction in the kiosk identity
-  step. Without it, identity binding falls back to an ephemeral `Trauma-Unknown-…`
-  alias, which is the intended default behaviour anyway.
-
-**These pins are not verified on Python 3.14.** `torch==2.1.2` predates Python 3.14
-wheel support, so `pip install -r requirements_nlp.txt` is expected to fail on this
-project's own interpreter until the file is re-pinned or run under a separate
-Python 3.10–3.12 environment. Nothing else in the repository depends on this.
 
 ## Installation
 
-All commands are run from the project root. PowerShell examples are given first
-because the project was developed on Windows; the bash equivalents follow.
+1. Copy the example environment file:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+2. Install dependencies using uv:
+   ```powershell
+   uv sync
+   ```
+3. Start the local Supabase instance and apply migrations:
+   ```powershell
+   supabase start
+   supabase db reset
+   ```
+4. Run the API:
+   ```powershell
+   uv run fastapi dev
+   ```
 
-### 1. Get the code
+The configured entrypoint is `src.main:app`. Development OpenAPI documentation is available at `http://127.0.0.1:8000/docs`; production disables interactive docs by default.
 
-```powershell
-git clone https://github.com/SDD-ResiliCare/ResiliCare_1.git
-cd ResiliCare_1
-```
-
-### 2. Put `src` on the Python path
-
-There is no packaging step. Every entry point expects `src` on `PYTHONPATH`.
-
-```powershell
-$env:PYTHONPATH = "src"
-```
-
-```bash
-export PYTHONPATH=src
-```
-
-Set this once per terminal session. Every command below assumes it is set.
-
-### 3. Verify the installation by running the test suite
-
-```powershell
-python -m unittest discover -s tests -v
-```
-
-This runs 124 tests across every layer and should end in `OK`. It requires no
-optional dependencies. If it passes, the prototype is correctly installed.
-
-### 4. Run the browser demo
-
-```powershell
-python demo/backend/audit_server.py
-```
-
-Then open `http://127.0.0.1:8000`. The server accepts `--host`, `--port`, and
-`--log` (audit-ledger path, default `data/audit_log.jsonl`); it binds to localhost
-only. See "Configuration" for what to click through once it is open.
-
-### 5. Run the command-line examples (optional)
-
-Each script prints one layer's behaviour and exits.
-
-```powershell
-python examples/run_safety_layer.py
-python examples/run_confidence_layer.py
-python examples/run_missingness_layer.py
-python examples/run_waiting_room.py
-python examples/run_surge_simulation.py
-```
-
-`run_surge_simulation.py` is the headless proof of the Task 10 rubric requirement
-and prints the quiet-versus-surge comparison directly:
-
-```
-QUIET_1X: 7 arrivals / 15 min, queue=7, Combat Mode=OFF
-SURGE_3X: 21 arrivals / 15 min, queue=21, Combat Mode=ON
-Deterioration replay: Q-001 (PT-018) rank 18 -> 9
-```
-
-### 6. Install the optional audio extras (only if demoing Task 12 audio)
-
-```powershell
-pip install -r requirements_nlp.txt
-pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
-```
-
-Expect this to fail on Python 3.14 (see "Recommended optional dependencies"). The
-demo's voice-intake tab works regardless, using manual transcript entry.
 
 ## Configuration
 
-### Demo walkthrough
+Set the real Supabase connection and authentication values in `.env`.
 
-Once `python demo/backend/audit_server.py` is running at `http://127.0.0.1:8000`:
+### Prototype login accounts
 
-1. **Patient queue** opens on a 7-encounter quiet shift in the normal detailed
-   layout. Each card shows the ESI badge with confidence, the one-to-two-line
-   explanation, any mandatory safety workup, hospital operational guidance, and
-   simulated financial routing.
-2. **Override ESI** on any card requires a clinician ID, a different ESI level, a
-   structured reason category, and free-text rationale. The server, not the
-   browser, looks up the canonical AI output before appending the event.
-3. **Run 3x surge** replays 21 arrivals into the same 15-minute window, crosses the
-   queue-length threshold of 20, and automatically activates Combat Mode. **Declare
-   surge manually** triggers the same display for drills; **Reset quiet shift**
-   returns to 7 encounters.
-4. **Open & acknowledge** on a Combat Mode card requires a clinician ID (enter it in
-   the surge control bar first) and restores the full detail view.
-5. **Hospital profile · simulated** swaps between the urban trauma centre and the
-   rural clinic live. `Q-007` is the clearest demo: the ESI badge stays identical
-   while the operational recommendation changes to stabilise-and-transfer.
-6. **Open details** shows ResiliCare-local visit history and offers **Export as
-   FHIR-shaped bundle**. `PT-016` / `RC-P-016` is the seeded returning patient.
-7. **Audit log** is the append-only viewer for overrides and Combat Mode
-   acknowledgements.
-8. **Voice intake (experimental)** provides the Task 12 manual transcript fallback.
+The compact four-hospital prototype dataset is stored in `data/prototype_dataset_v1/`. It includes 100 synthetic patients, 40 live encounters, 60 reserve patient profiles, and a 17-account login manifest.
 
-### Tunable configuration files
+To provision the synthetic `.test` accounts, set `SUPABASE_URL`, a server-only `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`), and `RESILICARE_DEMO_PASSWORD`, then run:
 
-Prototype thresholds are deliberately isolated in versioned JSON rather than
-hard-coded, so a clinician can review and replace them:
+```powershell
+python scripts/seed_prototype_dataset.py --apply
+python scripts/provision_demo_auth_users.py --apply
+```
 
-- `src/resilicare/vital_thresholds.json` — age-calibrated vital reference bands.
-- `src/resilicare/confidence_config.json` — confidence thresholds and penalties.
-- `src/resilicare/missingness_config.json` — history/vitals blend weights.
-- `src/resilicare/waiting_room_config.json` — reassessment ceilings per ESI level.
-- `src/resilicare/ambiguous_presentations.json` — differential pathway table.
-- `src/resilicare/facilities.json` — simulated scheme-to-facility routing table.
-- `src/resilicare/hospital_profiles.json` — simulated hospital capability profiles.
-
-Runtime state is written to `data/audit_log.jsonl` and
-`data/resilicare_history_runtime.json`; both are gitignored. The committed
-`data/resilicare_history_seed.json` is copied to the runtime file on first run.
-
-For a detailed breakdown of the clinical and operational tasks implemented in this prototype (Tasks 2 through 17), please see [TASKS.md](TASKS.md).
+The script creates or updates each user's `user_profiles` and `user_roles` rows, links staff accounts, links patient accounts, and gives only the single demo super-administrator the `platform_admin` role. Never run this demo-account flow for real users.
 
 
-## Troubleshooting
+## Troubleshooting & FAQ
 
-**`ModuleNotFoundError: No module named 'resilicare'`** — `PYTHONPATH` is not set for
-the current terminal session. Re-run `$env:PYTHONPATH = "src"` (PowerShell) or
-`export PYTHONPATH=src` (bash) from the project root. Opening a new terminal clears
-it.
+**Q: How do I verify my setup?**
 
-**`OSError: [WinError 10048]` or "address already in use" on startup** — port 8000 is
-taken, often by an earlier demo server that is still running. Start on another port
-with `python demo/backend/audit_server.py --port 8080`.
+**A:** Run the test suite and linter:
+```powershell
+uv run pytest -q
+uv run ruff check src tests scripts
+```
+Current tests cover the existing clinical engine plus production API and schema contracts. A live Supabase instance is required for repository integration tests and applying migrations.
 
-**The demo shows no previous visits for a patient** — this is correct behaviour for
-every patient except the seeded returning patient `PT-016` / `RC-P-016`. To reset
-history entirely, delete `data/resilicare_history_runtime.json`; it is regenerated
-from the committed seed on next start.
-
-**`pip install -r requirements_nlp.txt` fails** — expected on Python 3.14; see
-"Recommended optional dependencies". Nothing except the Task 12 audio pipeline needs
-it, and the voice-intake tab works without it.
-
-**`RuntimeError: Task 12 audio pipeline requires 'torch' …`** — an audio method was
-called without the optional extras installed. Use `process_kiosk_text()` or the demo's
-manual transcript box instead.
-
-**Combat Mode does not activate** — it triggers at a queue length of 20 or more. The
-quiet shift is 7 encounters; select `Run 3x surge` first, or use `Declare surge
-manually` to force the display below threshold.
-
-## FAQ
-
-**Is this safe to use on real patients?**
-No. It is an educational hackathon prototype, not a clinically validated medical
-device, and it has no authentication, encryption, or access control. Every safety
-threshold in it is a prototype default awaiting clinician review.
-
-**Can the AI lower a patient's acuity on its own?**
-No. Every automated path is escalation-only. Safety ceilings, differential pathways,
-and waiting-room re-triage can move a patient to a more urgent ESI but never to a
-less urgent one; only a clinician can downgrade, and that is recorded as an override.
-
-**Is the audit log tamper-proof?**
-It is an application-level append-only ledger — insert and read only, with PUT,
-PATCH, and DELETE returning `405`. It is not cryptographically immutable and not
-protected against an operator with filesystem access.
-
-**Is the FHIR export real FHIR? Does it talk to ABDM?**
-No to both. It is FHIR-*shaped* prototype JSON, downloaded locally, never
-transmitted, and not conformance-validated.
-
-**Does the routing feature check real insurance eligibility?**
-No. Schemes, facilities, distances, and room-rent caps are all fictional static
-lookup data. There is no NHCX call, eligibility check, or cashless authorization.
-
-**Why is there no trained model?**
-No validated labelled dataset exists for this prototype, so inventing class
-probabilities would misrepresent confidence. The confidence layer uses a clearly
-identified evidence-completeness heuristic instead, and explanations are rule
-templates rather than SHAP attributions.
-
-**Why is a GNN / live microphone intake not implemented?**
-Both were deliberately scoped out. A GNN needs a labelled symptom-diagnosis graph
-that does not exist here; live-microphone intake fails unpredictably in noisy demo
-venues, so Task 12 is built around pre-recorded clips and a manual fallback.
 
 ## Maintainers
 
-- ResiliCare team (Samosa Driven Development) —
-  [github.com/SDD-ResiliCare](https://github.com/SDD-ResiliCare)
+- Prem Agarwal - [premagarwal](https://github.com/premagarwals)
+- Harsh Sahu - [Harsh7645](https://github.com/Harsh7645)
+- Rishit Raj Singh - [pror993](https://github.com/pror993)
 
-Replace this section with individual maintainer names and handles before publishing.## Usage (Headless API)
 
-The monolithic frontend UI has been removed to keep this prototype strictly as a headless API and rules engine.
+## Architecture
 
-Start the API server on port 8000:
-```bash
-$env:PYTHONPATH = "src"  # PowerShell
-# or
-export PYTHONPATH="src"  # Bash/Zsh
+```text
+Client
+  -> Supabase Auth access token
+  -> FastAPI /api/v1
+       -> role and hospital-boundary checks
+       -> application services and transactions
+       -> SQLAlchemy repositories
+       -> Supabase Postgres
 
-python demo/backend/audit_server.py
+Profile images
+  -> FastAPI
+  -> Supabase Storage
 ```
 
-### Available API Endpoints
+The source tree is intentionally flat under `src/`:
 
-The API is logically separated into two distinct domains: one for hospital staff (nurses/admins) and one for patient-facing applications (kiosks/apps).
-
-#### Hospital-Facing API (Staff & Triage)
-**GET:**
-* `/api/hospital/suggestions`: Returns the current queue of patients and their AI-suggested ESI scores.
-* `/api/hospital/queue`: Returns global queue stats, load multiplier, and active hospital profile.
-* `/api/hospital/audit`: Returns the full append-only audit log of system events.
-* `/api/hospital/profiles`: Returns available simulated hospital profiles and capabilities.
-* `/api/hospital/fhir-export?encounter_id=X`: Returns a simulated FHIR-shaped export bundle for a given encounter.
-* `/api/hospital/override-rates`: (Task 15) Returns the rolling analytical override rate for each safety rule, highlighting de-escalations.
-
-**POST:**
-* `/api/hospital/surge/run`: Triggers a simulated 3x patient surge to test Combat Mode queue management.
-* `/api/hospital/surge/manual`: Manually toggle Combat Mode on/off.
-* `/api/hospital/overrides`: Submit a clinician override decision (escalation/de-escalation) which updates the queue and appends to the audit ledger.
-
-#### Patient-Facing API (Self-Service & Kiosk)
-**GET:**
-* `/api/patient/history?patient_uid=X`: Returns the local multi-visit history for a specific patient.
-* `/api/patient/kiosk-status`: Returns the availability of the experimental voice ASR models.
-
-**POST:**
-* `/api/patient/kiosk-text`: Submit a transcript for Multilingual NLP Intake triage (Task 12).
-* `/api/patient/routing-preview`: Previews simulated scheme-aware routing (insurance/financial routing) to alternate facilities for low-acuity cases (Task 13).
+- `src/api/routers/` — versioned HTTP endpoints.
+- `src/schemas/` — Pydantic request and response validation.
+- `src/services/` — workflow orchestration and transaction boundaries.
+- `src/db/models/` — SQLAlchemy mappings for the application tables.
+- `src/db/repositories/` — database queries without HTTP concerns.
+- `src/core/` — pure clinical calculations.
+- `src/workflows/` — waiting-room and real operational surge behavior.
+- `src/integrations/` — Supabase Auth, Storage, and FHIR adapters.
+- `supabase/migrations/` — authoritative PostgreSQL schema and security rules.
+- `tests/` — unit, contract, and API tests.
 
 
+## Core API groups
+
+```text
+/api/v1/auth
+/api/v1/hospitals
+/api/v1/staff
+/api/v1/patients
+/api/v1/queues
+/api/v1/encounters
+/api/v1/assessments
+/api/v1/prescriptions
+/api/v1/invoices
+/api/v1/feedback
+```
+
+Important workflows:
+
+- A staff member belongs to one hospital and may have multiple ward assignments.
+- An encounter has at most one active primary doctor; transfers close the prior assignment and create a linked replacement in one transaction.
+- Vitals are append-only observations. GCS total is derived from eye, verbal, and motor components.
+- Follow-up symptom questions retain questionnaire version, question ordering, branching conditions, response source, and the exact displayed question text.
+- Every triage run creates a new immutable assessment version. Clinician decisions do not overwrite generated assessments.
+- Every triage assessment stores a short deterministic AI overview, its structured clinical factors, and the ward suggested by the hospital's ESI routing configuration. The confirmed doctor work item separately snapshots why the selected ward and doctor were used, including whether the doctor was free or the patient's doctor-queue position.
+- The current queue exposes each patient's pending AI recommendation and confirmed ESI separately. An authorized allocator may confirm a ward and primary-doctor allocation only after the latest assessment has a clinician decision; the ward location, doctor participation, and combined audit event are persisted atomically.
+- Nurses and receptionists can perform the post-triage allocation. Allocation closes the hospital triage-queue entry and creates a doctor work item: it starts immediately when that doctor is free, otherwise it joins the doctor's ESI-ordered waiting list. Closing the current encounter promotes the next waiting patient.
+- An encounter closure records the medication decision. Actual prescriptions are created only when medication is ordered.
+- Invoice totals are calculated by the backend from line items. Issued invoices are superseded rather than silently overwritten.
+- Review tokens are stored only as SHA-256 hashes and doctor reviews are limited to doctors assigned to the encounter.
+
+
+## Clinical boundary
+
+ResiliCare provides decision support, not an autonomous diagnosis or treatment decision. ESI recommendations require clinician review. Thresholds, safety rules, questionnaires, escalation routes, and routing configuration must be clinically validated and governed before use with patients.

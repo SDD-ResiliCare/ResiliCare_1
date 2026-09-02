@@ -1,0 +1,9 @@
+feedback_id,hospital_id,encounter_id,patient_id,category,rating_1_5,message,contact_permission,status,created_at,is_synthetic
+FB-ENC-HSP-001-009,HSP-001,ENC-HSP-001-009,HSP-001-P009,QUEUE,3,Demo feedback: clearer wait estimate requested,false,NEW,2026-09-02T10:38:00+05:30,true
+FB-ENC-HSP-001-010,HSP-001,ENC-HSP-001-010,HSP-001-P010,APP,4,Demo feedback: intake steps were easy to follow,false,NEW,2026-09-02T10:45:00+05:30,true
+FB-ENC-HSP-002-009,HSP-002,ENC-HSP-002-009,HSP-002-P009,QUEUE,3,Demo feedback: clearer wait estimate requested,false,NEW,2026-09-02T10:41:00+05:30,true
+FB-ENC-HSP-002-010,HSP-002,ENC-HSP-002-010,HSP-002-P010,APP,4,Demo feedback: intake steps were easy to follow,false,NEW,2026-09-02T10:48:00+05:30,true
+FB-ENC-HSP-003-009,HSP-003,ENC-HSP-003-009,HSP-003-P009,QUEUE,3,Demo feedback: clearer wait estimate requested,false,NEW,2026-09-02T10:44:00+05:30,true
+FB-ENC-HSP-003-010,HSP-003,ENC-HSP-003-010,HSP-003-P010,APP,4,Demo feedback: intake steps were easy to follow,false,NEW,2026-09-02T10:51:00+05:30,true
+FB-ENC-HSP-004-009,HSP-004,ENC-HSP-004-009,HSP-004-P009,QUEUE,3,Demo feedback: clearer wait estimate requested,false,NEW,2026-09-02T10:47:00+05:30,true
+FB-ENC-HSP-004-010,HSP-004,ENC-HSP-004-010,HSP-004-P010,APP,4,Demo feedback: intake steps were easy to follow,false,NEW,2026-09-02T10:54:00+05:30,true
