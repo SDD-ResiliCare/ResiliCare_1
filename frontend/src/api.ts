@@ -299,6 +299,16 @@ export const api = {
     }
   },
 
+  getMLSuggestion: async (encounterId: string): Promise<any | null> => {
+    try {
+      const response = await apiClient.post(`/api/v1/encounters/${encounterId}/ml-suggest`);
+      return response.data;
+    } catch (error) {
+      console.warn("Failed to fetch ML suggestion:", error);
+      return null;
+    }
+  },
+
   // --- Patient Interface ---
   processKioskText: async (transcript: string): Promise<any> => {
     // Missing in backend.

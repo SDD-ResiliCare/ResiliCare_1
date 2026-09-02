@@ -106,3 +106,27 @@ export interface DoctorWorkload {
     queued_at: string;
   }>;
 }
+
+export interface MLTriagePredictionResponse {
+  encounter_id: string | null;
+  proposed_esi: number;
+  final_esi: number;
+  safety_ceiling: number | null;
+  safety_override_applied: boolean;
+  confidence_score: number;
+  prediction_set: number[];
+  class_probabilities: Record<string, number>;
+  is_uncertain: boolean;
+  uncertainty_reasons: string[];
+  top_contributing_factors: Array<{
+    feature_name: string;
+    feature_value: any;
+    contribution: number;
+    impact: string;
+  }>;
+  treeshap_attributions: Array<{
+    feature: string;
+    attribution: number;
+  }>;
+  clinical_rationale: string;
+}

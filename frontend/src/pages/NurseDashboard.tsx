@@ -132,6 +132,8 @@ export function NurseDashboard() {
   const [queueData, setQueueData] = useState<QueueSnapshot | null>(null);
   const [activePatientId, setActivePatientId] = useState<string | null>(null);
   const [doctorWorkloads, setDoctorWorkloads] = useState<any[]>([]);
+  const [mlSuggestion, setMlSuggestion] = useState<any | null>(null);
+  const [isLoadingML, setIsLoadingML] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -164,6 +166,20 @@ export function NurseDashboard() {
   }, []);
 
   const activePatient = queueData?.patients.find(p => p.id === activePatientId) || null;
+
+  useEffect(() => {
+    if (activePatient?.encounter_id) {
+      setIsLoadingML(true);
+      api.getMLSuggestion(activePatient.encounter_id).then(data => {
+        setMlSuggestion(data);
+        setIsLoadingML(false);
+      });
+    } else {
+      setMlSuggestion(null);
+    }
+  }, [activePatient?.encounter_id]);
+
+  if (!queueData) return <div className="p-8 text-gray-500">Loading queue...</div>;
 
   return (
     <div className="flex flex-1 overflow-hidden h-full">
@@ -641,26 +657,41 @@ export function NurseDashboard() {
            <p className="text-[13px] font-semibold text-black mb-3 leading-tight pr-6">{activePatient.complaint || 'No complaint recorded'}</p>
         </div>
 
-        {/* Safety Flags & Workup */}
+        {/* ML Clinical Rationale */}
         <div className="shrink-0 mb-5">
            <div className="flex items-center gap-2 mb-2">
               <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Clinical Safety</span>
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">ML Suggestion</span>
            </div>
-           <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2.5 bg-red-50 border border-red-100 p-3 rounded-xl text-red-600">
-                 <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                   <HeartPulse className="w-3.5 h-3.5" />
-                 </div>
-                 <span className="text-[12px] font-semibold">Critical Flag: Cardiac Event</span>
-              </div>
-              <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-100 p-3 rounded-xl text-amber-600">
-                 <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                   <Activity className="w-3.5 h-3.5" />
-                 </div>
-                 <span className="text-[12px] font-semibold">Mandatory: 12-Lead ECG</span>
-              </div>
-           </div>
+           
+           {isLoadingML ? (
+             <div className="p-4 text-sm text-gray-400 animate-pulse bg-gray-50 rounded-xl border border-gray-100">Analyzing encounter data...</div>
+           ) : mlSuggestion ? (
+             <div className="flex flex-col gap-2">
+                <div className={`p-4 rounded-xl border ${mlSuggestion.is_uncertain ? 'bg-amber-50 border-amber-100 text-amber-800' : 'bg-emerald-50 border-emerald-100 text-emerald-800'}`}>
+                   <p className="text-[12px] font-medium leading-relaxed">{mlSuggestion.clinical_rationale || 'No rationale provided.'}</p>
+                   {mlSuggestion.final_esi && (
+                     <div className="mt-3 inline-block px-2.5 py-1 rounded-md bg-white border border-black/5 text-[11px] font-bold shadow-sm">
+                       Suggested ESI Level: {mlSuggestion.final_esi}
+                     </div>
+                   )}
+                </div>
+                {mlSuggestion.top_contributing_factors && mlSuggestion.top_contributing_factors.length > 0 && (
+                  <div className="mt-2 pl-1">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Top Factors</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {mlSuggestion.top_contributing_factors.slice(0, 3).map((factor: any, i: number) => (
+                        <span key={i} className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                          {factor.feature_name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+             </div>
+           ) : (
+             <div className="p-4 text-sm text-gray-400 bg-gray-50 rounded-xl border border-gray-100">No ML suggestion available.</div>
+           )}
         </div>
 
         {/* History & Routing */}
@@ -684,9 +715,11 @@ export function NurseDashboard() {
               <div className="text-right">
                 <div className="flex items-center justify-end gap-1.5 mb-0.5">
                    <ShieldCheck className="w-3 h-3 text-gray-400" />
-                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Data Quality</span>
+                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">ML Confidence</span>
                 </div>
-                <span className="text-[12px] font-bold text-green-600">High Confidence</span>
+                <span className={`text-[12px] font-bold ${isLoadingML ? 'text-gray-400' : mlSuggestion?.is_uncertain ? 'text-amber-600' : 'text-green-600'}`}>
+                  {isLoadingML ? '--' : mlSuggestion ? `${Math.round(mlSuggestion.confidence_score * 100)}% Confidence` : 'Unknown'}
+                </span>
               </div>
            </div>
         </div>

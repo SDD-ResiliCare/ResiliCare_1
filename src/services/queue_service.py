@@ -213,7 +213,7 @@ class QueueService:
                     "encounter": encounter,
                     "final_esi": decision.final_esi if decision else None,
                     "safety_alert": safety_alert,
-                    "vitals": {k: getattr(vitals, k) for k in vitals.__table__.columns} if vitals else None,
+                    "vitals": {k.name: getattr(vitals, k.name) for k in vitals.__table__.columns} if vitals else None,
                     "triage": {
                         "assessment_id": assessment.id if assessment else None,
                         "assessment_status": assessment.assessment_status if assessment else None,
