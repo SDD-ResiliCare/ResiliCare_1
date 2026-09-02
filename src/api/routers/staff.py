@@ -11,6 +11,9 @@ from src.services.staff_service import StaffService
 
 router = APIRouter(prefix="/staff", tags=["staff"])
 Admin = Annotated[RequestContext, Depends(require_roles("platform_admin", "administrator"))]
+ClinicalStaff = Annotated[
+    RequestContext, Depends(require_roles("platform_admin", "administrator", "nurse", "receptionist", "doctor"))
+]
 
 
 @router.post("", response_model=StaffResponse, status_code=status.HTTP_201_CREATED)
@@ -22,7 +25,7 @@ async def create_staff(payload: StaffCreate, session: DatabaseSession, context: 
 @router.get("", response_model=Page[StaffResponse])
 async def list_staff(
     session: DatabaseSession,
-    context: Admin,
+    context: ClinicalStaff,
     query: str | None = None,
     staff_type: str | None = None,
     ward_id: UUID | None = None,
@@ -43,7 +46,7 @@ async def list_staff(
 
 
 @router.get("/{staff_id}", response_model=StaffResponse)
-async def get_staff(staff_id: UUID, session: DatabaseSession, context: Admin):
+async def get_staff(staff_id: UUID, session: DatabaseSession, context: ClinicalStaff):
     member = await StaffService(session).get(staff_id)
     enforce_hospital_access(context, member.hospital_id)
     return member

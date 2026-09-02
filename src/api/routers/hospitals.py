@@ -18,6 +18,9 @@ from src.services.hospital_service import HospitalService
 
 router = APIRouter(prefix="/hospitals", tags=["hospitals"])
 Admin = Annotated[RequestContext, Depends(require_roles("platform_admin", "administrator"))]
+ClinicalStaff = Annotated[
+    RequestContext, Depends(require_roles("platform_admin", "administrator", "nurse", "receptionist", "doctor"))
+]
 
 
 @router.post("", response_model=HospitalResponse, status_code=status.HTTP_201_CREATED)
@@ -30,7 +33,7 @@ async def create_hospital(payload: HospitalCreate, session: DatabaseSession, _co
 @router.get("", response_model=Page[HospitalResponse])
 async def list_hospitals(
     session: DatabaseSession,
-    context: Admin,
+    context: ClinicalStaff,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=100),
 ):
@@ -44,14 +47,14 @@ async def list_hospitals(
 
 
 @router.get("/current", response_model=HospitalResponse)
-async def current_hospital(session: DatabaseSession, context: Admin):
+async def current_hospital(session: DatabaseSession, context: ClinicalStaff):
     if context.hospital_id is None:
         raise HTTPException(404, "current user is not linked to a hospital")
     return await HospitalService(session).get_hospital(context.hospital_id)
 
 
 @router.get("/{hospital_id}", response_model=HospitalResponse)
-async def get_hospital(hospital_id: UUID, session: DatabaseSession, context: Admin):
+async def get_hospital(hospital_id: UUID, session: DatabaseSession, context: ClinicalStaff):
     enforce_hospital_access(context, hospital_id)
     return await HospitalService(session).get_hospital(hospital_id)
 
@@ -66,6 +69,18 @@ async def update_hospital(hospital_id: UUID, payload: HospitalUpdate, session: D
 async def deactivate_hospital(hospital_id: UUID, session: DatabaseSession, context: Admin):
     enforce_hospital_access(context, hospital_id)
     return await HospitalService(session).deactivate_hospital(hospital_id)
+
+
+@router.get("/{hospital_id}/wards", response_model=Page[WardResponse])
+async def list_wards(
+    hospital_id: UUID,
+    session: DatabaseSession,
+    context: ClinicalStaff,
+    include_inactive: bool = Query(default=False),
+):
+    enforce_hospital_access(context, hospital_id)
+    wards = await HospitalService(session).list_wards(hospital_id, include_inactive=include_inactive)
+    return Page(items=wards, page=1, page_size=len(wards) or 1, total=len(wards), has_next=False)
 
 
 @router.post("/{hospital_id}/wards", response_model=WardResponse, status_code=status.HTTP_201_CREATED)

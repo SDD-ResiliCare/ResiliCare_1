@@ -193,6 +193,7 @@ class RankedQueueEntryResponse(BaseModel):
     safety_alert: bool
     triage: QueueTriageSummary
     allocation: QueueAllocationSummary
+    vitals: dict | None = None
 
 
 class CurrentQueueResponse(BaseModel):

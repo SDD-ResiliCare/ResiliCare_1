@@ -15,7 +15,7 @@ from src.schemas.encounter import (
 from src.services.queue_service import QueueService
 
 router = APIRouter(prefix="/queues", tags=["queues"])
-ClinicalStaff = Annotated[RequestContext, Depends(require_roles("administrator", "doctor", "nurse"))]
+ClinicalStaff = Annotated[RequestContext, Depends(require_roles("administrator", "nurse", "receptionist"))]
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
