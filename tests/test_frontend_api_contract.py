@@ -27,8 +27,15 @@ def test_frontend_discovery_and_workspace_routes_are_exposed():
         "/api/v1/encounters/{encounter_id}/prescriptions",
         "/api/v1/encounters/{encounter_id}/invoices",
         "/api/v1/audit-events",
+        "/api/v1/kiosk/status",
+        "/api/v1/kiosk/process-text",
+        "/api/v1/kiosk/process-audio",
+        "/api/v1/kiosk/submit-followups",
+        "/api/v1/kiosk/trauma-intake",
+        "/api/v1/kiosk/reconcile-identity",
     }
     assert required <= paths.keys()
+
 
 
 def test_master_resources_expose_safe_crud_methods():
