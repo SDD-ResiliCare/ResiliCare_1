@@ -18,9 +18,7 @@ export function Sidebar() {
       <div className="flex flex-col items-center gap-12 w-full">
         {/* Logo Mark */}
         <div className="w-10 h-10 mb-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[#D6FF38] w-full h-full" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-          </svg>
+          <img src="/resilicare-mark.png" alt="ResiliCare" className="w-full h-full object-contain" />
         </div>
 
         {/* Navigation */}
