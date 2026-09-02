@@ -493,7 +493,7 @@ export function NurseDashboard() {
       </div>
 
       {/* Right Overview Panel - Clinical Data */}
-      {!isSurgeMode && activePatient && (
+      {activePatient && (
         <div className="w-[360px] bg-white rounded-[2rem] m-6 ml-0 flex flex-col p-6 relative shadow-xl shrink-0 overflow-y-auto no-scrollbar animate-in fade-in slide-in-from-right-8 duration-500">
           {/* Header - Profile */}
         <div className="shrink-0 flex items-center justify-between mb-6">
@@ -553,9 +553,11 @@ export function NurseDashboard() {
            </div>
         </div>
 
-        {/* Vitals Grid */}
-        <div className="shrink-0 mb-5">
-           <div className="flex items-center gap-2 mb-2">
+        {!isSurgeMode && (
+          <>
+            {/* Vitals Grid */}
+            <div className="shrink-0 mb-5">
+               <div className="flex items-center gap-2 mb-2">
              <Activity className="w-3.5 h-3.5 text-gray-400" />
              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Vitals</span>
            </div>
@@ -670,6 +672,8 @@ export function NurseDashboard() {
               </div>
            </div>
         </div>
+          </>
+        )}
       </div>
       )}
     </div>
