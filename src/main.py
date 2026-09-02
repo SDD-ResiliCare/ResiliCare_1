@@ -14,6 +14,7 @@ from src.api.routers import (
     encounters,
     feedback,
     hospitals,
+    kiosk,
     patients,
     prescriptions,
     queues,
@@ -59,11 +60,13 @@ for router in (
     queues.router,
     encounters.router,
     triage.router,
+    kiosk.router,
     prescriptions.router,
     billing.router,
     feedback.router,
 ):
     app.include_router(router, prefix=settings.api_v1_prefix)
+
 
 
 @app.get("/health", response_model=HealthResponse, tags=["system"])
