@@ -59,3 +59,46 @@ export interface AuditLog {
   actor: string;
   details: string;
 }
+
+export interface DoctorWorkload {
+  doctor: {
+    id: string;
+    employee_code: string;
+    first_name: string;
+    last_name?: string;
+  };
+  availability: string;
+  current_patient?: {
+    work_item_id: string;
+    encounter_id: string;
+    encounter_code: string;
+    patient_id: string;
+    patient_name: string;
+    ward: {
+      id: string;
+      name: string;
+      ward_code: string;
+    };
+    status: string;
+    confirmed_esi: number;
+    queue_position?: number;
+    queued_at: string;
+  };
+  waiting_count: number;
+  waiting_patients: Array<{
+    work_item_id: string;
+    encounter_id: string;
+    encounter_code: string;
+    patient_id: string;
+    patient_name: string;
+    ward: {
+      id: string;
+      name: string;
+      ward_code: string;
+    };
+    status: string;
+    confirmed_esi: number;
+    queue_position?: number;
+    queued_at: string;
+  }>;
+}

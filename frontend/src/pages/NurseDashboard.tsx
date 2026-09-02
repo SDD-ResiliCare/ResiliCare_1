@@ -121,6 +121,7 @@ export function NurseDashboard() {
   const [isSurgeMode, setIsSurgeMode] = useState(false);
   const [queueData, setQueueData] = useState<QueueSnapshot | null>(null);
   const [activePatientId, setActivePatientId] = useState<string | null>(null);
+  const [doctorWorkloads, setDoctorWorkloads] = useState<any[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -149,6 +150,7 @@ export function NurseDashboard() {
         setActivePatientId(data.patients[0].id);
       }
     });
+    api.getDoctorWorkloads().then(data => setDoctorWorkloads(data));
   }, []);
 
   const activePatient = queueData?.patients.find(p => p.id === activePatientId) || null;
@@ -438,82 +440,56 @@ export function NurseDashboard() {
           
           <div className="flex flex-col gap-8">
             
-            {/* Dr. Marcus Webb Queue */}
-            <div className="flex items-start gap-4 lg:gap-6">
-              <div className="w-32 pt-3 shrink-0">
-                 <div className="text-sm font-bold text-gray-200">Dr. M. Webb</div>
-                 <div className="text-[11px] font-semibold text-gray-500 mt-0.5">ER - Trauma</div>
-              </div>
-              <div className="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                 
-                 {/* Queue 1 */}
-                 <div className="bg-[#18191C] border border-white/5 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-white/10 transition-colors">
-                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D6FF38]" />
-                   <img src="https://i.pravatar.cc/150?u=p1" className="w-10 h-10 rounded-full shrink-0" />
-                   <div className="flex flex-col flex-1 min-w-0">
-                     <span className="text-sm font-bold text-white truncate">Wade Warren</span>
-                     <span className="text-xs text-gray-400 mt-0.5 truncate">Level 2 - Emergent</span>
+            {doctorWorkloads.length === 0 ? (
+              <div className="text-gray-500 text-sm">No doctor workloads found.</div>
+            ) : doctorWorkloads.map((workload, index) => (
+              <div key={workload.doctor.id || index} className="flex items-start gap-4 lg:gap-6">
+                <div className="w-32 pt-3 shrink-0">
+                   <div className="text-sm font-bold text-gray-200">
+                     Dr. {workload.doctor.first_name?.charAt(0)}. {workload.doctor.last_name || workload.doctor.first_name}
                    </div>
-                   <span className="bg-[#D6FF38]/10 text-[#D6FF38] text-[11px] font-bold px-2.5 py-1 rounded-md shrink-0 border border-[#D6FF38]/20">Queue #1</span>
-                 </div>
-
-                 {/* Queue 2 */}
-                 <div className="bg-[#18191C] border border-white/5 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-white/10 transition-colors">
-                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D6FF38]" />
-                   <img src="https://i.pravatar.cc/150?u=p6" className="w-10 h-10 rounded-full shrink-0" />
-                   <div className="flex flex-col flex-1 min-w-0">
-                     <span className="text-sm font-bold text-white truncate">Jenny Wilson</span>
-                     <span className="text-xs text-gray-400 mt-0.5 truncate">Level 3 - Urgent</span>
+                   <div className="text-[11px] font-semibold text-gray-500 mt-0.5">
+                     {workload.current_patient?.ward?.name || 'Assigned Ward'}
                    </div>
-                   <span className="bg-white/5 text-gray-300 text-[11px] font-bold px-2.5 py-1 rounded-md shrink-0">Queue #2</span>
-                 </div>
-                 
-              </div>
-            </div>
-
-            {/* Dr. Sarah Hayes Queue */}
-            <div className="flex items-start gap-4 lg:gap-6">
-              <div className="w-32 pt-3 shrink-0">
-                 <div className="text-sm font-bold text-gray-200">Dr. S. Hayes</div>
-                 <div className="text-[11px] font-semibold text-gray-500 mt-0.5">Cardiac ICU</div>
-              </div>
-              <div className="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                 
-                 {/* Queue 1 */}
-                 <div className="bg-[#18191C] border border-white/5 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-white/10 transition-colors">
-                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
-                   <img src="https://i.pravatar.cc/150?u=p4" className="w-10 h-10 rounded-full shrink-0" />
-                   <div className="flex flex-col flex-1 min-w-0">
-                     <span className="text-sm font-bold text-white truncate">Kristin Watson</span>
-                     <span className="text-xs text-gray-400 mt-0.5 truncate">Level 2 - Emergent</span>
+                   <div className="text-[10px] font-bold mt-1 uppercase tracking-wider text-[#D6FF38]">
+                     {workload.availability}
                    </div>
-                   <span className="bg-blue-500/10 text-blue-400 text-[11px] font-bold px-2.5 py-1 rounded-md shrink-0 border border-blue-500/20">Queue #1</span>
-                 </div>
+                </div>
+                <div className="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                   
+                   {workload.waiting_patients.length === 0 && !workload.current_patient ? (
+                     <div className="text-sm text-gray-500 mt-3">No patients in queue.</div>
+                   ) : null}
 
-              </div>
-            </div>
+                   {/* Current Patient */}
+                   {workload.current_patient && (
+                     <div className="bg-[#18191C] border border-[#D6FF38]/20 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-[#D6FF38]/40 transition-colors">
+                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D6FF38]" />
+                       <img src={`https://i.pravatar.cc/150?u=${workload.current_patient.patient_id}`} className="w-10 h-10 rounded-full shrink-0" />
+                       <div className="flex flex-col flex-1 min-w-0">
+                         <span className="text-sm font-bold text-white truncate">{workload.current_patient.patient_name}</span>
+                         <span className="text-xs text-gray-400 mt-0.5 truncate">Level {workload.current_patient.confirmed_esi}</span>
+                       </div>
+                       <span className="bg-[#D6FF38]/10 text-[#D6FF38] text-[11px] font-bold px-2.5 py-1 rounded-md shrink-0 border border-[#D6FF38]/20">Current</span>
+                     </div>
+                   )}
 
-            {/* Dr. James Wilson Queue */}
-            <div className="flex items-start gap-4 lg:gap-6">
-              <div className="w-32 pt-3 shrink-0">
-                 <div className="text-sm font-bold text-gray-200">Dr. J. Wilson</div>
-                 <div className="text-[11px] font-semibold text-gray-500 mt-0.5">General Surgery</div>
+                   {/* Queued Patients */}
+                   {workload.waiting_patients.map((wp: any, i: number) => (
+                     <div key={wp.work_item_id || i} className="bg-[#18191C] border border-white/5 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-white/10 transition-colors">
+                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/20" />
+                       <img src={`https://i.pravatar.cc/150?u=${wp.patient_id}`} className="w-10 h-10 rounded-full shrink-0" />
+                       <div className="flex flex-col flex-1 min-w-0">
+                         <span className="text-sm font-bold text-white truncate">{wp.patient_name}</span>
+                         <span className="text-xs text-gray-400 mt-0.5 truncate">Level {wp.confirmed_esi}</span>
+                       </div>
+                       <span className="bg-white/5 text-gray-300 text-[11px] font-bold px-2.5 py-1 rounded-md shrink-0">Queue #{wp.queue_position || i + 1}</span>
+                     </div>
+                   ))}
+                   
+                </div>
               </div>
-              <div className="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                 
-                 {/* Queue 1 */}
-                 <div className="bg-[#18191C] border border-white/5 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-white/10 transition-colors">
-                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500" />
-                   <img src="https://i.pravatar.cc/150?u=p2" className="w-10 h-10 rounded-full shrink-0" />
-                   <div className="flex flex-col flex-1 min-w-0">
-                     <span className="text-sm font-bold text-white truncate">Robert Fox</span>
-                     <span className="text-xs text-gray-400 mt-0.5 truncate">Level 3 - Urgent</span>
-                   </div>
-                   <span className="bg-orange-500/10 text-orange-400 text-[11px] font-bold px-2.5 py-1 rounded-md shrink-0 border border-orange-500/20">Queue #1</span>
-                 </div>
-
-              </div>
-            </div>
+            ))}
 
           </div>
         </div>
