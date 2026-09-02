@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.models.encounter import Encounter, EncounterLocationHistory, EncounterParticipant, Queue, QueueEntry
 from src.db.models.organization import EsiCareAreaRule, Hospital, Ward
 from src.db.models.patient import Patient
-from src.db.models.triage import AssessmentSafetyAction, ClinicianDecision, TriageAssessment
+from src.db.models.triage import AssessmentSafetyAction, ClinicianDecision, TriageAssessment, VitalObservation
 from src.db.models.workforce import Staff
 from src.db.repositories.queues import QueueEntryRepository, QueueRepository
 from src.schemas.encounter import QueueCreate, QueueEntryAction, QueueEntryCreate, QueuePriorityUpdate, QueueUpdate
@@ -193,6 +193,12 @@ class QueueService:
                     )
                 )
             )
+            vitals = await self.session.scalar(
+                select(VitalObservation)
+                .where(VitalObservation.encounter_id == encounter.id)
+                .order_by(VitalObservation.observed_at.desc())
+                .limit(1)
+            )
             ranked.append(
                 {
                     "queue_entry_id": entry.id,
@@ -207,6 +213,7 @@ class QueueService:
                     "encounter": encounter,
                     "final_esi": decision.final_esi if decision else None,
                     "safety_alert": safety_alert,
+                    "vitals": {k: getattr(vitals, k) for k in vitals.__table__.columns.keys()} if vitals else None,
                     "triage": {
                         "assessment_id": assessment.id if assessment else None,
                         "assessment_status": assessment.assessment_status if assessment else None,
