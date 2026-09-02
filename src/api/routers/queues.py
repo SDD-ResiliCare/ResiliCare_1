@@ -4,7 +4,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.api.dependencies import DatabaseSession, RequestContext, enforce_hospital_access, require_roles
-from src.schemas.encounter import QueueCreate, QueueEntryAction, QueueEntryCreate, QueuePriorityUpdate, QueueUpdate
+from src.schemas.encounter import (
+    CurrentQueueResponse,
+    QueueCreate,
+    QueueEntryAction,
+    QueueEntryCreate,
+    QueuePriorityUpdate,
+    QueueUpdate,
+)
 from src.services.queue_service import QueueService
 
 router = APIRouter(prefix="/queues", tags=["queues"])
@@ -31,7 +38,7 @@ async def current_queue(session: DatabaseSession, context: ClinicalStaff):
     return await QueueService(session).current_queue(context.hospital_id)
 
 
-@router.get("/current/entries")
+@router.get("/current/entries", response_model=CurrentQueueResponse)
 async def current_queue_entries(session: DatabaseSession, context: ClinicalStaff):
     if context.hospital_id is None:
         raise HTTPException(403, "hospital identity is required")

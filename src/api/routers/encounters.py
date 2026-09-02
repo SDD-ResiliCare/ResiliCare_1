@@ -1,7 +1,7 @@
 from typing import Annotated
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import select
 
 from src.api.dependencies import DatabaseSession, RequestContext, enforce_hospital_access, require_roles
@@ -16,6 +16,8 @@ from src.db.models.triage import (
 from src.schemas.common import Page, ReasonAction
 from src.schemas.encounter import (
     DoctorTransferCreate,
+    EncounterAllocationCreate,
+    EncounterAllocationResponse,
     EncounterClosureCreate,
     EncounterCreate,
     EncounterDiagnosisCreate,
@@ -30,6 +32,7 @@ from src.services.routing_service import RoutingService
 
 router = APIRouter(prefix="/encounters", tags=["encounters"])
 ClinicalStaff = Annotated[RequestContext, Depends(require_roles("administrator", "doctor", "nurse"))]
+Nurse = Annotated[RequestContext, Depends(require_roles("nurse"))]
 
 
 @router.post("", response_model=EncounterResponse, status_code=status.HTTP_201_CREATED)
@@ -94,6 +97,30 @@ async def encounter_workspace(encounter_id: UUID, session: DatabaseSession, cont
     encounter = await service.get(encounter_id)
     enforce_hospital_access(context, encounter.hospital_id)
     return await service.workspace(encounter_id)
+
+
+@router.post(
+    "/{encounter_id}/allocation",
+    response_model=EncounterAllocationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def confirm_encounter_allocation(
+    encounter_id: UUID,
+    payload: EncounterAllocationCreate,
+    session: DatabaseSession,
+    context: Nurse,
+    request_id: Annotated[str | None, Header(alias="X-Request-ID", max_length=100)] = None,
+):
+    if context.staff_id is None or context.hospital_id is None:
+        raise HTTPException(403, "nurse hospital identity is required")
+    return await EncounterService(session).confirm_allocation(
+        encounter_id,
+        payload,
+        confirmed_by_staff_id=context.staff_id,
+        actor_auth_user_id=context.auth_user_id,
+        hospital_id=context.hospital_id,
+        request_id=request_id or str(uuid4()),
+    )
 
 
 async def _authorized_encounter(encounter_id: UUID, session: DatabaseSession, context: RequestContext):

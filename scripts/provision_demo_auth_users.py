@@ -20,6 +20,17 @@ ROOT = Path(__file__).parents[1]
 DATASET = ROOT / "data" / "prototype_dataset_v1" / "csv"
 
 
+def _load_local_env() -> None:
+    env_path = ROOT / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip() or line.lstrip().startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
 @dataclass(frozen=True)
 class SeedAccount:
     seed_account_key: str
@@ -220,6 +231,7 @@ def _link_patient(client: Client, account: SeedAccount, auth_user_id: str, mrns:
 
 
 def provision(reset_existing_password: bool) -> None:
+    _load_local_env()
     supabase_url = os.environ.get("SUPABASE_URL")
     server_key = os.environ.get("SUPABASE_SECRET_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     password = os.environ.get("RESILICARE_DEMO_PASSWORD")

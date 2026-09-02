@@ -1,12 +1,13 @@
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models.billing import Invoice, InvoiceItem, Payment
-from src.db.models.encounter import Encounter, EncounterParticipant, QueueEntry
+from src.db.models.encounter import Encounter, EncounterLocationHistory, EncounterParticipant, Queue, QueueEntry
 from src.db.models.medication import Prescription, PrescriptionItem
+from src.db.models.organization import EsiCareAreaRule, Hospital, Ward
 from src.db.models.patient import Patient, PatientAllergy, PatientCondition
 from src.db.models.triage import (
     AssessmentSafetyAction,
@@ -18,6 +19,7 @@ from src.db.models.triage import (
     TriageAssessment,
     VitalObservation,
 )
+from src.db.models.workforce import Staff, StaffWardAssignment
 from src.db.repositories.encounters import (
     EncounterParticipantRepository,
     EncounterRepository,
@@ -27,6 +29,7 @@ from src.db.repositories.encounters import (
 )
 from src.schemas.encounter import (
     DoctorTransferCreate,
+    EncounterAllocationCreate,
     EncounterClosureCreate,
     EncounterCreate,
     EncounterDiagnosisCreate,
@@ -35,6 +38,7 @@ from src.schemas.encounter import (
     VitalObservationCreate,
 )
 from src.schemas.triage import SymptomInterviewCreate, SymptomResponseCreate
+from src.services.audit_service import record_audit_event
 
 
 class EncounterService:
@@ -120,6 +124,23 @@ class EncounterService:
                     .order_by(EncounterParticipant.assigned_at)
                 )
             ).all()
+        )
+        current_doctor = next(
+            (item for item in participants if item.role == "primary_doctor" and item.ended_at is None), None
+        )
+        current_doctor_staff = await self.session.get(Staff, current_doctor.staff_id) if current_doctor else None
+        hospital = await self.session.get(Hospital, encounter.hospital_id)
+        current_ward = (
+            await self.session.get(Ward, encounter.current_ward_id) if encounter.current_ward_id is not None else None
+        )
+        active_location = await self.session.scalar(
+            select(EncounterLocationHistory)
+            .where(
+                EncounterLocationHistory.encounter_id == encounter_id,
+                EncounterLocationHistory.exited_at.is_(None),
+            )
+            .order_by(EncounterLocationHistory.entered_at.desc())
+            .limit(1)
         )
         queue_entry = await self.session.scalar(
             select(QueueEntry).where(QueueEntry.encounter_id == encounter_id, QueueEntry.exited_at.is_(None))
@@ -228,6 +249,9 @@ class EncounterService:
         return {
             "encounter": encounter,
             "patient": patient,
+            "hospital": hospital,
+            "current_ward": current_ward,
+            "active_location": active_location,
             "allergies": list(
                 (
                     await self.session.scalars(
@@ -243,9 +267,8 @@ class EncounterService:
                 ).all()
             ),
             "participants": participants,
-            "current_doctor": next(
-                (item for item in participants if item.role == "primary_doctor" and item.ended_at is None), None
-            ),
+            "current_doctor": current_doctor,
+            "current_doctor_staff": current_doctor_staff,
             "queue_entry": queue_entry,
             "latest_vitals": vitals[0] if vitals else None,
             "vitals": vitals,
@@ -304,6 +327,193 @@ class EncounterService:
         )
         await self.session.commit()
         return replacement
+
+    async def confirm_allocation(
+        self,
+        encounter_id: UUID,
+        payload: EncounterAllocationCreate,
+        *,
+        confirmed_by_staff_id: UUID,
+        actor_auth_user_id: UUID,
+        hospital_id: UUID,
+        request_id: str,
+    ) -> dict:
+        """Persist a nurse-confirmed ward and primary-doctor allocation as one transaction."""
+        encounter = await self.get(encounter_id, for_update=True)
+        if encounter.hospital_id != hospital_id:
+            raise HTTPException(403, "cross-hospital access is not allowed")
+        if encounter.status in {"completed", "cancelled", "entered_in_error"}:
+            raise HTTPException(409, "closed encounters cannot be allocated")
+
+        queue_entry = await self.session.scalar(
+            select(QueueEntry)
+            .join(Queue, Queue.id == QueueEntry.queue_id)
+            .where(
+                QueueEntry.encounter_id == encounter_id,
+                QueueEntry.exited_at.is_(None),
+                Queue.hospital_id == hospital_id,
+                Queue.status == "active",
+            )
+            .with_for_update()
+        )
+        if queue_entry is None:
+            raise HTTPException(409, "encounter must be in the active hospital queue before allocation")
+
+        assessment = await self.session.scalar(
+            select(TriageAssessment)
+            .where(TriageAssessment.encounter_id == encounter_id)
+            .order_by(TriageAssessment.assessment_number.desc())
+            .limit(1)
+        )
+        if assessment is None:
+            raise HTTPException(409, "triage assessment is required before allocation")
+        decision = await self.session.scalar(
+            select(ClinicianDecision)
+            .where(
+                ClinicianDecision.assessment_id == assessment.id,
+                ClinicianDecision.superseded_at.is_(None),
+            )
+            .order_by(ClinicianDecision.decided_at.desc())
+            .limit(1)
+        )
+        if decision is None or assessment.assessment_status not in {"confirmed", "overridden"}:
+            raise HTTPException(409, "the latest triage assessment must be clinician-confirmed before allocation")
+        if payload.confirmed_at < decision.decided_at:
+            raise HTTPException(422, "allocation confirmation cannot predate the triage decision")
+
+        ward = await self.session.scalar(
+            select(Ward).where(Ward.id == payload.ward_id, Ward.hospital_id == hospital_id, Ward.status == "active")
+        )
+        if ward is None:
+            raise HTTPException(404, "active ward not found in encounter hospital")
+        doctor = await self.session.scalar(
+            select(Staff).where(
+                Staff.id == payload.doctor_staff_id,
+                Staff.hospital_id == hospital_id,
+                Staff.staff_type == "doctor",
+                Staff.employment_status == "active",
+            )
+        )
+        if doctor is None:
+            raise HTTPException(404, "active doctor not found in encounter hospital")
+        doctor_ward_assignment = await self.session.scalar(
+            select(StaffWardAssignment).where(
+                StaffWardAssignment.staff_id == doctor.id,
+                StaffWardAssignment.ward_id == ward.id,
+                StaffWardAssignment.assigned_from <= payload.confirmed_at,
+                or_(
+                    StaffWardAssignment.assigned_until.is_(None),
+                    StaffWardAssignment.assigned_until > payload.confirmed_at,
+                ),
+            )
+        )
+        if doctor_ward_assignment is None:
+            raise HTTPException(422, "doctor must have an active assignment to the selected ward")
+
+        suggested_rule = await self.session.scalar(
+            select(EsiCareAreaRule)
+            .where(
+                EsiCareAreaRule.operational_config_id == assessment.operational_config_id,
+                EsiCareAreaRule.esi_level == decision.final_esi,
+            )
+            .order_by(EsiCareAreaRule.is_default.desc(), EsiCareAreaRule.priority)
+            .limit(1)
+        )
+
+        current_location = await self.session.scalar(
+            select(EncounterLocationHistory)
+            .where(
+                EncounterLocationHistory.encounter_id == encounter_id,
+                EncounterLocationHistory.exited_at.is_(None),
+            )
+            .order_by(EncounterLocationHistory.entered_at.desc())
+            .with_for_update()
+            .limit(1)
+        )
+        if current_location is not None and current_location.entered_at > payload.confirmed_at:
+            raise HTTPException(422, "allocation confirmation cannot predate the current ward assignment")
+        if current_location is not None and (
+            current_location.ward_id != ward.id or current_location.bed_label != payload.bed_label
+        ):
+            current_location.exited_at = payload.confirmed_at
+            current_location.transfer_reason = payload.reason
+            current_location = None
+        if current_location is None:
+            current_location = EncounterLocationHistory(
+                encounter_id=encounter_id,
+                ward_id=ward.id,
+                bed_label=payload.bed_label,
+                entered_at=payload.confirmed_at,
+                moved_by_staff_id=confirmed_by_staff_id,
+                transfer_reason=payload.reason,
+            )
+            self.session.add(current_location)
+        encounter.current_ward_id = ward.id
+
+        current_doctor = await self.participants.active_primary_doctor(encounter_id, for_update=True)
+        if current_doctor is not None and current_doctor.assigned_at > payload.confirmed_at:
+            raise HTTPException(422, "allocation confirmation cannot predate the current doctor assignment")
+        if current_doctor is not None and current_doctor.staff_id != doctor.id:
+            current_doctor.ended_at = payload.confirmed_at
+            current_doctor.end_reason = payload.reason
+            previous_doctor = current_doctor
+            current_doctor = None
+        else:
+            previous_doctor = None
+        if current_doctor is None:
+            current_doctor = EncounterParticipant(
+                encounter_id=encounter_id,
+                staff_id=doctor.id,
+                role="primary_doctor",
+                assigned_at=payload.confirmed_at,
+                assigned_by_staff_id=confirmed_by_staff_id,
+                assignment_reason=payload.reason,
+                transferred_from_participant_id=previous_doctor.id if previous_doctor else None,
+            )
+            self.session.add(current_doctor)
+
+        await self.session.flush()
+        await record_audit_event(
+            self.session,
+            hospital_id=hospital_id,
+            action="encounter.allocation_confirmed",
+            resource_type="encounter",
+            resource_id=encounter.id,
+            request_id=request_id,
+            actor_staff_id=confirmed_by_staff_id,
+            actor_auth_user_id=actor_auth_user_id,
+            metadata={
+                "queue_entry_id": str(queue_entry.id),
+                "triage_assessment_id": str(assessment.id),
+                "clinician_decision_id": str(decision.id),
+                "confirmed_esi": decision.final_esi,
+                "ward_id": str(ward.id),
+                "suggested_ward_id": str(suggested_rule.ward_id) if suggested_rule else None,
+                "ward_matches_suggestion": suggested_rule is None or suggested_rule.ward_id == ward.id,
+                "doctor_staff_id": str(doctor.id),
+                "location_history_id": str(current_location.id),
+                "doctor_participant_id": str(current_doctor.id),
+                "reason": payload.reason,
+            },
+        )
+        await self.session.commit()
+        return {
+            "encounter_id": encounter.id,
+            "hospital_id": hospital_id,
+            "ward": {"id": ward.id, "ward_code": ward.ward_code, "name": ward.name, "ward_type": ward.ward_type},
+            "primary_doctor": {
+                "id": doctor.id,
+                "employee_code": doctor.employee_code,
+                "first_name": doctor.first_name,
+                "last_name": doctor.last_name,
+            },
+            "location_history_id": current_location.id,
+            "doctor_participant_id": current_doctor.id,
+            "triage_assessment_id": assessment.id,
+            "clinician_decision_id": decision.id,
+            "confirmed_by_staff_id": confirmed_by_staff_id,
+            "confirmed_at": payload.confirmed_at,
+        }
 
     async def record_vitals(self, encounter_id: UUID, payload: VitalObservationCreate) -> VitalObservation:
         await self.get(encounter_id)

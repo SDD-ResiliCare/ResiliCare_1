@@ -87,6 +87,7 @@ Important workflows:
 - Vitals are append-only observations. GCS total is derived from eye, verbal, and motor components.
 - Follow-up symptom questions retain questionnaire version, question ordering, branching conditions, response source, and the exact displayed question text.
 - Every triage run creates a new immutable assessment version. Clinician decisions do not overwrite generated assessments.
+- The current queue exposes each patient's pending AI recommendation and confirmed ESI separately. A nurse may confirm a ward and primary-doctor allocation only after the latest assessment has a clinician decision; the ward location, doctor participation, and combined audit event are persisted atomically.
 - An encounter closure records the medication decision. Actual prescriptions are created only when medication is ordered.
 - Invoice totals are calculated by the backend from line items. Issued invoices are superseded rather than silently overwritten.
 - Review tokens are stored only as SHA-256 hashes and doctor reviews are limited to doctors assigned to the encounter.
@@ -113,8 +114,20 @@ The login manifest contains no passwords or Supabase UUIDs. After the core seed
 rows have been imported, validate the account plan without changing Supabase:
 
 ```powershell
+python scripts/seed_prototype_dataset.py
 python scripts/provision_demo_auth_users.py
 ```
+
+Import the four hospitals, wards, staff, and the 40 live patient encounters with
+their related synthetic queue, vitals, interview, triage, prescription, invoice,
+and feedback rows using:
+
+```powershell
+python scripts/seed_prototype_dataset.py --apply
+```
+
+The 60 reserve profiles are deliberately excluded. They can be imported later
+with `--include-reserve` when a demonstration needs new-patient registrations.
 
 To provision the synthetic `.test` accounts, set `SUPABASE_URL`, a server-only
 `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`), and

@@ -2,12 +2,14 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.models.encounter import Encounter, Queue, QueueEntry
+from src.db.models.encounter import Encounter, EncounterLocationHistory, EncounterParticipant, Queue, QueueEntry
+from src.db.models.organization import EsiCareAreaRule, Hospital, Ward
 from src.db.models.patient import Patient
 from src.db.models.triage import AssessmentSafetyAction, ClinicianDecision, TriageAssessment
+from src.db.models.workforce import Staff
 from src.db.repositories.queues import QueueEntryRepository, QueueRepository
 from src.schemas.encounter import QueueCreate, QueueEntryAction, QueueEntryCreate, QueuePriorityUpdate, QueueUpdate
 
@@ -101,6 +103,9 @@ class QueueService:
 
     async def ranked_entries(self, queue: Queue) -> list[dict]:
         now = datetime.now(UTC)
+        hospital = await self.session.get(Hospital, queue.hospital_id)
+        if hospital is None:
+            raise HTTPException(409, "queue hospital no longer exists")
         rows = (
             await self.session.execute(
                 select(QueueEntry, Encounter, Patient)
@@ -111,11 +116,63 @@ class QueueService:
         ).all()
         ranked: list[dict] = []
         for entry, encounter, patient in rows:
-            final_esi = await self.session.scalar(
-                select(ClinicianDecision.final_esi)
-                .join(TriageAssessment, TriageAssessment.id == ClinicianDecision.assessment_id)
-                .where(TriageAssessment.encounter_id == encounter.id, ClinicianDecision.superseded_at.is_(None))
-                .order_by(ClinicianDecision.decided_at.desc())
+            triage_row = (
+                await self.session.execute(
+                    select(TriageAssessment, ClinicianDecision)
+                    .outerjoin(
+                        ClinicianDecision,
+                        and_(
+                            ClinicianDecision.assessment_id == TriageAssessment.id,
+                            ClinicianDecision.superseded_at.is_(None),
+                        ),
+                    )
+                    .where(TriageAssessment.encounter_id == encounter.id)
+                    .order_by(
+                        TriageAssessment.assessment_number.desc(),
+                        ClinicianDecision.decided_at.desc().nullslast(),
+                    )
+                    .limit(1)
+                )
+            ).first()
+            assessment, decision = triage_row if triage_row else (None, None)
+            effective_esi = decision.final_esi if decision else (assessment.recommended_esi if assessment else None)
+            suggested_ward = None
+            if assessment is not None and effective_esi is not None:
+                suggested_rule = await self.session.scalar(
+                    select(EsiCareAreaRule)
+                    .where(
+                        EsiCareAreaRule.operational_config_id == assessment.operational_config_id,
+                        EsiCareAreaRule.esi_level == effective_esi,
+                    )
+                    .order_by(desc(EsiCareAreaRule.is_default), EsiCareAreaRule.priority)
+                    .limit(1)
+                )
+                if suggested_rule is not None:
+                    suggested_ward = await self.session.get(Ward, suggested_rule.ward_id)
+
+            assigned_ward = (
+                await self.session.get(Ward, encounter.current_ward_id) if encounter.current_ward_id is not None else None
+            )
+            doctor_row = (
+                await self.session.execute(
+                    select(EncounterParticipant, Staff)
+                    .join(Staff, Staff.id == EncounterParticipant.staff_id)
+                    .where(
+                        EncounterParticipant.encounter_id == encounter.id,
+                        EncounterParticipant.role == "primary_doctor",
+                        EncounterParticipant.ended_at.is_(None),
+                    )
+                    .limit(1)
+                )
+            ).first()
+            participant, doctor = doctor_row if doctor_row else (None, None)
+            active_location = await self.session.scalar(
+                select(EncounterLocationHistory)
+                .where(
+                    EncounterLocationHistory.encounter_id == encounter.id,
+                    EncounterLocationHistory.exited_at.is_(None),
+                )
+                .order_by(EncounterLocationHistory.entered_at.desc())
                 .limit(1)
             )
             active_boost = (
@@ -138,27 +195,86 @@ class QueueService:
             )
             ranked.append(
                 {
+                    "queue_entry_id": entry.id,
                     "queue_entry": entry,
-                    "encounter": encounter,
-                    "patient": patient,
-                    "final_esi": final_esi,
+                    "queue_status": entry.status,
+                    "entered_at": entry.entered_at,
+                    "called_at": entry.called_at,
+                    "reassessment_due_at": entry.reassessment_due_at,
                     "reassessment_overdue": reassessment_overdue,
-                    "safety_alert": safety_alert,
                     "active_priority_boost": active_boost,
+                    "patient": patient,
+                    "encounter": encounter,
+                    "final_esi": decision.final_esi if decision else None,
+                    "safety_alert": safety_alert,
+                    "triage": {
+                        "assessment_id": assessment.id if assessment else None,
+                        "assessment_status": assessment.assessment_status if assessment else None,
+                        "predicted_esi": assessment.recommended_esi if assessment else None,
+                        "possible_esi_levels": assessment.possible_esi_levels if assessment else [],
+                        "uncertainty_label": assessment.uncertainty_label if assessment else None,
+                        "requires_senior_review": assessment.requires_senior_review if assessment else False,
+                        "safety_alert": safety_alert,
+                        "confirmation_status": (
+                            decision.decision_type if decision else ("pending" if assessment else "not_assessed")
+                        ),
+                        "decision_id": decision.id if decision else None,
+                        "final_esi": decision.final_esi if decision else None,
+                        "decided_at": decision.decided_at if decision else None,
+                    },
+                    "allocation": {
+                        "hospital_id": hospital.id,
+                        "hospital_name": hospital.name,
+                        "suggested_ward": self._ward_summary(suggested_ward),
+                        "suggestion_basis": (
+                            "confirmed_esi" if decision else ("predicted_esi" if assessment else None)
+                        ),
+                        "assigned_ward": self._ward_summary(assigned_ward),
+                        "primary_doctor": self._doctor_summary(doctor),
+                        "assigned_by_staff_id": (
+                            active_location.moved_by_staff_id
+                            if active_location
+                            else (participant.assigned_by_staff_id if participant else None)
+                        ),
+                        "assigned_at": (
+                            active_location.entered_at
+                            if active_location
+                            else (participant.assigned_at if participant else None)
+                        ),
+                    },
+                    "effective_esi": effective_esi,
                 }
             )
         ranked.sort(
             key=lambda item: (
-                item["final_esi"] if item["final_esi"] is not None else 6,
-                not item["safety_alert"],
+                item["effective_esi"] if item["effective_esi"] is not None else 6,
+                not item["triage"]["safety_alert"],
                 not item["reassessment_overdue"],
                 -item["active_priority_boost"],
-                item["queue_entry"].entered_at,
+                item["entered_at"],
             )
         )
         for rank, item in enumerate(ranked, 1):
             item["rank"] = rank
+            item.pop("effective_esi")
         return ranked
+
+    @staticmethod
+    def _ward_summary(ward: Ward | None) -> dict | None:
+        if ward is None:
+            return None
+        return {"id": ward.id, "ward_code": ward.ward_code, "name": ward.name, "ward_type": ward.ward_type}
+
+    @staticmethod
+    def _doctor_summary(doctor: Staff | None) -> dict | None:
+        if doctor is None:
+            return None
+        return {
+            "id": doctor.id,
+            "employee_code": doctor.employee_code,
+            "first_name": doctor.first_name,
+            "last_name": doctor.last_name,
+        }
 
     async def get_entry_for_hospital(
         self, entry_id: UUID, hospital_id: UUID, *, for_update: bool = False

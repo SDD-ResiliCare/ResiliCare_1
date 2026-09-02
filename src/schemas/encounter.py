@@ -4,9 +4,10 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from src.schemas.common import ResourceResponse
+from src.schemas.common import ORMModel, ResourceResponse
+from src.schemas.patient import PatientResponse
 
 
 class EncounterCreate(BaseModel):
@@ -87,6 +88,129 @@ class QueuePriorityUpdate(BaseModel):
 class QueueEntryAction(BaseModel):
     occurred_at: datetime
     reason: str | None = Field(default=None, max_length=1000)
+
+
+class QueueEntryResponse(ResourceResponse):
+    queue_id: UUID
+    encounter_id: UUID
+    status: str
+    entered_at: datetime
+    called_at: datetime | None
+    exited_at: datetime | None
+    exit_reason: str | None
+    priority_boost: int
+    priority_boost_reason: str | None
+    priority_boost_expires_at: datetime | None
+    boosted_by_staff_id: UUID | None
+    reassessment_due_at: datetime | None
+    last_ranked_at: datetime | None
+
+
+class EncounterAllocationCreate(BaseModel):
+    ward_id: UUID
+    doctor_staff_id: UUID
+    confirmed_at: datetime
+    bed_label: str | None = Field(default=None, max_length=50)
+    reason: str = Field(min_length=1, max_length=1000)
+
+    @field_validator("confirmed_at")
+    @classmethod
+    def require_timezone(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("confirmed_at must include a timezone")
+        return value
+
+    @field_validator("reason")
+    @classmethod
+    def normalize_reason(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("reason cannot be blank")
+        return value.strip()
+
+
+class QueueSummary(ORMModel):
+    id: UUID
+    hospital_id: UUID
+    ward_id: UUID | None
+    queue_code: str
+    name: str
+    queue_type: str
+    status: str
+
+
+class QueueWardSummary(BaseModel):
+    id: UUID
+    ward_code: str
+    name: str
+    ward_type: str
+
+
+class QueueDoctorSummary(BaseModel):
+    id: UUID
+    employee_code: str
+    first_name: str
+    last_name: str | None
+
+
+class QueueTriageSummary(BaseModel):
+    assessment_id: UUID | None
+    assessment_status: str | None
+    predicted_esi: int | None
+    possible_esi_levels: list[int]
+    uncertainty_label: str | None
+    requires_senior_review: bool
+    safety_alert: bool
+    confirmation_status: str
+    decision_id: UUID | None
+    final_esi: int | None
+    decided_at: datetime | None
+
+
+class QueueAllocationSummary(BaseModel):
+    hospital_id: UUID
+    hospital_name: str
+    suggested_ward: QueueWardSummary | None
+    suggestion_basis: str | None
+    assigned_ward: QueueWardSummary | None
+    primary_doctor: QueueDoctorSummary | None
+    assigned_by_staff_id: UUID | None
+    assigned_at: datetime | None
+
+
+class RankedQueueEntryResponse(BaseModel):
+    rank: int
+    queue_entry_id: UUID
+    queue_entry: QueueEntryResponse
+    queue_status: str
+    entered_at: datetime
+    called_at: datetime | None
+    reassessment_due_at: datetime | None
+    reassessment_overdue: bool
+    active_priority_boost: int
+    patient: PatientResponse
+    encounter: EncounterResponse
+    final_esi: int | None
+    safety_alert: bool
+    triage: QueueTriageSummary
+    allocation: QueueAllocationSummary
+
+
+class CurrentQueueResponse(BaseModel):
+    queue: QueueSummary
+    entries: list[RankedQueueEntryResponse]
+
+
+class EncounterAllocationResponse(BaseModel):
+    encounter_id: UUID
+    hospital_id: UUID
+    ward: QueueWardSummary
+    primary_doctor: QueueDoctorSummary
+    location_history_id: UUID
+    doctor_participant_id: UUID
+    triage_assessment_id: UUID
+    clinician_decision_id: UUID
+    confirmed_by_staff_id: UUID
+    confirmed_at: datetime
 
 
 class VitalObservationCreate(BaseModel):

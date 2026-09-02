@@ -73,6 +73,14 @@ class QueueEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class EncounterLocationHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "encounter_location_history"
+    __table_args__ = (
+        Index(
+            "uq_encounter_active_location",
+            "encounter_id",
+            unique=True,
+            postgresql_where=text("exited_at IS NULL"),
+        ),
+    )
 
     encounter_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
     ward_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("wards.id"), nullable=False)
