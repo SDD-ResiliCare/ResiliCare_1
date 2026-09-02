@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { User, Mic, Send, AlertTriangle, ShieldCheck, Activity, Clock, Stethoscope, Building2, CreditCard, FileText, Bed, HeartPulse, Droplets, Thermometer, Wind, CheckCircle2, Star } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { User, Mic, Send, AlertTriangle, ShieldCheck, Activity, Clock, Stethoscope, Building2, CreditCard, FileText, Bed, HeartPulse, Droplets, Thermometer, Wind, CheckCircle2, Star, StopCircle } from 'lucide-react';
+import { api } from '../api';
 
 export function PatientDashboard() {
   const [transcript, setTranscript] = useState('');
@@ -11,6 +12,56 @@ export function PatientDashboard() {
   const [ratings, setRatings] = useState({ triage: 0, ward: 0, hospital: 0, doctor: 0 });
   const [reviewText, setReviewText] = useState('');
   const [qnaAnswers, setQnaAnswers] = useState<Record<number, boolean>>({});
+
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const audioChunks = useRef<Blob[]>([]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      audioChunks.current = [];
+
+      mediaRecorder.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunks.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+        
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+
+        setIsProcessing(true);
+        try {
+          const result = await api.processKioskAudio(audioBlob);
+          if (result && result.transcript) {
+            setTranscript(result.transcript);
+          }
+        } catch (e) {
+          console.error("Failed to process audio", e);
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
+      mediaRecorder.current.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error accessing microphone", err);
+      alert("Could not access microphone.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder.current && isRecording) {
+      mediaRecorder.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -342,13 +393,32 @@ export function PatientDashboard() {
                </div>
 
                {/* Clinical Text */}
-               <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+               <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors relative">
                   <textarea 
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
                     placeholder="Chief Complaint (What is the main reason for your visit?)"
                     className="w-full h-24 bg-transparent text-white p-5 resize-none outline-none placeholder:text-gray-600 text-sm custom-scrollbar"
                   />
+                  <div className="absolute right-4 bottom-4">
+                    {isRecording ? (
+                      <button 
+                        type="button"
+                        onClick={stopRecording}
+                        className="bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-full shadow-lg transition-colors animate-pulse flex items-center justify-center"
+                      >
+                        <StopCircle className="w-5 h-5" />
+                      </button>
+                    ) : (
+                      <button 
+                        type="button"
+                        onClick={startRecording}
+                        className="bg-[#D6FF38] hover:bg-[#bceb15] text-black p-2.5 rounded-full shadow-[0_0_15px_rgba(214,255,56,0.2)] transition-colors flex items-center justify-center"
+                      >
+                        <Mic className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
                </div>
                
                <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">

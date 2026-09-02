@@ -302,10 +302,29 @@ export const api = {
   // --- Patient Interface ---
   processKioskText: async (transcript: string): Promise<any> => {
     // Missing in backend.
+    console.warn("Backend does not have process-text implemented. Returning mock data");
     return {
-      chiefComplaint: transcript,
-      redFlags: transcript.toLowerCase().includes('pain') ? ['Pain identified'] : [],
-      differential: ['Review needed'],
-    };
-  }
+      transcript: transcript,
+      speech_detected: true,
+      distress_score: 0.2,
+      red_flags: [],
+      follow_up_questions: []
+    }
+  },
+
+  processKioskAudio: async (audioBlob: Blob): Promise<any> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'recording.webm');
+      const response = await apiClient.post('/api/v1/kiosk/process-audio', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.warn("Failed to process kiosk audio:", error);
+      throw error;
+    }
+  },
 };
