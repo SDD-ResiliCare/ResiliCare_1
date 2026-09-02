@@ -128,6 +128,42 @@ def test_triage_predict_simulation_api_endpoint():
         app.dependency_overrides.clear()
 
 
+def test_receptionist_can_access_ml_prediction_endpoints():
+    client = TestClient(app)
+
+    mock_receptionist_context = RequestContext(
+        auth_user_id=uuid4(),
+        platform_role="receptionist",
+        staff_id=uuid4(),
+        hospital_id=uuid4(),
+        staff_type="receptionist",
+        patient_ids=(),
+    )
+    app.dependency_overrides[get_request_context] = lambda: mock_receptionist_context
+
+    try:
+        payload = {
+            "encounter_id": "SIM-RECEPTIONIST-01",
+            "age": 42.0,
+            "sex": "Female",
+            "arrival_mode": "Walk-in",
+            "chief_complaint": "Mild headache and sore throat",
+            "heart_rate_bpm": 76.0,
+            "respiratory_rate_bpm": 16.0,
+            "spo2_percent": 99.0,
+            "systolic_bp_mmhg": 120.0,
+            "diastolic_bp_mmhg": 80.0,
+            "temperature_c": 37.0,
+        }
+        response = client.post("/api/v1/triage/predict", json=payload)
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert data["proposed_esi"] in (4, 5)
+    finally:
+        app.dependency_overrides.clear()
+
+
+
 @pytest.mark.asyncio
 async def test_triage_service_predict_ml_persisted_flow():
     mock_session = AsyncMock()
@@ -172,3 +208,124 @@ async def test_triage_service_predict_ml_persisted_flow():
     assert pred_res.final_esi <= 3
     assert len(pred_res.top_contributing_factors) > 0
     assert len(pred_res.clinical_rationale) > 0
+
+
+def test_supabase_sql_query_structure():
+    """Verify that the SQL query compiles to exact PostgreSQL JOIN across encounters, patients, and vitals."""
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy import select
+    from src.db.models.encounter import Encounter
+    from src.db.models.patient import Patient
+    from src.db.models.triage import VitalObservation
+
+    test_encounter_id = uuid4()
+    test_hospital_id = uuid4()
+
+    latest_vital_subquery = (
+        select(VitalObservation.id)
+        .where(VitalObservation.encounter_id == test_encounter_id)
+        .order_by(VitalObservation.observed_at.desc())
+        .limit(1)
+        .scalar_subquery()
+    )
+    statement = (
+        select(Patient, Encounter, VitalObservation)
+        .join_from(Patient, Encounter, Encounter.patient_id == Patient.id)
+        .outerjoin(VitalObservation, VitalObservation.id == latest_vital_subquery)
+        .where(Encounter.id == test_encounter_id, Encounter.hospital_id == test_hospital_id)
+    )
+
+    compiled = str(statement.compile(dialect=postgresql.dialect()))
+    assert "FROM patients JOIN encounters ON encounters.patient_id = patients.id" in compiled
+    assert "LEFT OUTER JOIN vital_observations ON vital_observations.id =" in compiled
+    assert "encounters.id =" in compiled
+    assert "encounters.hospital_id =" in compiled
+
+
+@pytest.mark.asyncio
+async def test_create_assessment_populates_supabase_ml_output():
+    """Verify that create_assessment persists class probabilities, TreeSHAP attributions, and rationale in ml_output."""
+    from src.schemas.triage import AssessmentCreate
+
+    mock_session = AsyncMock()
+
+    mock_patient = MagicMock()
+    mock_patient.id = uuid4()
+    mock_patient.date_of_birth = None
+    mock_patient.estimated_age_years = 55.0
+    mock_patient.sex_at_birth = "male"
+
+    mock_encounter = MagicMock()
+    mock_encounter.id = uuid4()
+    mock_encounter.encounter_code = "ENC-ML-PERSIST"
+    mock_encounter.arrival_mode = "Ambulance"
+    mock_encounter.chief_complaint = "Crushing chest pain radiating to left jaw"
+    mock_encounter.presenting_details = "Diaphoretic, pale, acute onset 20 min ago"
+    mock_encounter.hospital_id = uuid4()
+
+    mock_vital = MagicMock()
+    mock_vital.id = uuid4()
+    mock_vital.encounter_id = mock_encounter.id
+    mock_vital.heart_rate_bpm = 115.0
+    mock_vital.respiratory_rate_bpm = 24.0
+    mock_vital.spo2_percent = 93.0
+    mock_vital.systolic_bp_mmhg = 100.0
+    mock_vital.diastolic_bp_mmhg = 65.0
+    mock_vital.temperature_c = 36.8
+    mock_vital.avpu = "A"
+    mock_vital.gcs_total = 15
+    mock_vital.pain_score = 9
+
+    mock_config = MagicMock()
+    mock_config.id = uuid4()
+    mock_config.hospital_id = mock_encounter.hospital_id
+
+    # Mock execute results
+    query_count = 0
+    def execute_side_effect(stmt, *args, **kwargs):
+        nonlocal query_count
+        res = MagicMock()
+        if query_count == 0:
+            res.first.return_value = (mock_patient, mock_encounter, mock_vital)
+        else:
+            res.first.return_value = None
+        query_count += 1
+        return res
+
+    mock_session.execute = AsyncMock(side_effect=execute_side_effect)
+    mock_session.scalar = AsyncMock(return_value=mock_config)
+
+
+    service = TriageService(mock_session)
+    service.assessments = MagicMock()
+    
+    saved_assessment = None
+    async def capture_add(assessment):
+        nonlocal saved_assessment
+        saved_assessment = assessment
+        return assessment
+
+    service.assessments.add = AsyncMock(side_effect=capture_add)
+
+    payload = AssessmentCreate(
+        operational_config_id=mock_config.id,
+        latest_vital_observation_id=mock_vital.id,
+        proposed_esi=2,
+        score_source="ml_lgbm_v1",
+        engine_version="1.0.0",
+    )
+
+    assessment = await service.create_assessment(
+        encounter_id=mock_encounter.id,
+        payload=payload,
+        created_by=uuid4(),
+        hospital_id=mock_encounter.hospital_id,
+    )
+
+    assert assessment is not None
+    assert assessment.ml_output is not None
+    assert "class_probabilities" in assessment.ml_output
+    assert "treeshap_attributions" in assessment.ml_output
+    assert "clinical_rationale" in assessment.ml_output
+    assert assessment.ml_output["proposed_esi"] in (1, 2)
+

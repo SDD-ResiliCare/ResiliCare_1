@@ -26,7 +26,15 @@ from src.services.triage_service import TriageService
 router = APIRouter(tags=["triage"])
 ClinicalStaff = Annotated[RequestContext, Depends(require_roles("doctor", "nurse"))]
 ClinicalAdmin = Annotated[RequestContext, Depends(require_roles("platform_admin", "administrator"))]
-TriageReader = Annotated[RequestContext, Depends(require_roles("platform_admin", "administrator", "doctor", "nurse"))]
+TriageReader = Annotated[
+    RequestContext,
+    Depends(require_roles("platform_admin", "administrator", "doctor", "nurse", "receptionist", "reception_staff")),
+]
+TriageSuggester = Annotated[
+    RequestContext,
+    Depends(require_roles("platform_admin", "administrator", "doctor", "nurse", "receptionist", "reception_staff")),
+]
+
 
 
 
@@ -158,10 +166,11 @@ async def record_decision(
 async def get_ml_suggestion(
     encounter_id: UUID,
     session: DatabaseSession,
-    context: ClinicalStaff,
+    context: TriageSuggester,
 ):
     """Fetch live encounter, demographics, and vitals from Supabase and run second-tier ML advisor with TreeSHAP."""
     return await TriageService(session).predict_ml(encounter_id, context.hospital_id)
+
 
 
 @router.post(

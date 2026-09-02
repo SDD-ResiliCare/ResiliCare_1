@@ -682,9 +682,10 @@ export function NurseDashboard() {
                     <div className="flex flex-wrap gap-1.5">
                       {mlSuggestion.top_contributing_factors.slice(0, 3).map((factor: any, i: number) => (
                         <span key={i} className="text-[10px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                          {factor.feature_name}
+                          {factor.feature || factor.feature_name}
                         </span>
                       ))}
+
                     </div>
                   </div>
                 )}

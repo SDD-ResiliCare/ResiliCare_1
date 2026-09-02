@@ -289,16 +289,6 @@ export const api = {
     ];
   },
 
-  getDoctorWorkloads: async (): Promise<any[]> => {
-    try {
-      const response = await apiClient.get('/api/v1/staff/doctors/workloads');
-      return response.data || [];
-    } catch (error) {
-      console.warn("Failed to fetch doctor workloads, returning empty array");
-      return [];
-    }
-  },
-
   getMLSuggestion: async (encounterId: string): Promise<any | null> => {
     try {
       const response = await apiClient.post(`/api/v1/encounters/${encounterId}/ml-suggest`);
