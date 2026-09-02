@@ -93,12 +93,6 @@ async def create_ward(hospital_id: UUID, payload: WardCreate, session: DatabaseS
     return await HospitalService(session).create_ward(payload)
 
 
-@router.get("/{hospital_id}/wards", response_model=list[WardResponse])
-async def list_wards(hospital_id: UUID, session: DatabaseSession, context: Admin, include_inactive: bool = False):
-    enforce_hospital_access(context, hospital_id)
-    return await HospitalService(session).list_wards(hospital_id, include_inactive=include_inactive)
-
-
 @router.get("/wards/{ward_id}", response_model=WardResponse)
 async def get_ward(ward_id: UUID, session: DatabaseSession, context: Admin):
     ward = await HospitalService(session).get_ward(ward_id)

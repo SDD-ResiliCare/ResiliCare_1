@@ -1,0 +1,7 @@
+Architecture,QWK,Accuracy,Macro F1,ESI 1 Recall (Resuscitation),ESI 2 Recall (Emergent),Train Time (s),Latency (ms/pt)
+1. LightGBM (Tuned GBDT),0.7984,87.83%,0.8251,92.96%,86.46%,13.0,0.013
+2. XGBoost (Hist GBDT),0.7946,87.77%,0.8241,94.54%,86.17%,6.5,0.002
+3. CatBoost (Oblivious Trees),0.781,86.93%,0.8138,95.54%,84.72%,11.6,0.0
+4. Deep Tabular MLP (Neural Net),0.8634,89.54%,0.8525,83.33%,85.28%,7.1,0.001
+5. Multinomial Logistic Regression (L2),0.7776,86.84%,0.8115,95.93%,83.75%,3.6,0.0
+6. Hybrid Neural-Tree Ensemble (Deep MLP + GBDT Trio),0.8253,89.07%,0.842,92.16%,85.44%,38.2,0.016

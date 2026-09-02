@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.confidence_scoring import score_with_confidence
+from src.core.safety_rules import evaluate_safety_rules
 from src.db.models.encounter import Encounter
 from src.db.models.organization import EsiCareAreaRule, HospitalOperationalConfig, Ward
 from src.db.models.patient import Patient
@@ -22,7 +23,16 @@ from src.db.models.triage import (
     VitalObservation,
 )
 from src.db.repositories.triage import ClinicianDecisionRepository, TriageAssessmentRepository
-from src.schemas.triage import AssessmentCreate, ClinicianDecisionCreate, QuestionnaireCreate
+from src.ml import ESITriagePipeline
+from src.schemas.triage import (
+    AssessmentCreate,
+    ClinicianDecisionCreate,
+    MLTriagePredictionRequest,
+    MLTriagePredictionResponse,
+    QuestionnaireCreate,
+    TopContributingFactor,
+    TreeSHAPAttribution,
+)
 from src.services.clinical_overview_service import build_triage_overview
 
 
@@ -31,6 +41,12 @@ class TriageService:
         self.session = session
         self.assessments = TriageAssessmentRepository(session)
         self.decisions = ClinicianDecisionRepository(session)
+        self._ml_pipeline: ESITriagePipeline | None = None
+
+    def _get_ml_pipeline(self) -> ESITriagePipeline:
+        if self._ml_pipeline is None:
+            self._ml_pipeline = ESITriagePipeline()
+        return self._ml_pipeline
 
     async def create_questionnaire(self, payload: QuestionnaireCreate) -> Questionnaire:
         questionnaire = Questionnaire(
@@ -110,6 +126,42 @@ class TriageService:
             ward_id=recommended_rule.ward_id if recommended_rule else None,
             ward_name=recommended_ward.name if recommended_ward else None,
         )
+
+        snapshot = {
+            "patient_id": str(patient.id),
+            "vital_observation_id": str(vital.id) if vital else None,
+            "symptom_interview_id": str(payload.source_interview_id) if payload.source_interview_id else None,
+            "engine_input": engine_input,
+        }
+
+        # If score_source is ML or hybrid, compute and persist full ML & TreeSHAP predictions in dedicated ml_output column
+        ml_output = None
+        if payload.score_source and any(
+            k in payload.score_source.lower() for k in ("ml", "lgbm", "hybrid", "model", "tree")
+        ):
+            try:
+                pipeline = self._get_ml_pipeline()
+                ml_input = {
+                    "encounter_id": str(encounter.encounter_code or encounter.id),
+                    "age": engine_input.get("age_years"),
+                    "sex": patient.sex_at_birth,
+                    "arrival_mode": encounter.arrival_mode,
+                    "chief_complaint": encounter.chief_complaint,
+                    "presenting_details": encounter.presenting_details,
+                    "heart_rate_bpm": engine_input.get("hr_bpm"),
+                    "respiratory_rate_bpm": engine_input.get("rr_bpm"),
+                    "spo2_percent": engine_input.get("spo2_pct"),
+                    "systolic_bp_mmhg": engine_input.get("sbp_mmhg"),
+                    "diastolic_bp_mmhg": engine_input.get("dbp_mmhg"),
+                    "temperature_c": engine_input.get("temp_c"),
+                    "avpu": vital.avpu if vital else "A",
+                    "gcs_total": vital.gcs_total if vital else 15,
+                    "pain_score": vital.pain_score if vital else 0,
+                }
+                ml_output = pipeline.predict_encounter(ml_input, safety_ceiling=result.get("safety_ceiling"))
+            except Exception as ml_err:  # noqa: BLE001
+                ml_output = {"error": str(ml_err)}
+
         next_number = (
             await self.session.scalar(
                 select(func.coalesce(func.max(TriageAssessment.assessment_number), 0) + 1).where(
@@ -117,12 +169,7 @@ class TriageService:
                 )
             )
         ) or 1
-        snapshot = {
-            "patient_id": str(patient.id),
-            "vital_observation_id": str(vital.id) if vital else None,
-            "symptom_interview_id": str(payload.source_interview_id) if payload.source_interview_id else None,
-            "engine_input": engine_input,
-        }
+
         encoded = json.dumps(snapshot, sort_keys=True, separators=(",", ":"), default=str).encode()
         assessment = await self.assessments.add(
             TriageAssessment(
@@ -145,6 +192,7 @@ class TriageService:
                 ai_overview=ai_overview,
                 ai_overview_factors=ai_overview_factors,
                 input_snapshot=snapshot,
+                ml_output=ml_output,
                 input_hash=hashlib.sha256(encoded).hexdigest(),
                 score_source=payload.score_source,
                 engine_version=payload.engine_version,
@@ -152,6 +200,7 @@ class TriageService:
                 created_by_staff_id=created_by,
             )
         )
+
         for pathway in result.get("ambiguous_presentations", []):
             self.session.add(
                 AssessmentSafetyAction(
@@ -164,6 +213,128 @@ class TriageService:
             )
         await self.session.commit()
         return assessment
+
+    async def predict_ml(self, encounter_id: UUID, hospital_id: UUID | None) -> MLTriagePredictionResponse:
+        """Fetch live encounter & vitals from Supabase, evaluate safety ceilings, and run ESI ML inference."""
+        latest_vital_subquery = (
+            select(VitalObservation.id)
+            .where(VitalObservation.encounter_id == encounter_id)
+            .order_by(VitalObservation.observed_at.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        statement = (
+            select(Patient, Encounter, VitalObservation)
+            .join_from(Patient, Encounter, Encounter.patient_id == Patient.id)
+            .outerjoin(VitalObservation, VitalObservation.id == latest_vital_subquery)
+            .where(Encounter.id == encounter_id)
+        )
+        if hospital_id is not None:
+            statement = statement.where(Encounter.hospital_id == hospital_id)
+        row = (await self.session.execute(statement)).first()
+        if row is None:
+            raise HTTPException(404, "encounter not found")
+        patient, encounter, vital = row
+
+        engine_input = self._engine_input(patient, encounter, vital)
+        safety = evaluate_safety_rules(engine_input)
+        safety_ceiling = safety.get("ceiling")
+
+        pipeline_input = {
+            "encounter_id": str(encounter.encounter_code or encounter.id),
+            "age": engine_input.get("age_years"),
+            "sex": patient.sex_at_birth,
+            "arrival_mode": encounter.arrival_mode,
+            "chief_complaint": encounter.chief_complaint,
+            "presenting_details": encounter.presenting_details,
+            "heart_rate_bpm": engine_input.get("hr_bpm"),
+            "respiratory_rate_bpm": engine_input.get("rr_bpm"),
+            "spo2_percent": engine_input.get("spo2_pct"),
+            "systolic_bp_mmhg": engine_input.get("sbp_mmhg"),
+            "diastolic_bp_mmhg": engine_input.get("dbp_mmhg"),
+            "temperature_c": engine_input.get("temp_c"),
+            "avpu": vital.avpu if vital else "A",
+            "gcs_total": vital.gcs_total if vital else 15,
+            "pain_score": vital.pain_score if vital else 0,
+        }
+
+        pipeline = self._get_ml_pipeline()
+        raw_pred = pipeline.predict_encounter(pipeline_input, safety_ceiling=safety_ceiling)
+
+        return MLTriagePredictionResponse(
+            encounter_id=str(encounter.id),
+            proposed_esi=raw_pred["proposed_esi"],
+            final_esi=raw_pred["final_esi"],
+            safety_ceiling=safety_ceiling,
+            safety_override_applied=raw_pred["safety_override_applied"],
+            confidence_score=raw_pred["confidence_score"],
+            prediction_set=raw_pred["prediction_set"],
+            class_probabilities=raw_pred["class_probabilities"],
+            is_uncertain=raw_pred["is_uncertain"],
+            uncertainty_reasons=raw_pred["uncertainty_reasons"],
+            top_contributing_factors=[TopContributingFactor(**f) for f in raw_pred["top_contributing_factors"]],
+            treeshap_attributions=[TreeSHAPAttribution(**a) for a in raw_pred.get("treeshap_attributions", [])],
+            clinical_rationale=raw_pred["clinical_rationale"],
+        )
+
+    def predict_simulation(self, payload: MLTriagePredictionRequest) -> MLTriagePredictionResponse:
+        """Run ML prediction and TreeSHAP explainability for simulated or uncommitted patient inputs."""
+        pipeline = self._get_ml_pipeline()
+        sim_input = {
+            "encounter_id": payload.encounter_id or "SIMULATION-001",
+            "age": payload.age,
+            "sex": payload.sex,
+            "arrival_mode": payload.arrival_mode,
+            "chief_complaint": payload.chief_complaint,
+            "presenting_details": payload.presenting_details,
+            "heart_rate_bpm": payload.heart_rate_bpm,
+            "respiratory_rate_bpm": payload.respiratory_rate_bpm,
+            "spo2_percent": payload.spo2_percent,
+            "systolic_bp_mmhg": payload.systolic_bp_mmhg,
+            "diastolic_bp_mmhg": payload.diastolic_bp_mmhg,
+            "temperature_c": payload.temperature_c,
+            "avpu": payload.avpu or "A",
+            "gcs_total": payload.gcs_total or 15,
+            "pain_score": payload.pain_score or 0,
+        }
+
+        safety_input = {
+            "age_years": payload.age,
+            "chief_complaint": payload.chief_complaint,
+            "hr_bpm": payload.heart_rate_bpm,
+            "rr_bpm": payload.respiratory_rate_bpm,
+            "spo2_pct": payload.spo2_percent,
+            "sbp_mmhg": payload.systolic_bp_mmhg,
+            "dbp_mmhg": payload.diastolic_bp_mmhg,
+            "temp_c": payload.temperature_c,
+        }
+        safety = evaluate_safety_rules(safety_input)
+        computed_ceiling = safety.get("ceiling")
+
+        if payload.safety_ceiling is not None:
+            effective_ceiling = (
+                min(payload.safety_ceiling, computed_ceiling) if computed_ceiling else payload.safety_ceiling
+            )
+        else:
+            effective_ceiling = computed_ceiling
+
+        raw_pred = pipeline.predict_encounter(sim_input, safety_ceiling=effective_ceiling)
+
+        return MLTriagePredictionResponse(
+            encounter_id=payload.encounter_id,
+            proposed_esi=raw_pred["proposed_esi"],
+            final_esi=raw_pred["final_esi"],
+            safety_ceiling=effective_ceiling,
+            safety_override_applied=raw_pred["safety_override_applied"],
+            confidence_score=raw_pred["confidence_score"],
+            prediction_set=raw_pred["prediction_set"],
+            class_probabilities=raw_pred["class_probabilities"],
+            is_uncertain=raw_pred["is_uncertain"],
+            uncertainty_reasons=raw_pred["uncertainty_reasons"],
+            top_contributing_factors=[TopContributingFactor(**f) for f in raw_pred["top_contributing_factors"]],
+            treeshap_attributions=[TreeSHAPAttribution(**a) for a in raw_pred.get("treeshap_attributions", [])],
+            clinical_rationale=raw_pred["clinical_rationale"],
+        )
 
     async def record_decision(
         self, assessment_id: UUID, payload: ClinicianDecisionCreate, staff_id: UUID, hospital_id: UUID | None

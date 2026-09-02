@@ -13,13 +13,21 @@ from src.db.models.triage import (
     QuestionnaireQuestion,
     TriageAssessment,
 )
-from src.schemas.triage import AssessmentCreate, ClinicianDecisionCreate, QuestionnaireCreate, QuestionnaireUpdate
+from src.schemas.triage import (
+    AssessmentCreate,
+    ClinicianDecisionCreate,
+    MLTriagePredictionRequest,
+    MLTriagePredictionResponse,
+    QuestionnaireCreate,
+    QuestionnaireUpdate,
+)
 from src.services.triage_service import TriageService
 
 router = APIRouter(tags=["triage"])
 ClinicalStaff = Annotated[RequestContext, Depends(require_roles("doctor", "nurse"))]
 ClinicalAdmin = Annotated[RequestContext, Depends(require_roles("platform_admin", "administrator"))]
 TriageReader = Annotated[RequestContext, Depends(require_roles("platform_admin", "administrator", "doctor", "nurse"))]
+
 
 
 @router.post("/questionnaires", status_code=status.HTTP_201_CREATED)
@@ -140,3 +148,39 @@ async def record_decision(
     if context.staff_id is None:
         raise HTTPException(403, "staff identity is required")
     return await TriageService(session).record_decision(assessment_id, payload, context.staff_id, context.hospital_id)
+
+
+@router.post(
+    "/encounters/{encounter_id}/ml-suggest",
+    response_model=MLTriagePredictionResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_ml_suggestion(
+    encounter_id: UUID,
+    session: DatabaseSession,
+    context: ClinicalStaff,
+):
+    """Fetch live encounter, demographics, and vitals from Supabase and run second-tier ML advisor with TreeSHAP."""
+    return await TriageService(session).predict_ml(encounter_id, context.hospital_id)
+
+
+@router.post(
+    "/triage/predict",
+    response_model=MLTriagePredictionResponse,
+    status_code=status.HTTP_200_OK,
+)
+@router.post(
+    "/predict",
+    response_model=MLTriagePredictionResponse,
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
+)
+async def simulate_ml_prediction(
+    payload: MLTriagePredictionRequest,
+    session: DatabaseSession,
+    _context: TriageReader,
+):
+    """Run ESI 5-class ML model inference, conformal prediction, and TreeSHAP explainability for simulated data."""
+    return TriageService(session).predict_simulation(payload)
+
+

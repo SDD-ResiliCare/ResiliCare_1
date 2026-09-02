@@ -72,3 +72,53 @@ class QuestionnaireUpdate(BaseModel):
     title: str | None = None
     complaint_category: str | None = None
     is_active: bool | None = None
+
+
+class TreeSHAPAttribution(BaseModel):
+    feature_name: str
+    raw_value: float
+    shap_impact: float
+    direction: str
+
+
+class TopContributingFactor(BaseModel):
+    feature: str
+    value: str
+    urgency_impact: str
+    weight: float
+
+
+class MLTriagePredictionRequest(BaseModel):
+    encounter_id: str | None = None
+    age: float | None = None
+    sex: str | None = None
+    arrival_mode: str | None = None
+    chief_complaint: str | None = None
+    presenting_details: str | None = None
+    heart_rate_bpm: float | None = None
+    respiratory_rate_bpm: float | None = None
+    spo2_percent: float | None = None
+    systolic_bp_mmhg: float | None = None
+    diastolic_bp_mmhg: float | None = None
+    temperature_c: float | None = None
+    avpu: str | None = None
+    gcs_total: int | None = None
+    pain_score: int | None = None
+    safety_ceiling: int | None = Field(default=None, ge=1, le=5)
+
+
+class MLTriagePredictionResponse(BaseModel):
+    encounter_id: str | None = None
+    proposed_esi: int = Field(ge=1, le=5)
+    final_esi: int = Field(ge=1, le=5)
+    safety_ceiling: int | None = None
+    safety_override_applied: bool = False
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    prediction_set: list[int]
+    class_probabilities: dict[str, float]
+    is_uncertain: bool
+    uncertainty_reasons: list[str]
+    top_contributing_factors: list[TopContributingFactor]
+    treeshap_attributions: list[TreeSHAPAttribution]
+    clinical_rationale: str
+

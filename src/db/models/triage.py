@@ -143,6 +143,7 @@ class TriageAssessment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     ai_overview: Mapped[str] = mapped_column(Text, nullable=False)
     ai_overview_factors: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     input_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    ml_output: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     score_source: Mapped[str] = mapped_column(String(40), nullable=False)
     engine_version: Mapped[str] = mapped_column(String(80), nullable=False)
