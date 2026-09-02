@@ -31,7 +31,7 @@ export function AdminDashboard() {
             </button>
           </div>
           <div className="flex items-center gap-4">
-             <div className="px-4 py-2 rounded-full bg-[#D6FF38]/10 border border-[#D6FF38]/20 text-[#D6FF38] text-sm font-medium flex items-center gap-2">
+             <div className="px-4 py-2 rounded-full bg-[#8BE8E2]/10 border border-[#8BE8E2]/20 text-[#8BE8E2] text-sm font-medium flex items-center gap-2">
                 <Server className="w-4 h-4" /> System Online
              </div>
           </div>
@@ -39,7 +39,7 @@ export function AdminDashboard() {
 
         {/* Top Operations & System Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10">
-          <div className="col-span-1 lg:col-span-2 bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8">
+          <div className="col-span-1 lg:col-span-2 bg-[#121722] border border-[#26344A] rounded-[2rem] p-8">
              <div className="flex items-center justify-between mb-6">
                 <h3 className="text-gray-300 font-semibold text-lg flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-gray-500" /> System Management
@@ -49,8 +49,8 @@ export function AdminDashboard() {
              
              <div className="grid grid-cols-2 gap-4">
                 <button className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl p-4 transition-colors text-left">
-                   <div className="w-10 h-10 rounded-full bg-[#D6FF38]/10 flex items-center justify-center shrink-0">
-                      <Plus className="w-5 h-5 text-[#D6FF38]" />
+                   <div className="w-10 h-10 rounded-full bg-[#8BE8E2]/10 flex items-center justify-center shrink-0">
+                      <Plus className="w-5 h-5 text-[#8BE8E2]" />
                    </div>
                    <div>
                       <h4 className="text-sm font-semibold text-white">Add Hospital</h4>
@@ -78,16 +78,16 @@ export function AdminDashboard() {
              </div>
           </div>
 
-          <div className="bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8 flex flex-col justify-center text-center">
+          <div className="bg-[#121722] border border-[#26344A] rounded-[2rem] p-8 flex flex-col justify-center text-center">
              <h3 className="text-gray-400 font-medium mb-2">Network Occupancy</h3>
              <span className="text-5xl font-light mb-2">78<span className="text-2xl text-gray-500">%</span></span>
              <p className="text-sm text-gray-500">142 of 182 beds filled</p>
              <div className="w-full bg-white/10 rounded-full h-1.5 mt-6 overflow-hidden">
-                <div className="bg-[#D6FF38] h-full rounded-full" style={{ width: '78%' }}></div>
+                <div className="bg-[#8BE8E2] h-full rounded-full" style={{ width: '78%' }}></div>
              </div>
           </div>
 
-          <div className={`rounded-[2rem] p-8 relative overflow-hidden flex flex-col justify-between transition-colors duration-500 ${surgeActive ? 'bg-red-500 text-white' : 'bg-[#D6FF38] text-black shadow-[0_10px_30px_rgba(214,255,56,0.15)]'}`}>
+          <div className={`rounded-[2rem] p-8 relative overflow-hidden flex flex-col justify-between transition-colors duration-500 ${surgeActive ? 'bg-red-500 text-white' : 'bg-[#8BE8E2] text-black shadow-[0_10px_30px_rgba(139,232,226,0.15)]'}`}>
              <div className="relative z-10">
                <h3 className="font-semibold mb-2">{surgeActive ? 'Surge Protocol Active' : 'Normal Operations'}</h3>
                <p className="text-sm opacity-80 mb-6 font-medium">
@@ -108,7 +108,7 @@ export function AdminDashboard() {
         {/* Grid: Ward & Doctor Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
            {/* Ward Overview */}
-           <div className="bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8">
+           <div className="bg-[#121722] border border-[#26344A] rounded-[2rem] p-8">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-white font-semibold text-lg">Ward Overview</h3>
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Live Dist</span>
@@ -117,7 +117,7 @@ export function AdminDashboard() {
               <div className="space-y-4">
                  {[
                    { name: 'Trauma ICU', hospital: 'Central General', beds: '28/30', pct: 93, colorClass: 'text-red-500', doc: 'Dr. Hayes (Assigned)' },
-                   { name: 'Cardiology', hospital: 'Central General', beds: '14/20', pct: 70, colorClass: 'text-[#D6FF38]', doc: 'Dr. Kim (Free)' },
+                   { name: 'Cardiology', hospital: 'Central General', beds: '14/20', pct: 70, colorClass: 'text-[#8BE8E2]', doc: 'Dr. Kim (Free)' },
                    { name: 'General Med', hospital: 'Westside Clinic', beds: '45/50', pct: 90, colorClass: 'text-white', doc: 'Dr. Rivera (Assigned)' },
                    { name: 'Pediatrics', hospital: 'Westside Clinic', beds: '8/15', pct: 53, colorClass: 'text-gray-400', doc: 'Dr. Patel (Free)' },
                  ].map((ward, i) => (
@@ -146,7 +146,7 @@ export function AdminDashboard() {
            </div>
 
            {/* Doctor Overview */}
-           <div className="bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8">
+           <div className="bg-[#121722] border border-[#26344A] rounded-[2rem] p-8">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-white font-semibold text-lg">Doctor Status & Queues</h3>
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Live Roster</span>
@@ -159,12 +159,12 @@ export function AdminDashboard() {
                    status: workload.availability === 'busy' ? 'Busy' : 'Free',
                    ward: workload.current_patient?.ward?.name || workload.waiting_patients?.[0]?.ward?.name || 'Ward assignment',
                    queue: workload.waiting_count ? `${workload.waiting_count} patients waiting` : 'No queue',
-                   color: workload.availability === 'busy' ? 'text-red-400' : 'text-[#D6FF38]',
-                   bg: workload.availability === 'busy' ? 'bg-red-500/10' : 'bg-[#D6FF38]/10',
+                   color: workload.availability === 'busy' ? 'text-red-400' : 'text-[#8BE8E2]',
+                   bg: workload.availability === 'busy' ? 'bg-red-500/10' : 'bg-[#8BE8E2]/10',
                    img: `https://i.pravatar.cc/150?u=${workload.doctor.id}`,
                  })) : [
                    { name: 'Dr. Sarah Hayes', spec: 'Trauma Surgery', status: 'Assigned', ward: 'Trauma ICU', queue: '3 patients waiting', color: 'text-red-400', bg: 'bg-red-500/10', img: 'https://i.pravatar.cc/150?u=d1' },
-                   { name: 'Dr. Marcus Kim', spec: 'Cardiology', status: 'Free', ward: 'Cardiology', queue: 'No queue', color: 'text-[#D6FF38]', bg: 'bg-[#D6FF38]/10', img: 'https://i.pravatar.cc/150?u=d2' },
+                   { name: 'Dr. Marcus Kim', spec: 'Cardiology', status: 'Free', ward: 'Cardiology', queue: 'No queue', color: 'text-[#8BE8E2]', bg: 'bg-[#8BE8E2]/10', img: 'https://i.pravatar.cc/150?u=d2' },
                    { name: 'Dr. Elena Rivera', spec: 'Internal Medicine', status: 'Assigned', ward: 'General Med', queue: '1 patient assigned', color: 'text-white', bg: 'bg-white/10', img: 'https://i.pravatar.cc/150?u=d3' },
                    { name: 'Dr. Anil Patel', spec: 'Pediatrics', status: 'Free', ward: 'Pediatrics', queue: 'No queue', color: 'text-gray-400', bg: 'bg-white/5', img: 'https://i.pravatar.cc/150?u=d4' },
                  ]).map((doc, i) => (
@@ -187,7 +187,7 @@ export function AdminDashboard() {
         </div>
 
         {/* Patient Directory */}
-        <div className="bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8 mb-8">
+        <div className="bg-[#121722] border border-[#26344A] rounded-[2rem] p-8 mb-8">
            <div className="flex items-center justify-between mb-8">
              <div className="flex items-center gap-3">
                 <h3 className="text-white font-semibold text-lg">Patient Directory</h3>
@@ -236,14 +236,14 @@ export function AdminDashboard() {
                           <td className="py-4 px-4">
                              <div className="flex items-center gap-3">
                                 <div className="w-24 bg-white/10 rounded-full h-1.5 overflow-hidden">
-                                   <div className={`h-full rounded-full ${p.status === 'critical' ? 'bg-red-500' : p.status === 'discharge' ? 'bg-[#D6FF38]' : 'bg-white'}`} style={{ width: `${p.prog}%` }}></div>
+                                   <div className={`h-full rounded-full ${p.status === 'critical' ? 'bg-red-500' : p.status === 'discharge' ? 'bg-[#8BE8E2]' : 'bg-white'}`} style={{ width: `${p.prog}%` }}></div>
                                 </div>
                                 <span className="text-[11px] font-bold text-gray-400">{p.prog}%</span>
                              </div>
                           </td>
                           <td className="py-4 px-4">
                              <div className="text-gray-300 text-xs flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-gray-500" /> {p.ins}</div>
-                             <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${p.bill === 'Cleared' ? 'text-[#D6FF38]' : p.bill === 'Pending' ? 'text-gray-400' : 'text-white'}`}>
+                             <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${p.bill === 'Cleared' ? 'text-[#8BE8E2]' : p.bill === 'Pending' ? 'text-gray-400' : 'text-white'}`}>
                                 {p.bill}
                              </div>
                           </td>

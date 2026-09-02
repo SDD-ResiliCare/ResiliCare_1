@@ -45,8 +45,8 @@ export default function App() {
 
     return (
       <div className="min-h-screen bg-[#0A0A0B] text-white flex items-center justify-center p-4">
-        <div className="bg-[#18191C] border border-[#2A2B30] p-8 rounded-[2rem] w-full max-w-md shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#D6FF38]/10 blur-3xl rounded-full pointer-events-none" />
+        <div className="bg-[#121722] border border-[#26344A] p-8 rounded-[2rem] w-full max-w-md shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#8BE8E2]/10 blur-3xl rounded-full pointer-events-none" />
           
           <h2 className="text-3xl font-bold mb-2 text-center text-white">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
           <p className="text-gray-400 text-sm mb-8 text-center">{isLogin ? 'Sign in to ResiliCare' : 'Join ResiliCare staff network'}</p>
@@ -65,7 +65,7 @@ export default function App() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="staff@resilicare.com" 
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D6FF38] transition-colors"
+                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8BE8E2] transition-colors"
                 required
               />
             </div>
@@ -76,14 +76,14 @@ export default function App() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••" 
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D6FF38] transition-colors"
+                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8BE8E2] transition-colors"
                 required
               />
             </div>
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-[#D6FF38] text-black font-bold py-3.5 rounded-xl hover:bg-[#c2e633] transition-colors mt-4 disabled:opacity-50"
+              className="w-full bg-[#8BE8E2] text-black font-bold py-3.5 rounded-xl hover:bg-[#55D9D5] transition-colors mt-4 disabled:opacity-50"
             >
               {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
             </button>
@@ -93,7 +93,7 @@ export default function App() {
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button 
               onClick={() => { setIsLogin(!isLogin); setErrorMsg(''); }} 
-              className="text-[#D6FF38] font-semibold hover:underline"
+              className="text-[#8BE8E2] font-semibold hover:underline"
             >
               {isLogin ? 'Sign Up' : 'Sign In'}
             </button>

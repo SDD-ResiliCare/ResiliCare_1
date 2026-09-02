@@ -9,8 +9,8 @@ export function RoleSelection() {
       icon: Activity,
       title: 'Triage Dashboard',
       description: 'Nurse & MD Interface to review AI suggestions, monitor queue, and override ESI scores.',
-      color: 'text-[#D6FF38]',
-      bg: 'bg-[#D6FF38]/10'
+      color: 'text-[#8BE8E2]',
+      bg: 'bg-[#8BE8E2]/10'
     },
     {
       to: '/admin',
@@ -34,7 +34,7 @@ export function RoleSelection() {
     <div className="flex flex-col items-center justify-center min-h-[80vh] max-w-4xl mx-auto w-full">
       <div className="text-center mb-16 space-y-4">
         <h1 className="text-4xl md:text-5xl font-light tracking-tight text-white">
-          Welcome to <span className="font-semibold text-[#D6FF38]">ResiliCare</span>
+          Welcome to <span className="font-semibold text-[#8BE8E2]">ResiliCare</span>
         </h1>
         <p className="text-gray-400 text-lg max-w-xl mx-auto">
           AI-assisted ER triage and clinical operations management system. Select your role to continue.
@@ -46,7 +46,7 @@ export function RoleSelection() {
           <Link
             key={role.to}
             to={role.to}
-            className="group relative flex flex-col p-8 rounded-[2rem] bg-[#1C1D21] border border-[#2A2B30] hover:border-[#D6FF38]/50 hover:bg-[#25262B] transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+            className="group relative flex flex-col p-8 rounded-[2rem] bg-[#161B24] border border-[#26344A] hover:border-[#8BE8E2]/50 hover:bg-[#202A3A] transition-all duration-300 hover:-translate-y-1 overflow-hidden"
           >
             <div className={`w-14 h-14 rounded-2xl ${role.bg} flex items-center justify-center mb-6`}>
               <role.icon className={`w-7 h-7 ${role.color}`} />

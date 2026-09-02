@@ -99,7 +99,7 @@ export function PatientDashboard() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* Queue Status Hero */}
-            <div className={`lg:col-span-2 rounded-[2rem] p-8 flex flex-col justify-between transition-colors duration-500 ${visitCompleted ? 'bg-emerald-500 text-white shadow-[0_10px_30px_rgba(16,185,129,0.2)]' : 'bg-[#D6FF38] text-black shadow-[0_10px_30px_rgba(214,255,56,0.15)]'}`}>
+            <div className={`lg:col-span-2 rounded-[2rem] p-8 flex flex-col justify-between transition-colors duration-500 ${visitCompleted ? 'bg-emerald-500 text-white shadow-[0_10px_30px_rgba(16,185,129,0.2)]' : 'bg-[#8BE8E2] text-black shadow-[0_10px_30px_rgba(139,232,226,0.15)]'}`}>
               <div>
                 <div className="flex items-center gap-2 mb-4 font-semibold opacity-80 uppercase tracking-wider text-sm">
                    {visitCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />} 
@@ -135,10 +135,10 @@ export function PatientDashboard() {
             </div>
 
             {/* Doctor Profile */}
-            <div className="bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8 flex flex-col items-center justify-center text-center">
+            <div className="bg-[#121722] border border-[#26344A] rounded-[2rem] p-8 flex flex-col items-center justify-center text-center">
                <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-white/5 relative">
                   <img src="https://i.pravatar.cc/150?u=d1" alt="Doctor" className="w-full h-full object-cover" />
-                  <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-500 rounded-full border-2 border-[#18191C] flex items-center justify-center">
+                  <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-500 rounded-full border-2 border-[#121722] flex items-center justify-center">
                      <CheckCircle2 className="w-3 h-3 text-white" />
                   </div>
                </div>
@@ -173,7 +173,7 @@ export function PatientDashboard() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
              {/* Clinical Summary */}
-             <div className="bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8">
+             <div className="bg-[#121722] border border-[#26344A] rounded-[2rem] p-8">
                 <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
                    <Activity className="w-5 h-5 text-gray-500" /> Your Clinical Data
                 </h3>
@@ -219,7 +219,7 @@ export function PatientDashboard() {
              </div>
 
              {/* Admin / Billing */}
-             <div className="bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8">
+             <div className="bg-[#121722] border border-[#26344A] rounded-[2rem] p-8">
                 <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
                    <FileText className="w-5 h-5 text-gray-500" /> Administrative Info
                 </h3>
@@ -259,16 +259,16 @@ export function PatientDashboard() {
                       <span className="text-lg font-bold text-white">{visitCompleted ? '100%' : '85%'}</span>
                    </div>
                    <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-1000 ${visitCompleted ? 'bg-emerald-500' : 'bg-[#D6FF38]'}`} style={{ width: visitCompleted ? '100%' : '85%' }}></div>
+                      <div className={`h-full rounded-full transition-all duration-1000 ${visitCompleted ? 'bg-emerald-500' : 'bg-[#8BE8E2]'}`} style={{ width: visitCompleted ? '100%' : '85%' }}></div>
                    </div>
                 </div>
              </div>
           </div>
 
           {visitCompleted && (
-            <div className="bg-[#1C1D21] border border-white/10 rounded-[2rem] p-8 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-[#161B24] border border-white/10 rounded-[2rem] p-8 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <h3 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
-                  <Stethoscope className="w-5 h-5 text-[#D6FF38]" /> Doctor's Instructions & Prescriptions
+                  <Stethoscope className="w-5 h-5 text-[#8BE8E2]" /> Doctor's Instructions & Prescriptions
                </h3>
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -298,7 +298,7 @@ export function PatientDashboard() {
 
         {visitCompleted && reviewStatus === 'rating' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-[#18191C] border border-[#2A2B30] rounded-[2rem] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="bg-[#121722] border border-[#26344A] rounded-[2rem] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
                <h3 className="text-2xl font-semibold text-white mb-6 text-center">Rate your experience</h3>
                
                <div className="space-y-4 mb-6">
@@ -309,7 +309,7 @@ export function PatientDashboard() {
                              {[1,2,3,4,5].map(star => (
                                  <Star 
                                    key={star} 
-                                   className={`w-6 h-6 cursor-pointer transition-colors ${ratings[cat as keyof typeof ratings] >= star ? 'fill-[#D6FF38] text-[#D6FF38]' : 'text-gray-600 hover:text-gray-400'}`} 
+                                   className={`w-6 h-6 cursor-pointer transition-colors ${ratings[cat as keyof typeof ratings] >= star ? 'fill-[#8BE8E2] text-[#8BE8E2]' : 'text-gray-600 hover:text-gray-400'}`} 
                                    onClick={() => setRatings({...ratings, [cat]: star})} 
                                  />
                              ))}
@@ -324,7 +324,7 @@ export function PatientDashboard() {
                    value={reviewText}
                    onChange={(e) => setReviewText(e.target.value)}
                    placeholder="Tell us about your visit..."
-                   className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-[#D6FF38]/50 min-h-[120px] resize-none"
+                   className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-[#8BE8E2]/50 min-h-[120px] resize-none"
                  />
                </div>
 
@@ -338,7 +338,7 @@ export function PatientDashboard() {
                   <button 
                     onClick={() => setReviewStatus('submitted')} 
                     disabled={Object.values(ratings).some(v => v === 0)}
-                    className="flex-1 bg-[#D6FF38] text-black px-4 py-3 rounded-full text-sm font-bold hover:bg-[#c2e633] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-[#8BE8E2] text-black px-4 py-3 rounded-full text-sm font-bold hover:bg-[#55D9D5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                       Submit Review
                   </button>
@@ -374,26 +374,26 @@ export function PatientDashboard() {
                
                {/* Basic Info */}
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                 <div className="bg-[#121722] border border-[#26344A] rounded-2xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                     <input type="text" placeholder="Full Name" className="w-full bg-transparent text-white px-5 py-3 outline-none placeholder:text-gray-600 text-sm" />
                  </div>
                  <div className="flex gap-4">
-                    <div className="flex-1 bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                    <div className="flex-1 bg-[#121722] border border-[#26344A] rounded-2xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                        <input type="text" placeholder="Age" className="w-full bg-transparent text-white px-5 py-3 outline-none placeholder:text-gray-600 text-sm" />
                     </div>
-                    <div className="flex-1 bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors px-4 py-3">
+                    <div className="flex-1 bg-[#121722] border border-[#26344A] rounded-2xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors px-4 py-3">
                        <select className="w-full bg-transparent text-white outline-none appearance-none text-sm cursor-pointer">
                           <option value="" disabled selected className="text-gray-600">Age Group</option>
-                          <option value="adult" className="bg-[#1C1D21]">Adult</option>
-                          <option value="pediatric" className="bg-[#1C1D21]">Pediatric</option>
-                          <option value="geriatric" className="bg-[#1C1D21]">Geriatric</option>
+                          <option value="adult" className="bg-[#161B24]">Adult</option>
+                          <option value="pediatric" className="bg-[#161B24]">Pediatric</option>
+                          <option value="geriatric" className="bg-[#161B24]">Geriatric</option>
                        </select>
                     </div>
                  </div>
                </div>
 
                {/* Clinical Text */}
-               <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors relative">
+               <div className="bg-[#121722] border border-[#26344A] rounded-2xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors relative">
                   <textarea 
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
@@ -413,7 +413,7 @@ export function PatientDashboard() {
                       <button 
                         type="button"
                         onClick={startRecording}
-                        className="bg-[#D6FF38] hover:bg-[#bceb15] text-black p-2.5 rounded-full shadow-[0_0_15px_rgba(214,255,56,0.2)] transition-colors flex items-center justify-center"
+                        className="bg-[#8BE8E2] hover:bg-[#38BFC3] text-black p-2.5 rounded-full shadow-[0_0_15px_rgba(139,232,226,0.2)] transition-colors flex items-center justify-center"
                       >
                         <Mic className="w-5 h-5" />
                       </button>
@@ -421,7 +421,7 @@ export function PatientDashboard() {
                   </div>
                </div>
                
-               <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+               <div className="bg-[#121722] border border-[#26344A] rounded-2xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                   <textarea 
                     placeholder="Presenting Details (When did it start? How severe is it?)"
                     className="w-full h-24 bg-transparent text-white p-5 resize-none outline-none placeholder:text-gray-600 text-sm custom-scrollbar"
@@ -429,29 +429,29 @@ export function PatientDashboard() {
                </div>
 
                {/* Vitals Grid */}
-               <div className="bg-[#1C1D21] border border-[#2A2B30] rounded-2xl p-6">
+               <div className="bg-[#161B24] border border-[#26344A] rounded-2xl p-6">
                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-4">Patient Vitals Entry</span>
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                   <div className="bg-[#18191C] border border-[#2A2B30] rounded-xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                   <div className="bg-[#121722] border border-[#26344A] rounded-xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                       <input type="text" placeholder="HR (bpm)" className="w-full bg-transparent text-white px-3 py-2 outline-none placeholder:text-gray-600 text-sm text-center" />
                    </div>
-                   <div className="bg-[#18191C] border border-[#2A2B30] rounded-xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                   <div className="bg-[#121722] border border-[#26344A] rounded-xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                       <input type="text" placeholder="RR" className="w-full bg-transparent text-white px-3 py-2 outline-none placeholder:text-gray-600 text-sm text-center" />
                    </div>
-                   <div className="bg-[#18191C] border border-[#2A2B30] rounded-xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                   <div className="bg-[#121722] border border-[#26344A] rounded-xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                       <input type="text" placeholder="SpO₂ (%)" className="w-full bg-transparent text-white px-3 py-2 outline-none placeholder:text-gray-600 text-sm text-center" />
                    </div>
-                   <div className="bg-[#18191C] border border-[#2A2B30] rounded-xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                   <div className="bg-[#121722] border border-[#26344A] rounded-xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                       <input type="text" placeholder="BP (mmHg)" className="w-full bg-transparent text-white px-3 py-2 outline-none placeholder:text-gray-600 text-sm text-center" />
                    </div>
-                   <div className="bg-[#18191C] border border-[#2A2B30] rounded-xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                   <div className="bg-[#121722] border border-[#26344A] rounded-xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                       <input type="text" placeholder="Temp (°F)" className="w-full bg-transparent text-white px-3 py-2 outline-none placeholder:text-gray-600 text-sm text-center" />
                    </div>
                  </div>
                </div>
 
                {/* History & Insurance */}
-               <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+               <div className="bg-[#121722] border border-[#26344A] rounded-2xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                   <textarea 
                     placeholder="Relevant Medical History (Past surgeries, chronic conditions)"
                     className="w-full h-20 bg-transparent text-white p-5 resize-none outline-none placeholder:text-gray-600 text-sm custom-scrollbar"
@@ -459,10 +459,10 @@ export function PatientDashboard() {
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                 <div className="bg-[#121722] border border-[#26344A] rounded-2xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                     <input type="text" placeholder="Insurance Provider" className="w-full bg-transparent text-white px-5 py-3 outline-none placeholder:text-gray-600 text-sm" />
                  </div>
-                 <div className="bg-[#18191C] border border-[#2A2B30] rounded-2xl p-1 focus-within:border-[#D6FF38]/50 transition-colors">
+                 <div className="bg-[#121722] border border-[#26344A] rounded-2xl p-1 focus-within:border-[#8BE8E2]/50 transition-colors">
                     <input type="text" placeholder="Insurance Plan Name" className="w-full bg-transparent text-white px-5 py-3 outline-none placeholder:text-gray-600 text-sm" />
                  </div>
                </div>
@@ -475,7 +475,7 @@ export function PatientDashboard() {
                  <button 
                     type="submit"
                     disabled={isProcessing}
-                    className="px-8 py-3 rounded-full bg-[#D6FF38] text-black font-bold hover:bg-[#bceb15] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm shadow-[0_0_15px_rgba(214,255,56,0.3)]"
+                    className="px-8 py-3 rounded-full bg-[#8BE8E2] text-black font-bold hover:bg-[#38BFC3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm shadow-[0_0_15px_rgba(139,232,226,0.3)]"
                  >
                     <Send className="w-4 h-4" /> Run AI Triage Assessment
                  </button>
@@ -485,14 +485,14 @@ export function PatientDashboard() {
 
           <div className="flex flex-col gap-6 xl:col-span-1">
              {isProcessing ? (
-               <div className="bg-[#1C1D21] border border-white/5 rounded-[2rem] p-8 flex flex-col items-center justify-center h-64 animate-pulse">
-                 <div className="w-12 h-12 rounded-full border-4 border-[#D6FF38]/30 border-t-[#D6FF38] animate-spin mb-4" />
+               <div className="bg-[#161B24] border border-white/5 rounded-[2rem] p-8 flex flex-col items-center justify-center h-64 animate-pulse">
+                 <div className="w-12 h-12 rounded-full border-4 border-[#8BE8E2]/30 border-t-[#8BE8E2] animate-spin mb-4" />
                  <p className="text-gray-400">Processing clinical data...</p>
                </div>
              ) : result ? (
-               <div className="bg-[#1C1D21] border border-white/10 rounded-[2rem] p-8 flex flex-col h-full shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-y-auto custom-scrollbar">
+               <div className="bg-[#161B24] border border-white/10 rounded-[2rem] p-8 flex flex-col h-full shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-y-auto custom-scrollbar">
                  <h3 className="text-xl font-medium mb-4 flex items-center gap-2">
-                   <Activity className="w-5 h-5 text-[#D6FF38]" /> AI Clinical Assessment
+                   <Activity className="w-5 h-5 text-[#8BE8E2]" /> AI Clinical Assessment
                  </h3>
                  <p className="text-sm text-gray-400 mb-6">Please answer the following questions to help us assess your condition.</p>
                  
@@ -507,13 +507,13 @@ export function PatientDashboard() {
                          <div className="flex gap-3">
                            <button 
                              onClick={() => setQnaAnswers({...qnaAnswers, [i]: true})}
-                             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${qnaAnswers[i] === true ? 'bg-[#D6FF38] text-black' : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'}`}
+                             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${qnaAnswers[i] === true ? 'bg-[#8BE8E2] text-black' : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'}`}
                            >
                              Yes
                            </button>
                            <button 
                              onClick={() => setQnaAnswers({...qnaAnswers, [i]: false})}
-                             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${qnaAnswers[i] === false ? 'bg-[#D6FF38] text-black' : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'}`}
+                             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${qnaAnswers[i] === false ? 'bg-[#8BE8E2] text-black' : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'}`}
                            >
                              No
                            </button>
@@ -526,7 +526,7 @@ export function PatientDashboard() {
                    <div className="mt-8 pt-6 border-t border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500 flex justify-end">
                      <button 
                        onClick={() => setShowStatus(true)}
-                       className="px-8 py-3 rounded-full bg-[#D6FF38] text-black font-bold text-sm hover:bg-[#bceb15] transition-colors shadow-[0_0_15px_rgba(214,255,56,0.3)] flex items-center justify-center gap-2"
+                       className="px-8 py-3 rounded-full bg-[#8BE8E2] text-black font-bold text-sm hover:bg-[#38BFC3] transition-colors shadow-[0_0_15px_rgba(139,232,226,0.3)] flex items-center justify-center gap-2"
                      >
                        <CheckCircle2 className="w-4 h-4" /> Submit
                      </button>

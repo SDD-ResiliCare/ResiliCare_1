@@ -54,7 +54,7 @@ const AllocationSelector = ({ patient, onAllocate }: { key?: React.Key; patient:
       <div className="flex flex-col gap-1">
         <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Hospital</label>
         <select 
-          className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#D6FF38] focus:outline-none focus:border-[#D6FF38] appearance-none cursor-pointer"
+          className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#8BE8E2] focus:outline-none focus:border-[#8BE8E2] appearance-none cursor-pointer"
           value={selectedHospital}
           onChange={(e) => { setSelectedHospital(e.target.value); setSelectedWard(''); setSelectedDoctor(''); }}
         >
@@ -71,7 +71,7 @@ const AllocationSelector = ({ patient, onAllocate }: { key?: React.Key; patient:
       <div className="flex flex-col gap-1 mt-2">
         <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Ward</label>
         <select 
-          className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#D6FF38] focus:outline-none focus:border-[#D6FF38] appearance-none cursor-pointer disabled:opacity-50"
+          className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#8BE8E2] focus:outline-none focus:border-[#8BE8E2] appearance-none cursor-pointer disabled:opacity-50"
           value={selectedWard}
           onChange={(e) => { setSelectedWard(e.target.value); setSelectedDoctor(''); }}
           disabled={!selectedHospital}
@@ -89,7 +89,7 @@ const AllocationSelector = ({ patient, onAllocate }: { key?: React.Key; patient:
       <div className="flex flex-col gap-1 mt-2">
         <label className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Primary Doctor</label>
         <select 
-          className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold text-white focus:outline-none focus:border-[#D6FF38] appearance-none cursor-pointer disabled:opacity-50"
+          className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold text-white focus:outline-none focus:border-[#8BE8E2] appearance-none cursor-pointer disabled:opacity-50"
           value={selectedDoctor}
           onChange={(e) => setSelectedDoctor(e.target.value)}
           disabled={!selectedWard}
@@ -208,10 +208,10 @@ export function NurseDashboard() {
           <div className="flex items-center gap-8">
             <div className="flex items-center">
               <div className="flex -space-x-3">
-                <img src="https://i.pravatar.cc/150?u=a1" className="w-9 h-9 rounded-full border-[3px] border-[#111215] relative z-30" />
-                <img src="https://i.pravatar.cc/150?u=a2" className="w-9 h-9 rounded-full border-[3px] border-[#111215] relative z-20" />
-                <img src="https://i.pravatar.cc/150?u=a3" className="w-9 h-9 rounded-full border-[3px] border-[#111215] relative z-10" />
-                <div className="w-9 h-9 rounded-full border-[3px] border-[#111215] relative z-0 bg-white text-black flex items-center justify-center text-xs font-bold">+6</div>
+                <img src="https://i.pravatar.cc/150?u=a1" className="w-9 h-9 rounded-full border-[3px] border-[#080A0F] relative z-30" />
+                <img src="https://i.pravatar.cc/150?u=a2" className="w-9 h-9 rounded-full border-[3px] border-[#080A0F] relative z-20" />
+                <img src="https://i.pravatar.cc/150?u=a3" className="w-9 h-9 rounded-full border-[3px] border-[#080A0F] relative z-10" />
+                <div className="w-9 h-9 rounded-full border-[3px] border-[#080A0F] relative z-0 bg-white text-black flex items-center justify-center text-xs font-bold">+6</div>
               </div>
             </div>
 
@@ -240,14 +240,14 @@ export function NurseDashboard() {
             <div className="flex flex-col items-start">
               <div className="flex items-start gap-1">
                 <span className="text-[2.75rem] leading-none font-light">34</span>
-                <span className="text-[#D6FF38] text-xs font-semibold mt-1.5 tracking-wide">+4</span>
+                <span className="text-[#8BE8E2] text-xs font-semibold mt-1.5 tracking-wide">+4</span>
               </div>
               <span className="text-sm text-gray-500 font-medium mt-1">Queue Length</span>
             </div>
             <div className="flex flex-col items-start">
               <div className="flex items-start gap-1">
                 <span className="text-[2.75rem] leading-none font-light">12</span>
-                <span className="text-[#D6FF38] text-xs font-semibold mt-1.5 tracking-wide">+2</span>
+                <span className="text-[#8BE8E2] text-xs font-semibold mt-1.5 tracking-wide">+2</span>
               </div>
               <span className="text-sm text-gray-500 font-medium mt-1">Total Assigned</span>
             </div>
@@ -269,7 +269,7 @@ export function NurseDashboard() {
               <input 
                 type="text" 
                 placeholder="Search" 
-                className="bg-[#1C1D21] text-sm text-white rounded-full pl-11 pr-4 py-3 outline-none w-72 border border-transparent focus:border-white/20 transition-all placeholder:text-gray-500" 
+                className="bg-[#161B24] text-sm text-white rounded-full pl-11 pr-4 py-3 outline-none w-72 border border-transparent focus:border-white/20 transition-all placeholder:text-gray-500" 
               />
             </div>
             <button className="text-gray-400 hover:text-white w-10 h-10 flex items-center justify-center transition-colors">
@@ -302,7 +302,7 @@ export function NurseDashboard() {
                <div 
                  key={patient.id} 
                  onClick={() => setActivePatientId(patient.id)}
-                 className={`min-w-[380px] min-h-[440px] h-auto shrink-0 snap-start cursor-pointer ${isActive ? "bg-[#D6FF38] text-black rounded-[2rem] p-7 relative flex flex-col shadow-[0_10px_30px_rgba(214,255,56,0.15)] overflow-hidden" : "bg-[#18191C] border border-[#2A2B30] text-white rounded-[2rem] p-7 relative flex flex-col hover:border-[#D6FF38]/30 transition-all duration-300 group"}`}
+                 className={`min-w-[380px] min-h-[440px] h-auto shrink-0 snap-start cursor-pointer ${isActive ? "bg-[#8BE8E2] text-black rounded-[2rem] p-7 relative flex flex-col shadow-[0_10px_30px_rgba(139,232,226,0.15)] overflow-hidden" : "bg-[#121722] border border-[#26344A] text-white rounded-[2rem] p-7 relative flex flex-col hover:border-[#8BE8E2]/30 transition-all duration-300 group"}`}
                >
                  {isActive && <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none" />}
                  
@@ -396,7 +396,7 @@ export function NurseDashboard() {
                            </>
                          ) : (
                            <>
-                             <div className="w-2.5 h-2.5 rounded-full bg-[#D6FF38]" />
+                             <div className="w-2.5 h-2.5 rounded-full bg-[#8BE8E2]" />
                              <span className="text-[13px] font-semibold">Observation</span>
                            </>
                          )}
@@ -409,14 +409,14 @@ export function NurseDashboard() {
                      </div>
                    </>
                  ) : (
-                    <div className={`rounded-2xl p-5 relative overflow-hidden mt-2 flex-1 flex flex-col justify-center animate-in fade-in duration-500 ${isActive ? 'bg-[#111215] text-white border border-white/10' : 'bg-black/20 text-white border border-white/5'}`}>
-                      {isActive && <div className="absolute top-0 right-0 w-32 h-32 bg-[#D6FF38]/10 blur-3xl rounded-full pointer-events-none" />}
+                    <div className={`rounded-2xl p-5 relative overflow-hidden mt-2 flex-1 flex flex-col justify-center animate-in fade-in duration-500 ${isActive ? 'bg-[#080A0F] text-white border border-white/10' : 'bg-black/20 text-white border border-white/5'}`}>
+                      {isActive && <div className="absolute top-0 right-0 w-32 h-32 bg-[#8BE8E2]/10 blur-3xl rounded-full pointer-events-none" />}
                       <div className="flex items-center justify-between mb-4 relative z-10">
                         <div className="flex items-center gap-2 text-gray-400">
                           <Brain className="w-4 h-4" />
                           <span className="text-xs font-semibold uppercase tracking-wide">AI Recommendation</span>
                         </div>
-                        <span className="bg-[#D6FF38]/20 text-[#D6FF38] text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                        <span className="bg-[#8BE8E2]/20 text-[#8BE8E2] text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
                            <Activity className="w-3 h-3" /> 94% Confidence
                         </span>
                       </div>
@@ -432,7 +432,7 @@ export function NurseDashboard() {
                              value={patient.esi || ''}
                              readOnly
                              disabled={!isActive}
-                             className={`bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold focus:outline-none focus:border-[#D6FF38] appearance-none ${isActive ? 'text-[#D6FF38] cursor-pointer' : 'text-gray-500 cursor-default'}`}
+                             className={`bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold focus:outline-none focus:border-[#8BE8E2] appearance-none ${isActive ? 'text-[#8BE8E2] cursor-pointer' : 'text-gray-500 cursor-default'}`}
                             >
                                <option value="1">Level 1 - Resuscitation</option>
                                <option value="2">Level 2 - Emergent</option>
@@ -450,7 +450,7 @@ export function NurseDashboard() {
                       )}
                       
                       <div className="flex gap-3 mt-auto pt-4 border-t border-white/10 relative z-10">
-                        <button className={`flex-1 font-semibold text-sm py-2.5 rounded-full transition-colors ${isActive ? 'bg-[#D6FF38] text-black hover:bg-[#c2e633]' : 'bg-white/10 text-white hover:bg-white/20'}`}>Approve</button>
+                        <button className={`flex-1 font-semibold text-sm py-2.5 rounded-full transition-colors ${isActive ? 'bg-[#8BE8E2] text-black hover:bg-[#55D9D5]' : 'bg-white/10 text-white hover:bg-white/20'}`}>Approve</button>
                         <button className={`flex-1 font-medium text-sm py-2.5 rounded-full transition-colors ${isActive ? 'border border-white/20 text-white hover:bg-white/5' : 'border border-white/10 text-gray-400 hover:text-white'}`}>Bring Next</button>
                       </div>
                     </div>
@@ -477,7 +477,7 @@ export function NurseDashboard() {
                    <div className="text-[11px] font-semibold text-gray-500 mt-0.5">
                      {workload.current_patient?.ward?.name || 'Assigned Ward'}
                    </div>
-                   <div className="text-[10px] font-bold mt-1 uppercase tracking-wider text-[#D6FF38]">
+                   <div className="text-[10px] font-bold mt-1 uppercase tracking-wider text-[#8BE8E2]">
                      {workload.availability}
                    </div>
                 </div>
@@ -489,20 +489,20 @@ export function NurseDashboard() {
 
                    {/* Current Patient */}
                    {workload.current_patient && (
-                     <div className="bg-[#18191C] border border-[#D6FF38]/20 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-[#D6FF38]/40 transition-colors">
-                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D6FF38]" />
+                     <div className="bg-[#121722] border border-[#8BE8E2]/20 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-[#8BE8E2]/40 transition-colors">
+                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#8BE8E2]" />
                        <img src={`https://i.pravatar.cc/150?u=${workload.current_patient.patient_id}`} className="w-10 h-10 rounded-full shrink-0" />
                        <div className="flex flex-col flex-1 min-w-0">
                          <span className="text-sm font-bold text-white truncate">{workload.current_patient.patient_name}</span>
                          <span className="text-xs text-gray-400 mt-0.5 truncate">Level {workload.current_patient.confirmed_esi}</span>
                        </div>
-                       <span className="bg-[#D6FF38]/10 text-[#D6FF38] text-[11px] font-bold px-2.5 py-1 rounded-md shrink-0 border border-[#D6FF38]/20">Current</span>
+                       <span className="bg-[#8BE8E2]/10 text-[#8BE8E2] text-[11px] font-bold px-2.5 py-1 rounded-md shrink-0 border border-[#8BE8E2]/20">Current</span>
                      </div>
                    )}
 
                    {/* Queued Patients */}
                    {workload.waiting_patients.map((wp: any, i: number) => (
-                     <div key={wp.work_item_id || i} className="bg-[#18191C] border border-white/5 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-white/10 transition-colors">
+                     <div key={wp.work_item_id || i} className="bg-[#121722] border border-white/5 rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-white/10 transition-colors">
                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/20" />
                        <img src={`https://i.pravatar.cc/150?u=${wp.patient_id}`} className="w-10 h-10 rounded-full shrink-0" />
                        <div className="flex flex-col flex-1 min-w-0">
@@ -524,7 +524,7 @@ export function NurseDashboard() {
 
       {/* Right Overview Panel - Clinical Data */}
       {activePatient && (
-        <div className="w-[360px] bg-white rounded-[2rem] m-6 ml-0 flex flex-col p-6 relative shadow-xl shrink-0 overflow-y-auto no-scrollbar animate-in fade-in slide-in-from-right-8 duration-500">
+        <div className="w-[360px] bg-[#E8FBFA] border border-[#BDE9EA] rounded-[2rem] m-6 ml-0 flex flex-col p-6 relative shadow-[0_12px_40px_rgba(34,211,197,0.12)] shrink-0 overflow-y-auto no-scrollbar animate-in fade-in slide-in-from-right-8 duration-500">
           {/* Header - Profile */}
         <div className="shrink-0 flex items-center justify-between mb-6">
            <div className="flex items-center gap-3">
@@ -541,14 +541,14 @@ export function NurseDashboard() {
 
         {/* AI ESI Suggestion */}
         {!isSurgeMode && (
-          <div className="shrink-0 bg-[#111215] text-white rounded-2xl p-5 mb-5 relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-32 h-32 bg-[#D6FF38]/10 blur-3xl rounded-full pointer-events-none" />
+          <div className="shrink-0 bg-[#080A0F] text-white rounded-2xl p-5 mb-5 relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-[#8BE8E2]/10 blur-3xl rounded-full pointer-events-none" />
            <div className="flex items-center justify-between mb-4 relative z-10">
              <div className="flex items-center gap-2 text-gray-400">
                 <Brain className="w-4 h-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide">AI Recommendation</span>
              </div>
-             <span className="bg-[#D6FF38]/20 text-[#D6FF38] text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+             <span className="bg-[#8BE8E2]/20 text-[#8BE8E2] text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
                 <Activity className="w-3 h-3" /> 94% Confidence
              </span>
            </div>
@@ -563,7 +563,7 @@ export function NurseDashboard() {
                  <select 
                   value={activePatient.esi || ''}
                   readOnly
-                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#D6FF38] focus:outline-none focus:border-[#D6FF38] appearance-none cursor-pointer"
+                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] font-semibold text-[#8BE8E2] focus:outline-none focus:border-[#8BE8E2] appearance-none cursor-pointer"
                  >
                     <option value="1">Level 1 - Resuscitation</option>
                     <option value="2">Level 2 - Emergent</option>
@@ -581,7 +581,7 @@ export function NurseDashboard() {
             )}
             
             <div className="flex gap-3 mt-4 pt-4 border-t border-white/10 relative z-10">
-             <button className="flex-1 bg-[#D6FF38] text-black font-semibold text-sm py-2.5 rounded-full hover:bg-[#c2e633] transition-colors">Approve</button>
+             <button className="flex-1 bg-[#8BE8E2] text-black font-semibold text-sm py-2.5 rounded-full hover:bg-[#55D9D5] transition-colors">Approve</button>
              <button className="flex-1 border border-white/20 text-white font-medium text-sm py-2.5 rounded-full hover:bg-white/5 transition-colors">Bring Next</button>
            </div>
         </div>

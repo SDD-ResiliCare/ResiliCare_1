@@ -40,7 +40,7 @@ export function Sidebar() {
                 <link.icon className={cn("w-[22px] h-[22px]", isActive && "fill-black/10")} strokeWidth={isActive ? 2.5 : 2} />
                 
                 {/* Tooltip */}
-                <div className="absolute left-14 bg-[#1C1D21] text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 transition-opacity z-50 shadow-xl font-medium">
+                <div className="absolute left-14 bg-[#161B24] text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 transition-opacity z-50 shadow-xl font-medium">
                   {link.label}
                 </div>
               </NavLink>

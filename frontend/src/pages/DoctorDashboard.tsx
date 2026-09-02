@@ -31,7 +31,7 @@ export function DoctorDashboard() {
           </div>
           
           <div className="flex items-center gap-3">
-             <div className="px-4 py-2.5 rounded-full bg-[#D6FF38]/10 border border-[#D6FF38]/20 text-[#D6FF38] text-sm font-bold flex items-center gap-2">
+             <div className="px-4 py-2.5 rounded-full bg-[#8BE8E2]/10 border border-[#8BE8E2]/20 text-[#8BE8E2] text-sm font-bold flex items-center gap-2">
                 <Users className="w-4 h-4" /> 3 Patients in Queue
              </div>
           </div>
@@ -42,7 +42,7 @@ export function DoctorDashboard() {
             
             {/* Left Panel: Patient Information */}
             <div className="flex-1 flex flex-col gap-6">
-               <div className="bg-[#1C1D21] border border-white/10 rounded-[2rem] p-8 flex flex-col relative overflow-hidden shadow-lg">
+               <div className="bg-[#161B24] border border-white/10 rounded-[2rem] p-8 flex flex-col relative overflow-hidden shadow-lg">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-3xl rounded-full pointer-events-none" />
                  
                  <div className="flex items-center justify-between mb-6 relative z-10">
@@ -95,8 +95,8 @@ export function DoctorDashboard() {
                  </div>
 
                  {/* AI Triage Summary */}
-                 <div className="bg-[#111215] border border-white/10 rounded-2xl p-5 relative z-10">
-                    <div className="flex items-center gap-2 text-[#D6FF38] mb-3">
+                 <div className="bg-[#080A0F] border border-white/10 rounded-2xl p-5 relative z-10">
+                    <div className="flex items-center gap-2 text-[#8BE8E2] mb-3">
                        <Brain className="w-4 h-4" />
                        <span className="text-xs font-bold uppercase tracking-wide">AI Intake Analysis</span>
                     </div>
@@ -107,7 +107,7 @@ export function DoctorDashboard() {
                </div>
 
                {/* Complete Medical Profile */}
-               <div className="bg-[#1C1D21] border border-white/10 rounded-[2rem] p-8 shadow-lg">
+               <div className="bg-[#161B24] border border-white/10 rounded-[2rem] p-8 shadow-lg">
                   <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                      <History className="w-5 h-5 text-gray-400" /> Complete Medical Profile
                   </h3>
@@ -129,7 +129,7 @@ export function DoctorDashboard() {
                         <span className="text-sm font-bold text-white mt-1">185 lbs</span>
                      </div>
                      <div className="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col items-center justify-center text-center">
-                        <Activity className="w-4 h-4 text-[#D6FF38] mb-1" />
+                        <Activity className="w-4 h-4 text-[#8BE8E2] mb-1" />
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">BMI</span>
                         <span className="text-sm font-bold text-white mt-1">24.4</span>
                      </div>
@@ -158,7 +158,7 @@ export function DoctorDashboard() {
                </div>
 
                {/* Billing & Insurance */}
-               <div className="bg-[#1C1D21] border border-white/10 rounded-[2rem] p-8 shadow-lg">
+               <div className="bg-[#161B24] border border-white/10 rounded-[2rem] p-8 shadow-lg">
                   <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                      <CreditCard className="w-5 h-5 text-gray-400" /> Billing & Insurance
                   </h3>
@@ -201,7 +201,7 @@ export function DoctorDashboard() {
                            </div>
                            <div className="pt-3 border-t border-white/10 flex justify-between">
                               <span className="text-sm font-bold text-white">Patient Responsibility</span>
-                              <span className="text-lg font-bold text-[#D6FF38]">$270.00</span>
+                              <span className="text-lg font-bold text-[#8BE8E2]">$270.00</span>
                            </div>
                         </div>
                      </div>
@@ -211,7 +211,7 @@ export function DoctorDashboard() {
 
             {/* Right Panel: Doctor Notes & Prescription */}
             <div className="w-full lg:w-[400px] flex flex-col gap-4">
-               <div className="bg-[#1C1D21] border border-white/10 rounded-[2rem] p-6 flex flex-col flex-1 shadow-lg">
+               <div className="bg-[#161B24] border border-white/10 rounded-[2rem] p-6 flex flex-col flex-1 shadow-lg">
                   <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                      <FileText className="w-5 h-5 text-gray-400" /> Clinical Notes
                   </h3>
@@ -223,7 +223,7 @@ export function DoctorDashboard() {
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
                           placeholder="Enter clinical observations..."
-                          className="bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-[#D6FF38] resize-none flex-1 placeholder:text-gray-600 custom-scrollbar"
+                          className="bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-[#8BE8E2] resize-none flex-1 placeholder:text-gray-600 custom-scrollbar"
                         />
                      </div>
                      
@@ -235,14 +235,14 @@ export function DoctorDashboard() {
                           value={prescription}
                           onChange={(e) => setPrescription(e.target.value)}
                           placeholder="Enter prescribed medications, resting plan..."
-                          className="bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-[#D6FF38] resize-none flex-1 placeholder:text-gray-600 custom-scrollbar"
+                          className="bg-black/20 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-[#8BE8E2] resize-none flex-1 placeholder:text-gray-600 custom-scrollbar"
                         />
                      </div>
                   </div>
 
                   <button 
                      onClick={handleComplete}
-                     className="w-full mt-6 py-3.5 rounded-xl bg-[#D6FF38] text-black font-bold text-sm hover:bg-[#bceb15] transition-colors shadow-[0_0_15px_rgba(214,255,56,0.2)]"
+                     className="w-full mt-6 py-3.5 rounded-xl bg-[#8BE8E2] text-black font-bold text-sm hover:bg-[#38BFC3] transition-colors shadow-[0_0_15px_rgba(139,232,226,0.2)]"
                   >
                      Complete Appointment
                   </button>
@@ -252,8 +252,8 @@ export function DoctorDashboard() {
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
-             <div className="w-20 h-20 bg-[#D6FF38]/10 rounded-full flex items-center justify-center mb-6">
-               <CheckCircle2 className="w-10 h-10 text-[#D6FF38]" />
+             <div className="w-20 h-20 bg-[#8BE8E2]/10 rounded-full flex items-center justify-center mb-6">
+               <CheckCircle2 className="w-10 h-10 text-[#8BE8E2]" />
              </div>
              <h2 className="text-2xl font-bold text-white mb-2">Appointment Completed</h2>
              <p className="text-gray-400 mb-8 max-w-md text-center">
