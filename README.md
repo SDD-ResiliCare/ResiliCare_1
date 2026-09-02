@@ -25,7 +25,7 @@ The source tree is intentionally flat under `src/`:
 - `src/api/routers/` — versioned HTTP endpoints.
 - `src/schemas/` — Pydantic request and response validation.
 - `src/services/` — workflow orchestration and transaction boundaries.
-- `src/db/models/` — SQLAlchemy mappings for the 41 application tables.
+- `src/db/models/` — SQLAlchemy mappings for the application tables.
 - `src/db/repositories/` — database queries without HTTP concerns.
 - `src/core/` — pure clinical calculations.
 - `src/workflows/` — waiting-room and real operational surge behavior.
@@ -54,7 +54,7 @@ supabase db reset
 The committed migration order is:
 
 1. PostgreSQL extensions and shared trigger helpers.
-2. All 41 production application tables and foreign keys.
+2. Production application tables and foreign keys.
 3. Clinical constraints, partial unique indexes, audit immutability, grants, and RLS enablement.
 
 Run the API:
@@ -87,7 +87,8 @@ Important workflows:
 - Vitals are append-only observations. GCS total is derived from eye, verbal, and motor components.
 - Follow-up symptom questions retain questionnaire version, question ordering, branching conditions, response source, and the exact displayed question text.
 - Every triage run creates a new immutable assessment version. Clinician decisions do not overwrite generated assessments.
-- The current queue exposes each patient's pending AI recommendation and confirmed ESI separately. A nurse may confirm a ward and primary-doctor allocation only after the latest assessment has a clinician decision; the ward location, doctor participation, and combined audit event are persisted atomically.
+- The current queue exposes each patient's pending AI recommendation and confirmed ESI separately. An authorized allocator may confirm a ward and primary-doctor allocation only after the latest assessment has a clinician decision; the ward location, doctor participation, and combined audit event are persisted atomically.
+- Nurses and receptionists can perform the post-triage allocation. Allocation closes the hospital triage-queue entry and creates a doctor work item: it starts immediately when that doctor is free, otherwise it joins the doctor's ESI-ordered waiting list. Closing the current encounter promotes the next waiting patient.
 - An encounter closure records the medication decision. Actual prescriptions are created only when medication is ordered.
 - Invoice totals are calculated by the backend from line items. Issued invoices are superseded rather than silently overwritten.
 - Review tokens are stored only as SHA-256 hashes and doctor reviews are limited to doctors assigned to the encounter.

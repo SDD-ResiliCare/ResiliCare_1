@@ -3,7 +3,19 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    SmallInteger,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -113,6 +125,49 @@ class EncounterParticipant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     transferred_from_participant_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("encounter_participants.id")
     )
+
+
+class DoctorWorkItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "doctor_work_items"
+    __table_args__ = (
+        CheckConstraint(
+            "status in ('waiting', 'in_service', 'completed', 'transferred', 'cancelled')",
+            name="doctor_work_items_status",
+        ),
+        CheckConstraint("priority_esi between 1 and 5", name="doctor_work_items_priority_esi"),
+        CheckConstraint(
+            "(started_at IS NULL OR started_at >= queued_at) "
+            "AND (completed_at IS NULL OR started_at IS NOT NULL) "
+            "AND (completed_at IS NULL OR completed_at >= started_at)",
+            name="doctor_work_items_timestamps",
+        ),
+        Index(
+            "uq_doctor_work_items_active_encounter",
+            "encounter_id",
+            unique=True,
+            postgresql_where=text("status IN ('waiting', 'in_service')"),
+        ),
+        Index(
+            "uq_doctor_work_items_current_doctor",
+            "doctor_staff_id",
+            unique=True,
+            postgresql_where=text("status = 'in_service'"),
+        ),
+        Index("ix_doctor_work_items_doctor_status_queue", "doctor_staff_id", "status", "priority_esi", "queued_at"),
+    )
+
+    hospital_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("hospitals.id"), nullable=False)
+    encounter_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("encounters.id"), nullable=False)
+    doctor_staff_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("staff.id"), nullable=False)
+    ward_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("wards.id"), nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False)
+    priority_esi: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    queued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    assigned_by_staff_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("staff.id"), nullable=False)
+    allocation_reason: Mapped[str] = mapped_column(Text, nullable=False)
+    end_reason: Mapped[str | None] = mapped_column(Text)
 
 
 class EncounterCoverage(UUIDPrimaryKeyMixin, TimestampMixin, Base):

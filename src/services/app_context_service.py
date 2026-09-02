@@ -15,7 +15,8 @@ ROLE_PERMISSIONS = {
     "doctor": ["view_patients", "manage_encounters", "confirm_triage", "manage_prescriptions"],
     "nurse": ["view_patients", "manage_queue", "record_vitals", "perform_triage"],
     "billing_staff": ["view_patients", "manage_billing"],
-    "reception_staff": ["register_patients", "manage_queue"],
+    "receptionist": ["register_patients", "manage_queue", "allocate_care_team"],
+    "reception_staff": ["register_patients", "manage_queue", "allocate_care_team"],
     "patient": ["view_own_health"],
 }
 

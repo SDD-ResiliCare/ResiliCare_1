@@ -15,31 +15,34 @@ from src.schemas.encounter import (
 from src.services.queue_service import QueueService
 
 router = APIRouter(prefix="/queues", tags=["queues"])
-ClinicalStaff = Annotated[RequestContext, Depends(require_roles("administrator", "doctor", "nurse"))]
+QueueOperator = Annotated[
+    RequestContext,
+    Depends(require_roles("administrator", "doctor", "nurse", "receptionist", "reception_staff")),
+]
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-async def create_queue(payload: QueueCreate, session: DatabaseSession, context: ClinicalStaff):
+async def create_queue(payload: QueueCreate, session: DatabaseSession, context: QueueOperator):
     enforce_hospital_access(context, payload.hospital_id)
     return await QueueService(session).create_queue(payload)
 
 
 @router.get("")
-async def list_queues(session: DatabaseSession, context: ClinicalStaff):
+async def list_queues(session: DatabaseSession, context: QueueOperator):
     if context.hospital_id is None:
         raise HTTPException(403, "hospital identity is required")
     return await QueueService(session).list_queues(context.hospital_id)
 
 
 @router.get("/current")
-async def current_queue(session: DatabaseSession, context: ClinicalStaff):
+async def current_queue(session: DatabaseSession, context: QueueOperator):
     if context.hospital_id is None:
         raise HTTPException(403, "hospital identity is required")
     return await QueueService(session).current_queue(context.hospital_id)
 
 
 @router.get("/current/entries", response_model=CurrentQueueResponse)
-async def current_queue_entries(session: DatabaseSession, context: ClinicalStaff):
+async def current_queue_entries(session: DatabaseSession, context: QueueOperator):
     if context.hospital_id is None:
         raise HTTPException(403, "hospital identity is required")
     service = QueueService(session)
@@ -48,7 +51,7 @@ async def current_queue_entries(session: DatabaseSession, context: ClinicalStaff
 
 
 @router.post("/current/entries", status_code=status.HTTP_201_CREATED)
-async def add_current_queue_entry(payload: QueueEntryCreate, session: DatabaseSession, context: ClinicalStaff):
+async def add_current_queue_entry(payload: QueueEntryCreate, session: DatabaseSession, context: QueueOperator):
     if context.hospital_id is None:
         raise HTTPException(403, "hospital identity is required")
     service = QueueService(session)
@@ -58,7 +61,7 @@ async def add_current_queue_entry(payload: QueueEntryCreate, session: DatabaseSe
 
 @router.patch("/entries/{entry_id}/priority")
 async def update_queue_priority(
-    entry_id: UUID, payload: QueuePriorityUpdate, session: DatabaseSession, context: ClinicalStaff
+    entry_id: UUID, payload: QueuePriorityUpdate, session: DatabaseSession, context: QueueOperator
 ):
     if context.hospital_id is None or context.staff_id is None:
         raise HTTPException(403, "staff hospital identity is required")
@@ -78,52 +81,52 @@ async def _transition(
 
 
 @router.post("/entries/{entry_id}/call")
-async def call_queue_entry(entry_id: UUID, payload: QueueEntryAction, session: DatabaseSession, context: ClinicalStaff):
+async def call_queue_entry(entry_id: UUID, payload: QueueEntryAction, session: DatabaseSession, context: QueueOperator):
     return await _transition(entry_id, "call", payload, session, context)
 
 
 @router.post("/entries/{entry_id}/start-care")
 async def start_queue_entry_care(
-    entry_id: UUID, payload: QueueEntryAction, session: DatabaseSession, context: ClinicalStaff
+    entry_id: UUID, payload: QueueEntryAction, session: DatabaseSession, context: QueueOperator
 ):
     return await _transition(entry_id, "start-care", payload, session, context)
 
 
 @router.post("/entries/{entry_id}/exit")
-async def exit_queue_entry(entry_id: UUID, payload: QueueEntryAction, session: DatabaseSession, context: ClinicalStaff):
+async def exit_queue_entry(entry_id: UUID, payload: QueueEntryAction, session: DatabaseSession, context: QueueOperator):
     return await _transition(entry_id, "exit", payload, session, context)
 
 
 @router.post("/entries/{entry_id}/cancel")
 async def cancel_queue_entry(
-    entry_id: UUID, payload: QueueEntryAction, session: DatabaseSession, context: ClinicalStaff
+    entry_id: UUID, payload: QueueEntryAction, session: DatabaseSession, context: QueueOperator
 ):
     return await _transition(entry_id, "cancel", payload, session, context)
 
 
 @router.get("/{queue_id}")
-async def get_queue(queue_id: UUID, session: DatabaseSession, context: ClinicalStaff):
+async def get_queue(queue_id: UUID, session: DatabaseSession, context: QueueOperator):
     queue = await QueueService(session).get_queue(queue_id)
     enforce_hospital_access(context, queue.hospital_id)
     return queue
 
 
 @router.patch("/{queue_id}")
-async def update_queue(queue_id: UUID, payload: QueueUpdate, session: DatabaseSession, context: ClinicalStaff):
+async def update_queue(queue_id: UUID, payload: QueueUpdate, session: DatabaseSession, context: QueueOperator):
     if context.hospital_id is None:
         raise HTTPException(403, "hospital identity is required")
     return await QueueService(session).update_queue(queue_id, payload, context.hospital_id)
 
 
 @router.delete("/{queue_id}")
-async def deactivate_queue(queue_id: UUID, session: DatabaseSession, context: ClinicalStaff):
+async def deactivate_queue(queue_id: UUID, session: DatabaseSession, context: QueueOperator):
     if context.hospital_id is None:
         raise HTTPException(403, "hospital identity is required")
     return await QueueService(session).deactivate_queue(queue_id, context.hospital_id)
 
 
 @router.get("/{queue_id}/entries")
-async def list_entries(queue_id: UUID, session: DatabaseSession, context: ClinicalStaff):
+async def list_entries(queue_id: UUID, session: DatabaseSession, context: QueueOperator):
     service = QueueService(session)
     queue = await service.get_queue(queue_id)
     enforce_hospital_access(context, queue.hospital_id)
@@ -131,7 +134,7 @@ async def list_entries(queue_id: UUID, session: DatabaseSession, context: Clinic
 
 
 @router.post("/{queue_id}/entries", status_code=status.HTTP_201_CREATED)
-async def add_entry(queue_id: UUID, payload: QueueEntryCreate, session: DatabaseSession, context: ClinicalStaff):
+async def add_entry(queue_id: UUID, payload: QueueEntryCreate, session: DatabaseSession, context: QueueOperator):
     service = QueueService(session)
     queue = await service.get_queue(queue_id)
     enforce_hospital_access(context, queue.hospital_id)

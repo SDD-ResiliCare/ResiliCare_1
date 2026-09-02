@@ -16,7 +16,7 @@ def test_all_production_tables_are_mapped_and_migrated():
     migrations = "\n".join(
         path.read_text(encoding="utf-8") for path in sorted((ROOT / "supabase" / "migrations").glob("*.sql"))
     )
-    assert len(application_tables) == 43
+    assert len(application_tables) == 44
     normalized_migrations = migrations.lower().replace("create table public.", "create table ")
     assert all(f"create table {table}" in normalized_migrations for table in application_tables)
 

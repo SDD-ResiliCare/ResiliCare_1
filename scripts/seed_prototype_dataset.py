@@ -277,6 +277,22 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
     assessment_by_encounter = {row["encounter_id"]: row for row in assessment_rows}
     doctor_by_encounter = {row["encounter_id"]: row for row in doctor_rows}
     nurse_by_encounter = {row["encounter_id"]: row for row in nurse_rows}
+    encounter_by_id = {row["encounter_id"]: row for row in encounter_rows}
+    confirmed_doctor_rows = [
+        row
+        for row in doctor_rows
+        if assessment_by_encounter[row["encounter_id"]]["clinician_confirmation_status"] == "CONFIRMED"
+    ]
+    current_assignment_ids = set()
+    for doctor_external_id in {row["doctor_staff_id"] for row in confirmed_doctor_rows}:
+        assignments = sorted(
+            (row for row in confirmed_doctor_rows if row["doctor_staff_id"] == doctor_external_id),
+            key=lambda row: (
+                encounter_by_id[row["encounter_id"]]["status"] != "UNDER_ASSESSMENT",
+                row["assigned_at"],
+            ),
+        )
+        current_assignment_ids.add(assignments[0]["doctor_assignment_id"])
     patient_source = {row["patient_id"]: row for row in patient_rows}
     encounters = []
     queue_entries = []
@@ -286,6 +302,7 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
         assessment = assessment_by_encounter[row["encounter_id"]]
         allocation_confirmed = assessment["clinician_confirmation_status"] == "CONFIRMED"
         doctor = doctor_by_encounter[row["encounter_id"]]
+        doctor_is_current = doctor["doctor_assignment_id"] in current_assignment_ids
         nurse = nurse_by_encounter[row["encounter_id"]]
         patient = patient_source[row["patient_id"]]
         encounters.append(
@@ -295,11 +312,11 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
                 "patient_id": patient_ids[row["patient_id"]],
                 "encounter_code": row["encounter_code"],
                 "encounter_type": "emergency",
-                "status": row["status"].casefold(),
+                "status": "in_care" if doctor_is_current else row["status"].casefold(),
                 "arrival_mode": row["arrival_mode"].casefold(),
                 "arrived_at": row["arrival_at"],
                 "triaged_at": assessment["assessed_at"],
-                "care_started_at": doctor["assigned_at"] if row["status"] != "WAITING" else None,
+                "care_started_at": doctor["assigned_at"] if doctor_is_current else None,
                 "current_ward_id": ward_ids[row["current_ward_id"]] if allocation_confirmed else None,
                 "chief_complaint": row["chief_complaint"],
                 "presenting_details": (
@@ -310,9 +327,7 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
                 "data_quality_notes": _nullable(row["data_quality_notes"]),
             }
         )
-        queue_status = {"WAITING": "waiting", "ASSIGNED": "called", "UNDER_ASSESSMENT": "in_assessment"}[
-            row["status"]
-        ]
+        queue_status = "completed" if allocation_confirmed else "waiting"
         queue_entries.append(
             {
                 "id": _id("queue_entry", row["encounter_id"]),
@@ -320,7 +335,9 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
                 "encounter_id": encounter_ids[row["encounter_id"]],
                 "status": queue_status,
                 "entered_at": row["arrival_at"],
-                "called_at": doctor["assigned_at"] if row["status"] != "WAITING" else None,
+                "called_at": doctor["assigned_at"] if allocation_confirmed else None,
+                "exited_at": doctor["assigned_at"] if allocation_confirmed else None,
+                "exit_reason": "allocated_to_doctor" if allocation_confirmed else None,
                 "priority_boost": int(row["queue_priority_boost"]),
             }
         )
@@ -370,6 +387,27 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
         }
         for row in nurse_rows
     )
+
+    doctor_work_items = []
+    for row in confirmed_doctor_rows:
+        encounter = encounter_by_id[row["encounter_id"]]
+        assessment = assessment_by_encounter[row["encounter_id"]]
+        is_current = row["doctor_assignment_id"] in current_assignment_ids
+        doctor_work_items.append(
+            {
+                "id": _id("doctor_work_item", row["doctor_assignment_id"]),
+                "hospital_id": hospital_ids[encounter["hospital_id"]],
+                "encounter_id": encounter_ids[row["encounter_id"]],
+                "doctor_staff_id": staff_ids[row["doctor_staff_id"]],
+                "ward_id": ward_ids[encounter["current_ward_id"]],
+                "status": "in_service" if is_current else "waiting",
+                "priority_esi": int(assessment["recommended_esi_level"]),
+                "queued_at": row["assigned_at"],
+                "started_at": row["assigned_at"] if is_current else None,
+                "assigned_by_staff_id": staff_ids[nurse_by_encounter[row["encounter_id"]]["nurse_staff_id"]],
+                "allocation_reason": "Synthetic nurse-confirmed initial allocation",
+            }
+        )
 
     questionnaire_id = _id("questionnaire", "DEMO-GENERAL-INTAKE:1:en-IN")
     questionnaires = [
@@ -642,6 +680,7 @@ def build_seed_plan(include_reserve: bool = False) -> list[tuple[str, str, list[
         ("queue_entries", "id", queue_entries),
         ("encounter_location_history", "id", location_history),
         ("encounter_participants", "id", participants),
+        ("doctor_work_items", "id", doctor_work_items),
         ("encounter_coverages", "id", coverages),
         ("questionnaires", "id", questionnaires),
         ("questionnaire_questions", "id", questions),

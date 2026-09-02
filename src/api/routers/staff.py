@@ -6,11 +6,17 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from src.api.dependencies import DatabaseSession, RequestContext, enforce_hospital_access, require_roles
 from src.schemas.common import Page
+from src.schemas.encounter import DoctorWorkloadResponse
 from src.schemas.staff import StaffCreate, StaffResponse, StaffUpdate, WardAssignmentCreate
+from src.services.doctor_work_service import DoctorWorkService
 from src.services.staff_service import StaffService
 
 router = APIRouter(prefix="/staff", tags=["staff"])
 Admin = Annotated[RequestContext, Depends(require_roles("platform_admin", "administrator"))]
+WorkloadReader = Annotated[
+    RequestContext,
+    Depends(require_roles("administrator", "doctor", "nurse", "receptionist", "reception_staff")),
+]
 
 
 @router.post("", response_model=StaffResponse, status_code=status.HTTP_201_CREATED)
@@ -40,6 +46,24 @@ async def list_staff(
         page_size=page_size,
     )
     return Page(items=items, page=page, page_size=page_size, total=total, has_next=page * page_size < total)
+
+
+@router.get("/doctors/workloads", response_model=list[DoctorWorkloadResponse])
+async def list_doctor_workloads(
+    session: DatabaseSession,
+    context: WorkloadReader,
+    ward_id: UUID | None = None,
+):
+    if context.hospital_id is None:
+        raise HTTPException(403, "hospital identity is required")
+    return await DoctorWorkService(session).list_workloads(context.hospital_id, ward_id)
+
+
+@router.get("/doctors/{doctor_id}/workload", response_model=DoctorWorkloadResponse)
+async def get_doctor_workload(doctor_id: UUID, session: DatabaseSession, context: WorkloadReader):
+    if context.hospital_id is None:
+        raise HTTPException(403, "hospital identity is required")
+    return await DoctorWorkService(session).get_workload(doctor_id, context.hospital_id)
 
 
 @router.get("/{staff_id}", response_model=StaffResponse)

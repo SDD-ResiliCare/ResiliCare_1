@@ -152,6 +152,28 @@ class QueueDoctorSummary(BaseModel):
     last_name: str | None
 
 
+class DoctorWorkPatientSummary(BaseModel):
+    work_item_id: UUID
+    encounter_id: UUID
+    encounter_code: str
+    patient_id: UUID
+    patient_name: str
+    ward: QueueWardSummary
+    status: str
+    confirmed_esi: int
+    queue_position: int | None
+    queued_at: datetime
+    started_at: datetime | None
+
+
+class DoctorWorkloadResponse(BaseModel):
+    doctor: QueueDoctorSummary
+    availability: str
+    current_patient: DoctorWorkPatientSummary | None
+    waiting_count: int
+    waiting_patients: list[DoctorWorkPatientSummary]
+
+
 class QueueTriageSummary(BaseModel):
     assessment_id: UUID | None
     assessment_status: str | None
@@ -209,6 +231,11 @@ class EncounterAllocationResponse(BaseModel):
     doctor_participant_id: UUID
     triage_assessment_id: UUID
     clinician_decision_id: UUID
+    hospital_queue_entry_id: UUID
+    hospital_queue_status: str
+    doctor_work_item_id: UUID
+    doctor_work_status: str
+    doctor_queue_position: int | None
     confirmed_by_staff_id: UUID
     confirmed_at: datetime
 

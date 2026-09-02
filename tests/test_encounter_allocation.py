@@ -11,7 +11,13 @@ import src.db.models  # noqa: F401
 from scripts.seed_prototype_dataset import build_seed_plan
 from src.db.base import Base
 from src.db.models.audit import AuditEvent
-from src.db.models.encounter import Encounter, EncounterLocationHistory, EncounterParticipant, QueueEntry
+from src.db.models.encounter import (
+    DoctorWorkItem,
+    Encounter,
+    EncounterLocationHistory,
+    EncounterParticipant,
+    QueueEntry,
+)
 from src.db.models.organization import EsiCareAreaRule, Ward
 from src.db.models.triage import ClinicianDecision, TriageAssessment
 from src.db.models.workforce import Staff, StaffWardAssignment
@@ -69,14 +75,24 @@ def test_prototype_seed_allocates_only_clinician_confirmed_encounters():
     doctor_encounters = {
         row["encounter_id"] for row in plan["encounter_participants"] if row["role"] == "primary_doctor"
     }
+    doctor_work_encounters = {row["encounter_id"] for row in plan["doctor_work_items"]}
     current_ward_by_encounter = {row["id"]: row["current_ward_id"] for row in plan["encounters"]}
+    queue_by_encounter = {row["encounter_id"]: row for row in plan["queue_entries"]}
     assert located_encounters == confirmed_assessments
     assert doctor_encounters == confirmed_assessments
+    assert doctor_work_encounters == confirmed_assessments
+    current_doctors = [
+        row["doctor_staff_id"] for row in plan["doctor_work_items"] if row["status"] == "in_service"
+    ]
+    assert len(current_doctors) == len(set(current_doctors))
+    assert all(queue_by_encounter[encounter_id]["exited_at"] is not None for encounter_id in confirmed_assessments)
+    assert all(queue_by_encounter[encounter_id]["exited_at"] is None for encounter_id in pending_assessments)
     assert all(current_ward_by_encounter[encounter_id] is None for encounter_id in pending_assessments)
 
 
 @pytest.mark.asyncio
-async def test_confirmed_allocation_persists_location_doctor_and_audit_together():
+@pytest.mark.parametrize("doctor_busy", [False, True])
+async def test_confirmed_allocation_persists_location_doctor_and_audit_together(doctor_busy):
     hospital_id = uuid4()
     encounter_id = uuid4()
     ward_id = uuid4()
@@ -153,10 +169,39 @@ async def test_confirmed_allocation_persists_location_doctor_and_audit_together(
         priority=1,
         is_default=True,
     )
+    current_doctor_work = (
+        DoctorWorkItem(
+            id=uuid4(),
+            hospital_id=hospital_id,
+            encounter_id=uuid4(),
+            doctor_staff_id=doctor_id,
+            ward_id=ward_id,
+            status="in_service",
+            priority_esi=2,
+            queued_at=confirmed_at,
+            started_at=confirmed_at,
+            assigned_by_staff_id=nurse_id,
+            allocation_reason="Existing synthetic patient",
+        )
+        if doctor_busy
+        else None
+    )
 
     session = MagicMock()
     session.scalar = AsyncMock(
-        side_effect=[encounter, queue_entry, assessment, decision, ward, doctor, doctor_assignment, suggested_rule, None]
+        side_effect=[
+            encounter,
+            queue_entry,
+            assessment,
+            decision,
+            ward,
+            doctor,
+            doctor_assignment,
+            current_doctor_work,
+            suggested_rule,
+            None,
+            *([1] if doctor_busy else []),
+        ]
     )
     session.flush = AsyncMock()
     session.commit = AsyncMock()
@@ -189,6 +234,7 @@ async def test_confirmed_allocation_persists_location_doctor_and_audit_together(
     added = [call.args[0] for call in session.add.call_args_list]
     location = next(item for item in added if isinstance(item, EncounterLocationHistory))
     participant = next(item for item in added if isinstance(item, EncounterParticipant))
+    work_item = next(item for item in added if isinstance(item, DoctorWorkItem))
     audit = next(item for item in added if isinstance(item, AuditEvent))
     assert encounter.current_ward_id == ward_id
     assert (location.ward_id, location.moved_by_staff_id, location.bed_label) == (ward_id, nurse_id, "B-12")
@@ -199,8 +245,21 @@ async def test_confirmed_allocation_persists_location_doctor_and_audit_together(
     )
     assert audit.action == "encounter.allocation_confirmed"
     assert audit.event_metadata["clinician_decision_id"] == str(decision_id)
+    expected_work_status = "waiting" if doctor_busy else "in_service"
+    assert (work_item.status, work_item.doctor_staff_id, work_item.priority_esi) == (
+        expected_work_status,
+        doctor_id,
+        3,
+    )
+    assert (queue_entry.status, queue_entry.exit_reason, queue_entry.exited_at) == (
+        "completed",
+        "allocated_to_doctor",
+        confirmed_at,
+    )
     assert response["location_history_id"] == location.id
     assert response["doctor_participant_id"] == participant.id
+    assert response["doctor_work_item_id"] == work_item.id
+    assert response["doctor_queue_position"] == (1 if doctor_busy else None)
     session.commit.assert_awaited_once()
 
 

@@ -14,6 +14,8 @@ def test_frontend_discovery_and_workspace_routes_are_exposed():
         "/api/v1/hospitals/current",
         "/api/v1/hospitals/{hospital_id}/wards",
         "/api/v1/staff",
+        "/api/v1/staff/doctors/workloads",
+        "/api/v1/staff/doctors/{doctor_id}/workload",
         "/api/v1/patients",
         "/api/v1/encounters",
         "/api/v1/encounters/{encounter_id}/workspace",

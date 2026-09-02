@@ -4,6 +4,7 @@
 from src.db.models.audit import AuditEvent
 from src.db.models.billing import Invoice, InvoiceItem, Payment
 from src.db.models.encounter import (
+    DoctorWorkItem,
     Encounter,
     EncounterCoverage,
     EncounterLocationHistory,

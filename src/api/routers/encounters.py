@@ -32,7 +32,7 @@ from src.services.routing_service import RoutingService
 
 router = APIRouter(prefix="/encounters", tags=["encounters"])
 ClinicalStaff = Annotated[RequestContext, Depends(require_roles("administrator", "doctor", "nurse"))]
-Nurse = Annotated[RequestContext, Depends(require_roles("nurse"))]
+Allocator = Annotated[RequestContext, Depends(require_roles("nurse", "receptionist", "reception_staff"))]
 
 
 @router.post("", response_model=EncounterResponse, status_code=status.HTTP_201_CREATED)
@@ -108,11 +108,11 @@ async def confirm_encounter_allocation(
     encounter_id: UUID,
     payload: EncounterAllocationCreate,
     session: DatabaseSession,
-    context: Nurse,
+    context: Allocator,
     request_id: Annotated[str | None, Header(alias="X-Request-ID", max_length=100)] = None,
 ):
     if context.staff_id is None or context.hospital_id is None:
-        raise HTTPException(403, "nurse hospital identity is required")
+        raise HTTPException(403, "allocator hospital identity is required")
     return await EncounterService(session).confirm_allocation(
         encounter_id,
         payload,

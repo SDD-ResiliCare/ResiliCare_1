@@ -1,11 +1,18 @@
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models.billing import Invoice, InvoiceItem, Payment
-from src.db.models.encounter import Encounter, EncounterLocationHistory, EncounterParticipant, Queue, QueueEntry
+from src.db.models.encounter import (
+    DoctorWorkItem,
+    Encounter,
+    EncounterLocationHistory,
+    EncounterParticipant,
+    Queue,
+    QueueEntry,
+)
 from src.db.models.medication import Prescription, PrescriptionItem
 from src.db.models.organization import EsiCareAreaRule, Hospital, Ward
 from src.db.models.patient import Patient, PatientAllergy, PatientCondition
@@ -39,6 +46,7 @@ from src.schemas.encounter import (
 )
 from src.schemas.triage import SymptomInterviewCreate, SymptomResponseCreate
 from src.services.audit_service import record_audit_event
+from src.services.doctor_work_service import DoctorWorkService
 
 
 class EncounterService:
@@ -144,6 +152,12 @@ class EncounterService:
         )
         queue_entry = await self.session.scalar(
             select(QueueEntry).where(QueueEntry.encounter_id == encounter_id, QueueEntry.exited_at.is_(None))
+        )
+        doctor_work_item = await self.session.scalar(
+            select(DoctorWorkItem).where(
+                DoctorWorkItem.encounter_id == encounter_id,
+                DoctorWorkItem.status.in_(("waiting", "in_service")),
+            )
         )
         vitals = list(
             (
@@ -270,6 +284,7 @@ class EncounterService:
             "current_doctor": current_doctor,
             "current_doctor_staff": current_doctor_staff,
             "queue_entry": queue_entry,
+            "doctor_work_item": doctor_work_item,
             "latest_vitals": vitals[0] if vitals else None,
             "vitals": vitals,
             "interviews": interviews,
@@ -291,8 +306,8 @@ class EncounterService:
         self, encounter_id: UUID, payload: ParticipantCreate, assigned_by: UUID | None
     ) -> EncounterParticipant:
         await self.get(encounter_id)
-        if payload.role == "primary_doctor" and await self.participants.active_primary_doctor(encounter_id):
-            raise HTTPException(409, "encounter already has an active primary doctor; use doctor transfer")
+        if payload.role == "primary_doctor":
+            raise HTTPException(409, "primary doctors must be assigned through allocation or doctor transfer")
         participant = await self.participants.add(
             EncounterParticipant(
                 encounter_id=encounter_id,
@@ -306,12 +321,62 @@ class EncounterService:
     async def transfer_doctor(
         self, encounter_id: UUID, payload: DoctorTransferCreate, assigned_by: UUID | None
     ) -> EncounterParticipant:
-        await self.get(encounter_id, for_update=True)
+        encounter = await self.get(encounter_id, for_update=True)
+        if assigned_by is None:
+            raise HTTPException(403, "staff identity is required")
+        if encounter.current_ward_id is None:
+            raise HTTPException(409, "encounter must have a current ward before doctor transfer")
         current = await self.participants.active_primary_doctor(encounter_id, for_update=True)
         if current is None:
             raise HTTPException(409, "encounter has no active primary doctor")
         if current.staff_id == payload.new_doctor_staff_id:
             raise HTTPException(409, "new doctor is already the active primary doctor")
+        new_doctor = await self.session.scalar(
+            select(Staff)
+            .where(
+                Staff.id == payload.new_doctor_staff_id,
+                Staff.hospital_id == encounter.hospital_id,
+                Staff.staff_type == "doctor",
+                Staff.employment_status == "active",
+            )
+            .with_for_update()
+        )
+        if new_doctor is None:
+            raise HTTPException(404, "active replacement doctor not found in encounter hospital")
+        ward_assignment = await self.session.scalar(
+            select(StaffWardAssignment).where(
+                StaffWardAssignment.staff_id == new_doctor.id,
+                StaffWardAssignment.ward_id == encounter.current_ward_id,
+                StaffWardAssignment.assigned_from <= payload.transferred_at,
+                or_(
+                    StaffWardAssignment.assigned_until.is_(None),
+                    StaffWardAssignment.assigned_until > payload.transferred_at,
+                ),
+            )
+        )
+        if ward_assignment is None:
+            raise HTTPException(422, "replacement doctor must be actively assigned to the encounter ward")
+        work_item = await self.session.scalar(
+            select(DoctorWorkItem)
+            .where(
+                DoctorWorkItem.encounter_id == encounter_id,
+                DoctorWorkItem.status.in_(("waiting", "in_service")),
+            )
+            .with_for_update()
+        )
+        if work_item is None:
+            raise HTTPException(409, "encounter has no active doctor work item")
+        if payload.transferred_at < current.assigned_at or payload.transferred_at < work_item.queued_at:
+            raise HTTPException(422, "doctor transfer cannot predate the active assignment")
+        new_doctor_current = await self.session.scalar(
+            select(DoctorWorkItem)
+            .where(
+                DoctorWorkItem.doctor_staff_id == new_doctor.id,
+                DoctorWorkItem.status == "in_service",
+            )
+            .with_for_update()
+        )
+
         current.ended_at = payload.transferred_at
         current.end_reason = payload.reason
         replacement = await self.participants.add(
@@ -325,6 +390,29 @@ class EncounterService:
                 transferred_from_participant_id=current.id,
             )
         )
+        was_in_service = work_item.status == "in_service"
+        work_item.status = "transferred"
+        work_item.end_reason = payload.reason
+        work_item.completed_at = payload.transferred_at if was_in_service else None
+        replacement_status = "waiting" if new_doctor_current is not None else "in_service"
+        replacement_work = DoctorWorkItem(
+            hospital_id=encounter.hospital_id,
+            encounter_id=encounter_id,
+            doctor_staff_id=new_doctor.id,
+            ward_id=encounter.current_ward_id,
+            status=replacement_status,
+            priority_esi=work_item.priority_esi,
+            queued_at=payload.transferred_at,
+            started_at=payload.transferred_at if replacement_status == "in_service" else None,
+            assigned_by_staff_id=assigned_by,
+            allocation_reason=payload.reason,
+        )
+        self.session.add(replacement_work)
+        if was_in_service:
+            await DoctorWorkService(self.session).promote_next(current.staff_id, payload.transferred_at)
+        encounter.status = "in_care" if replacement_status == "in_service" else "assigned"
+        if replacement_status == "in_service":
+            encounter.care_started_at = payload.transferred_at
         await self.session.commit()
         return replacement
 
@@ -338,7 +426,7 @@ class EncounterService:
         hospital_id: UUID,
         request_id: str,
     ) -> dict:
-        """Persist a nurse-confirmed ward and primary-doctor allocation as one transaction."""
+        """Persist a post-triage ward, doctor, and doctor-queue allocation as one transaction."""
         encounter = await self.get(encounter_id, for_update=True)
         if encounter.hospital_id != hospital_id:
             raise HTTPException(403, "cross-hospital access is not allowed")
@@ -392,7 +480,7 @@ class EncounterService:
                 Staff.hospital_id == hospital_id,
                 Staff.staff_type == "doctor",
                 Staff.employment_status == "active",
-            )
+            ).with_for_update()
         )
         if doctor is None:
             raise HTTPException(404, "active doctor not found in encounter hospital")
@@ -409,6 +497,15 @@ class EncounterService:
         )
         if doctor_ward_assignment is None:
             raise HTTPException(422, "doctor must have an active assignment to the selected ward")
+
+        current_doctor_work = await self.session.scalar(
+            select(DoctorWorkItem)
+            .where(
+                DoctorWorkItem.doctor_staff_id == doctor.id,
+                DoctorWorkItem.status == "in_service",
+            )
+            .with_for_update()
+        )
 
         suggested_rule = await self.session.scalar(
             select(EsiCareAreaRule)
@@ -472,7 +569,48 @@ class EncounterService:
             )
             self.session.add(current_doctor)
 
+        work_status = "waiting" if current_doctor_work is not None else "in_service"
+        doctor_work_item = DoctorWorkItem(
+            hospital_id=hospital_id,
+            encounter_id=encounter_id,
+            doctor_staff_id=doctor.id,
+            ward_id=ward.id,
+            status=work_status,
+            priority_esi=decision.final_esi,
+            queued_at=payload.confirmed_at,
+            started_at=payload.confirmed_at if work_status == "in_service" else None,
+            assigned_by_staff_id=confirmed_by_staff_id,
+            allocation_reason=payload.reason,
+        )
+        self.session.add(doctor_work_item)
+
+        queue_entry.status = "completed"
+        queue_entry.exited_at = payload.confirmed_at
+        queue_entry.exit_reason = "allocated_to_doctor"
+        if work_status == "in_service":
+            encounter.status = "in_care"
+            encounter.care_started_at = payload.confirmed_at
+        else:
+            encounter.status = "assigned"
+
         await self.session.flush()
+        doctor_queue_position = None
+        if work_status == "waiting":
+            doctor_queue_position = await self.session.scalar(
+                select(func.count())
+                .select_from(DoctorWorkItem)
+                .where(
+                    DoctorWorkItem.doctor_staff_id == doctor.id,
+                    DoctorWorkItem.status == "waiting",
+                    or_(
+                        DoctorWorkItem.priority_esi < doctor_work_item.priority_esi,
+                        and_(
+                            DoctorWorkItem.priority_esi == doctor_work_item.priority_esi,
+                            DoctorWorkItem.queued_at <= doctor_work_item.queued_at,
+                        ),
+                    ),
+                )
+            )
         await record_audit_event(
             self.session,
             hospital_id=hospital_id,
@@ -493,6 +631,10 @@ class EncounterService:
                 "doctor_staff_id": str(doctor.id),
                 "location_history_id": str(current_location.id),
                 "doctor_participant_id": str(current_doctor.id),
+                "doctor_work_item_id": str(doctor_work_item.id),
+                "doctor_work_status": doctor_work_item.status,
+                "doctor_queue_position": doctor_queue_position,
+                "hospital_queue_status": queue_entry.status,
                 "reason": payload.reason,
             },
         )
@@ -511,6 +653,11 @@ class EncounterService:
             "doctor_participant_id": current_doctor.id,
             "triage_assessment_id": assessment.id,
             "clinician_decision_id": decision.id,
+            "hospital_queue_entry_id": queue_entry.id,
+            "hospital_queue_status": queue_entry.status,
+            "doctor_work_item_id": doctor_work_item.id,
+            "doctor_work_status": doctor_work_item.status,
+            "doctor_queue_position": doctor_queue_position,
             "confirmed_by_staff_id": confirmed_by_staff_id,
             "confirmed_at": payload.confirmed_at,
         }
@@ -581,8 +728,29 @@ class EncounterService:
             raise HTTPException(409, "encounter is already closed")
         closure = EncounterClosure(encounter_id=encounter_id, closed_by_staff_id=staff_id, **payload.model_dump())
         self.session.add(closure)
+        await DoctorWorkService(self.session).finish_encounter_work(
+            encounter_id,
+            payload.closed_at,
+            f"Encounter closed: {payload.disposition}",
+        )
+        current_doctor = await self.participants.active_primary_doctor(encounter_id, for_update=True)
+        if current_doctor is not None:
+            current_doctor.ended_at = payload.closed_at
+            current_doctor.end_reason = f"Encounter closed: {payload.disposition}"
+        current_location = await self.session.scalar(
+            select(EncounterLocationHistory)
+            .where(
+                EncounterLocationHistory.encounter_id == encounter_id,
+                EncounterLocationHistory.exited_at.is_(None),
+            )
+            .with_for_update()
+        )
+        if current_location is not None:
+            current_location.exited_at = payload.closed_at
+            current_location.transfer_reason = f"Encounter closed: {payload.disposition}"
         encounter.status = "completed"
         encounter.completed_at = payload.closed_at
+        encounter.current_ward_id = None
         await self.session.commit()
         await self.session.refresh(closure)
         return closure
