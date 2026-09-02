@@ -226,21 +226,21 @@ export function NurseDashboard() {
                 <span className="text-[2.75rem] leading-none font-light">34</span>
                 <span className="text-[#D6FF38] text-xs font-semibold mt-1.5 tracking-wide">+4</span>
               </div>
-              <span className="text-sm text-gray-500 font-medium mt-1">Visits</span>
+              <span className="text-sm text-gray-500 font-medium mt-1">Queue Length</span>
             </div>
             <div className="flex flex-col items-start">
               <div className="flex items-start gap-1">
                 <span className="text-[2.75rem] leading-none font-light">12</span>
                 <span className="text-[#D6FF38] text-xs font-semibold mt-1.5 tracking-wide">+2</span>
               </div>
-              <span className="text-sm text-gray-500 font-medium mt-1">New</span>
+              <span className="text-sm text-gray-500 font-medium mt-1">Total Assigned</span>
             </div>
             <div className="flex flex-col items-start">
               <div className="flex items-start gap-1">
                 <span className="text-[2.75rem] leading-none font-light">6</span>
                 <span className="text-red-500 text-xs font-semibold mt-1.5 tracking-wide">-2</span>
               </div>
-              <span className="text-sm text-gray-500 font-medium mt-1">Reviews</span>
+              <span className="text-sm text-gray-500 font-medium mt-1">Total Available Doctors</span>
             </div>
           </div>
         </div>
