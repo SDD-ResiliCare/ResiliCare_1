@@ -289,6 +289,16 @@ export const api = {
     ];
   },
 
+  getDoctorWorkloads: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.get('/api/v1/staff/doctors/workloads');
+      return response.data || [];
+    } catch (error) {
+      console.warn("Failed to fetch doctor workloads, returning empty array");
+      return [];
+    }
+  },
+
   // --- Patient Interface ---
   processKioskText: async (transcript: string): Promise<any> => {
     // Missing in backend.

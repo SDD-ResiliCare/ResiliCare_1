@@ -29,7 +29,9 @@ class DoctorWorkService:
                 StaffWardAssignment.assigned_until.is_(None),
             )
         doctors = list((await self.session.scalars(statement.distinct().order_by(Staff.first_name))).all())
-        return [await self._workload(doctor) for doctor in doctors]
+        workloads = [await self._workload(doctor) for doctor in doctors]
+        workloads.sort(key=lambda w: (w["waiting_count"], w["doctor"]["first_name"]), reverse=True)
+        return workloads
 
     async def get_workload(self, doctor_id: UUID, hospital_id: UUID) -> dict:
         doctor = await self.session.scalar(
